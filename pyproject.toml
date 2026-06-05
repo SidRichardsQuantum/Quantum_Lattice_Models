@@ -1,0 +1,90 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "quantum-lattice-models"
+version = "0.1.0"
+description = "Small dense quantum lattice Hamiltonians for exact diagonalization and quantum algorithm prototypes."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "Sid Richards" }
+]
+keywords = [
+  "quantum",
+  "lattice models",
+  "exact diagonalization",
+  "hamiltonians",
+  "quantum algorithms"
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Physics"
+]
+dependencies = [
+  "numpy",
+  "scipy",
+  "matplotlib"
+]
+
+[project.optional-dependencies]
+dev = [
+  "black[jupyter]",
+  "build",
+  "pytest",
+  "ruff",
+  "twine"
+]
+notebooks = [
+  "ipykernel",
+  "notebook"
+]
+pennylane = [
+  "pennylane"
+]
+
+[project.urls]
+Homepage = "https://github.com/sidrichards/Quantum_Lattice_Models"
+Issues = "https://github.com/sidrichards/Quantum_Lattice_Models/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.black]
+target-version = ["py310"]
+line-length = 100
+extend-exclude = '''
+/(
+  \.venv
+  | \.matplotlib-cache
+  | build
+  | dist
+  | images
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [
+  ".venv",
+  ".matplotlib-cache",
+  "build",
+  "dist",
+  "images"
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/quantum_lattice_models"]
