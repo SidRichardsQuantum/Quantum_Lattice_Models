@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Quantum Lattice Models</title>
+    <meta
+      name="description"
+      content="Small dense quantum lattice Hamiltonians for exact diagonalization and quantum algorithm prototypes."
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="portfolio-page" id="top">
+      <header class="site-header">
+        <a class="brand" href="#top" aria-label="Quantum Lattice Models home">
+          <span class="brand-mark">QLM</span>
+          <span>Quantum Lattice Models</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary navigation">
+          <a href="#models">Models</a>
+          <a href="#package">Package</a>
+          <a href="#results">Results</a>
+          <a href="#docs">Docs</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero section">
+          <div class="hero-copy">
+            <p class="eyebrow">Exact diagonalization and quantum simulation testbeds</p>
+            <h1>Quantum Lattice Models</h1>
+            <p class="hero-text">
+              A lightweight, package-first Python library for constructing,
+              analyzing, plotting, and exporting small lattice Hamiltonians used
+              in physics workflows and quantum algorithm research prototypes.
+            </p>
+            <div class="badges" aria-label="Project badges">
+              <a href="https://pypi.org/project/quantum-lattice-models/">
+                <img src="https://img.shields.io/pypi/v/quantum-lattice-models?style=flat-square" alt="PyPI version">
+              </a>
+              <a href="https://pypi.org/project/quantum-lattice-models/">
+                <img src="https://img.shields.io/pypi/pyversions/quantum-lattice-models?style=flat-square" alt="Python versions">
+              </a>
+              <a href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/actions/workflows/pages.yml">
+                <img src="https://img.shields.io/github/actions/workflow/status/SidRichardsQuantum/Quantum_Lattice_Models/pages.yml?label=docs&style=flat-square" alt="Docs">
+              </a>
+              <a href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/LICENSE">
+                <img src="https://img.shields.io/github/license/SidRichardsQuantum/Quantum_Lattice_Models?style=flat-square" alt="License">
+              </a>
+            </div>
+            <div class="hero-actions" aria-label="Project links">
+              <a class="button primary" href="#docs">Read the Docs</a>
+              <a class="button" href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models">GitHub</a>
+              <a class="button" href="https://pypi.org/project/quantum-lattice-models/">PyPI</a>
+              <a class="button" href="https://sidrichardsquantum.github.io/">Portfolio</a>
+            </div>
+          </div>
+
+          <div class="hero-side">
+            <div class="hero-visual" aria-hidden="true">
+              <svg viewBox="0 0 520 360" role="presentation" focusable="false">
+                <defs>
+                  <pattern id="lattice-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M40 0H0V40" />
+                  </pattern>
+                </defs>
+                <rect class="visual-bg" width="520" height="360" rx="8" />
+                <rect class="visual-grid" width="520" height="360" rx="8" fill="url(#lattice-grid)" />
+                <g class="visual-lattice">
+                  <path d="M92 94h106l70 64h106l54 66" />
+                  <path d="M92 224h106l70-66M198 94v130M374 158v94" />
+                  <circle cx="92" cy="94" r="18" />
+                  <circle cx="198" cy="94" r="18" />
+                  <circle cx="268" cy="158" r="18" />
+                  <circle cx="374" cy="158" r="18" />
+                  <circle cx="428" cy="224" r="18" />
+                  <circle cx="92" cy="224" r="18" />
+                  <circle cx="198" cy="224" r="18" />
+                  <circle cx="374" cy="252" r="18" />
+                </g>
+                <g class="visual-labels">
+                  <text x="68" y="316">Ising</text>
+                  <text x="154" y="316">Heisenberg</text>
+                  <text x="292" y="316">SSH</text>
+                  <text x="382" y="316">Tight Binding</text>
+                </g>
+              </svg>
+            </div>
+
+            <aside class="focus-panel" aria-label="Project focus">
+              <h2>Project Scope</h2>
+              <ul>
+                <li>Dense spin-chain Hamiltonians for small qubit systems</li>
+                <li>Spin chains, ladders, Hubbard models, and topological lattices</li>
+                <li>Single-particle SSH, Rice-Mele, Haldane, Hofstadter, kagome, and AAH matrices</li>
+                <li>Exact spectra, ground states, gaps, and observables</li>
+                <li>Thin examples that save reproducible result plots</li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+
+        <section id="models" class="section">
+          <div class="section-heading">
+            <p class="eyebrow">Implemented models</p>
+            <h2>Small systems with explicit Hamiltonians</h2>
+            <p>
+              The package keeps model construction, spectra, observables, plotting,
+              and export helpers in importable modules under
+              <code>src/quantum_lattice_models/</code>.
+            </p>
+          </div>
+
+          <div class="project-grid">
+            <article class="project-card">
+              <div>
+                <h3>Transverse-Field Ising Chain</h3>
+                <p>
+                  Construct dense qubit-space matrices with nearest-neighbor
+                  <code>ZZ</code> coupling, transverse fields, longitudinal fields,
+                  and next-nearest-neighbor Ising variants.
+                </p>
+              </div>
+              <div class="tags">
+                <span>Spin Chain</span>
+                <span>Exact Diagonalization</span>
+                <span>VQE Testbed</span>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div>
+                <h3>Heisenberg Ladder</h3>
+                <p>
+                  Build two-leg spin ladders with independent leg and rung
+                  couplings for compact quasi-one-dimensional benchmarks.
+                </p>
+              </div>
+              <div class="tags">
+                <span>Spin Ladder</span>
+                <span>Rung Coupling</span>
+                <span>Dense ED</span>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div>
+                <h3>Hubbard Chains</h3>
+                <p>
+                  Use truncated Bose-Hubbard chains and spinful Fermi-Hubbard
+                  occupation-basis Hamiltonians for small interacting lattices.
+                </p>
+              </div>
+              <div class="tags">
+                <span>Bose-Hubbard</span>
+                <span>Fermi-Hubbard</span>
+                <span>Occupation Basis</span>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div>
+                <h3>Anisotropic Heisenberg Chain</h3>
+                <p>
+                  Build <code>XX</code>, <code>YY</code>, and <code>ZZ</code>
+                  coupled spin chains with optional longitudinal field terms.
+                </p>
+              </div>
+              <div class="tags">
+                <span>Heisenberg</span>
+                <span>Spin Physics</span>
+                <span>Observables</span>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div>
+                <h3>XY and XXZ Chains</h3>
+                <p>
+                  Use compact spin-chain builders for anisotropic exchange,
+                  transverse fields, and XXZ Heisenberg specializations.
+                </p>
+              </div>
+              <div class="tags">
+                <span>XY</span>
+                <span>XXZ</span>
+                <span>Spin Gaps</span>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div>
+                <h3>J1-J2 Heisenberg Chain</h3>
+                <p>
+                  Add next-nearest-neighbor Heisenberg interactions for a small
+                  frustrated spin-chain benchmark.
+                </p>
+              </div>
+              <div class="tags">
+                <span>Frustration</span>
+                <span>NNN Coupling</span>
+                <span>Dense Pauli Terms</span>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div>
+                <h3>SSH Model</h3>
+                <p>
+                  Study SSH, Rice-Mele, and Kitaev-chain single-particle or
+                  BdG matrices for compact topological-chain examples.
+                </p>
+              </div>
+              <div class="tags">
+                <span>Topology</span>
+                <span>Edge Modes</span>
+                <span>BdG</span>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div>
+                <h3>Generic Tight-Binding Chain</h3>
+                <p>
+                  Create one-dimensional single-particle hopping matrices with
+                  scalar or site-resolved onsite potentials.
+                </p>
+              </div>
+              <div class="tags">
+                <span>Single Particle</span>
+                <span>Spectra</span>
+                <span>Quantum Walks</span>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div>
+                <h3>Topological and Frustrated Lattices</h3>
+                <p>
+                  Build Harper-Hofstadter square lattices, Haldane honeycomb
+                  models, triangular lattices, kagome lattices, and AAH chains.
+                </p>
+              </div>
+              <div class="tags">
+                <span>Hofstadter</span>
+                <span>Haldane</span>
+                <span>Kagome</span>
+                <span>Quasiperiodic</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="package" class="section">
+          <div class="section-heading">
+            <p class="eyebrow">Published package</p>
+            <h2>Installable Python tooling</h2>
+            <p>
+              Runtime dependencies are intentionally small: <code>numpy</code>,
+              <code>scipy</code>, and <code>matplotlib</code>. PennyLane export
+              is optional.
+            </p>
+          </div>
+
+          <div class="package-list">
+            <article class="package-row">
+              <div>
+                <h3>Install from PyPI</h3>
+                <p>Use the published package for examples, notebooks, and scripts.</p>
+              </div>
+              <code>pip install quantum-lattice-models</code>
+              <a href="https://pypi.org/project/quantum-lattice-models/">PyPI</a>
+            </article>
+
+            <article class="package-row">
+              <div>
+                <h3>Install from source</h3>
+                <p>Use editable mode when developing the package or running tests.</p>
+              </div>
+              <code>python -m pip install -e ".[dev]"</code>
+              <a href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models">Source</a>
+            </article>
+
+            <article class="package-row">
+              <div>
+                <h3>Optional PennyLane export</h3>
+                <p>Convert dense Hamiltonians into PennyLane-compatible terms.</p>
+              </div>
+              <code>python -m pip install -e ".[pennylane]"</code>
+              <a href="#quickstart">Quickstart</a>
+            </article>
+          </div>
+        </section>
+
+        <section id="quickstart" class="section split-section">
+          <div class="section-heading">
+            <p class="eyebrow">Quickstart</p>
+            <h2>Import the package API</h2>
+          </div>
+          <div class="code-panel">
+            <pre><code>from quantum_lattice_models.models import transverse_field_ising
+from quantum_lattice_models.spectra import ground_energy, spectral_gap
+
+H = transverse_field_ising(n_sites=4, j=1.0, h=0.5, periodic=False)
+
+print(H.shape)
+print(ground_energy(H))
+print(spectral_gap(H))</code></pre>
+          </div>
+        </section>
+
+        <section id="results" class="section">
+          <div class="section-heading">
+            <p class="eyebrow">Generated examples</p>
+            <h2>Reference plots from command-line examples</h2>
+            <p>
+              Each script under <code>examples/</code> imports the package and saves
+              a PNG under <code>images/</code>, keeping notebooks and scripts as
+              thin clients of the public API.
+            </p>
+          </div>
+
+          <div class="result-grid">
+            <figure>
+              <img src="images/ising_spectrum.png" alt="Transverse-field Ising spectrum plot">
+              <figcaption>Transverse-field Ising spectrum</figcaption>
+            </figure>
+            <figure>
+              <img src="images/heisenberg_density.png" alt="Heisenberg chain density plot">
+              <figcaption>Heisenberg spectral density</figcaption>
+            </figure>
+            <figure>
+              <img src="images/ssh_edge_state.png" alt="SSH edge-state localization plot">
+              <figcaption>SSH edge-state localization</figcaption>
+            </figure>
+            <figure>
+              <img src="images/tight_binding_spectrum.png" alt="Tight-binding spectrum plot">
+              <figcaption>Tight-binding spectrum</figcaption>
+            </figure>
+            <figure>
+              <img src="images/rice_mele_spectrum.png" alt="Rice-Mele finite-chain spectrum plot">
+              <figcaption>Rice-Mele spectrum</figcaption>
+            </figure>
+            <figure>
+              <img src="images/hofstadter_butterfly.png" alt="Harper-Hofstadter flux spectrum plot">
+              <figcaption>Hofstadter flux spectrum</figcaption>
+            </figure>
+            <figure>
+              <img src="images/bose_hubbard_spectrum.png" alt="Truncated Bose-Hubbard spectrum plot">
+              <figcaption>Bose-Hubbard spectrum</figcaption>
+            </figure>
+            <figure>
+              <img src="images/haldane_spectrum.png" alt="Finite Haldane honeycomb spectrum plot">
+              <figcaption>Haldane spectrum</figcaption>
+            </figure>
+            <figure>
+              <img src="images/kagome_graph.png" alt="Kagome lattice graph connectivity plot">
+              <figcaption>Kagome graph</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section id="notebooks" class="section">
+          <div class="section-heading">
+            <p class="eyebrow">Executed notebooks</p>
+            <h2>Rendered notebook workflows</h2>
+            <p>
+              The notebooks are executed with saved outputs and exported to HTML
+              under <code>docs/notebooks/</code>. They include printed spectra,
+              parameter summaries, tables, and generated plots.
+            </p>
+          </div>
+
+          <div class="package-list">
+            <article class="package-row">
+              <div>
+                <h3>Spin-chain workflows</h3>
+                <p>Ising variants and Heisenberg ladder spectra with gap sweeps.</p>
+              </div>
+              <code>notebooks/ising_spin_chains.ipynb</code>
+              <a href="notebooks/ising_spin_chains.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>Topological chains</h3>
+                <p>SSH/Rice-Mele edge localization and Kitaev BdG particle-hole symmetry.</p>
+              </div>
+              <code>notebooks/kitaev_bdg_symmetry.ipynb</code>
+              <a href="notebooks/kitaev_bdg_symmetry.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>Flux and lattice geometry</h3>
+                <p>Hofstadter flux sweep plus Haldane, triangular, and kagome graphs.</p>
+              </div>
+              <code>notebooks/hofstadter_flux_sweep.ipynb</code>
+              <a href="notebooks/hofstadter_flux_sweep.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>Hubbard and sparse workflows</h3>
+                <p>Dense/sparse exact diagonalization and sparse scaling summaries.</p>
+              </div>
+              <code>notebooks/hubbard_exact_diagonalization.ipynb</code>
+              <a href="notebooks/hubbard_exact_diagonalization.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>Registry and CLI</h3>
+                <p>Model registry table and command-line plot walkthrough.</p>
+              </div>
+              <code>notebooks/model_registry_and_cli.ipynb</code>
+              <a href="notebooks/model_registry_and_cli.html">HTML</a>
+            </article>
+          </div>
+
+          <div class="result-grid notebook-grid">
+            <figure>
+              <img src="notebook_outputs/ising_spin_chains_1.png" alt="Notebook-generated Ising spectra">
+              <figcaption>Ising notebook spectra</figcaption>
+            </figure>
+            <figure>
+              <img src="notebook_outputs/kitaev_bdg_symmetry_1.png" alt="Notebook-generated Kitaev BdG spectrum">
+              <figcaption>Kitaev BdG notebook</figcaption>
+            </figure>
+            <figure>
+              <img src="notebook_outputs/hofstadter_flux_sweep_2.png" alt="Notebook-generated Hofstadter flux sweep">
+              <figcaption>Hofstadter notebook sweep</figcaption>
+            </figure>
+            <figure>
+              <img src="notebook_outputs/sparse_dense_scaling_1.png" alt="Notebook-generated sparse dense scaling summary">
+              <figcaption>Sparse scaling notebook</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section id="docs" class="section contact-section">
+          <div>
+            <p class="eyebrow">Documentation and source</p>
+            <h2>Read the project materials</h2>
+            <p>
+              The repository documents practical usage, model conventions, and the
+              package's truth contract for small-system exact diagonalization.
+              The notebook tree provides thin-client workflows for spin chains,
+              SSH/Rice-Mele, Hofstadter sweeps, Hubbard models, and finite
+              topological lattices.
+            </p>
+          </div>
+          <div class="contact-actions">
+            <a class="button primary" href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/README.md">Overview</a>
+            <a class="button" href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/USAGE.md">Usage</a>
+            <a class="button" href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/THEORY.md">Theory</a>
+            <a class="button" href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/RESULTS.md">Results</a>
+            <a class="button" href="notebooks/model_registry_and_cli.html">Notebooks</a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <span>&copy; 2026 Sid Richards</span>
+        <a href="https://sidrichardsquantum.github.io/">Main portfolio</a>
+        <a href="#top">Back to top</a>
+      </footer>
+    </div>
+  </body>
+</html>

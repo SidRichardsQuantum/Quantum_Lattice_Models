@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import numpy as np
+import scipy.sparse as sp
+import scipy.sparse.linalg as spla
 
 
 def eigenvalues(H: np.ndarray) -> np.ndarray:
     """Return sorted eigenvalues, using Hermitian routines when applicable."""
 
-    matrix = np.asarray(H, dtype=complex)
+    matrix = _as_dense(H)
     if _is_hermitian(matrix):
         return np.linalg.eigvalsh(matrix)
     return np.linalg.eigvals(matrix)
@@ -17,7 +19,7 @@ def eigenvalues(H: np.ndarray) -> np.ndarray:
 def eigensystem(H: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Return eigenvalues and eigenvectors as columns."""
 
-    matrix = np.asarray(H, dtype=complex)
+    matrix = _as_dense(H)
     if _is_hermitian(matrix):
         return np.linalg.eigh(matrix)
     return np.linalg.eig(matrix)
@@ -28,6 +30,36 @@ def ground_energy(H: np.ndarray) -> float:
 
     values = eigenvalues(H)
     return float(np.min(np.real_if_close(values).real))
+
+
+def lowest_eigenvalues(H: np.ndarray, k: int = 2) -> np.ndarray:
+    """Return the lowest ``k`` eigenvalues, using sparse solvers for sparse inputs."""
+
+    if k < 1:
+        raise ValueError("k must be positive.")
+    if sp.issparse(H):
+        matrix = H.asfptype()
+        n = matrix.shape[0]
+        if k >= n:
+            return np.sort(np.linalg.eigvalsh(matrix.toarray()))
+        values = spla.eigsh(matrix, k=k, which="SA", return_eigenvectors=False)
+        return np.sort(np.real_if_close(values))
+    return np.sort(np.real_if_close(eigenvalues(H)).real)[:k]
+
+
+def ground_state(H: np.ndarray) -> tuple[float, np.ndarray]:
+    """Return the ground-state energy and eigenvector."""
+
+    if sp.issparse(H):
+        matrix = H.asfptype()
+        if matrix.shape[0] <= 2:
+            values, vectors = np.linalg.eigh(matrix.toarray())
+        else:
+            values, vectors = spla.eigsh(matrix, k=1, which="SA")
+    else:
+        values, vectors = eigensystem(H)
+    index = int(np.argmin(np.real_if_close(values).real))
+    return float(np.real_if_close(values[index]).real), vectors[:, index]
 
 
 def spectral_gap(H: np.ndarray) -> float:
@@ -61,3 +93,9 @@ def _is_hermitian(matrix: np.ndarray) -> bool:
         and matrix.shape[0] == matrix.shape[1]
         and np.allclose(matrix, matrix.conj().T)
     )
+
+
+def _as_dense(H: np.ndarray) -> np.ndarray:
+    if sp.issparse(H):
+        return H.toarray()
+    return np.asarray(H, dtype=complex)

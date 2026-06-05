@@ -42,3 +42,36 @@ class DenseHamiltonian(np.ndarray):
         self.model_name = getattr(obj, "model_name", None)
         self.n_sites = getattr(obj, "n_sites", None)
         self.terms = getattr(obj, "terms", ())
+
+
+class LatticeHamiltonian(np.ndarray):
+    """Dense NumPy array with optional lattice-model metadata."""
+
+    model_name: str | None
+    basis: str | None
+    lattice_shape: tuple[int, ...] | None
+    metadata: dict[str, object]
+
+    def __new__(
+        cls,
+        matrix: np.ndarray,
+        *,
+        model_name: str | None = None,
+        basis: str | None = None,
+        lattice_shape: tuple[int, ...] | None = None,
+        metadata: dict[str, object] | None = None,
+    ) -> LatticeHamiltonian:
+        obj = np.asarray(matrix, dtype=complex).view(cls)
+        obj.model_name = model_name
+        obj.basis = basis
+        obj.lattice_shape = lattice_shape
+        obj.metadata = dict(metadata or {})
+        return obj
+
+    def __array_finalize__(self, obj: object) -> None:
+        if obj is None:
+            return
+        self.model_name = getattr(obj, "model_name", None)
+        self.basis = getattr(obj, "basis", None)
+        self.lattice_shape = getattr(obj, "lattice_shape", None)
+        self.metadata = getattr(obj, "metadata", {})

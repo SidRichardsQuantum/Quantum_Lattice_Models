@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quantum-lattice-models"
-version = "0.1.0"
+version = "0.1.1"
 description = "Small dense quantum lattice Hamiltonians for exact diagonalization and quantum algorithm prototypes."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -52,8 +52,11 @@ pennylane = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/sidrichards/Quantum_Lattice_Models"
-Issues = "https://github.com/sidrichards/Quantum_Lattice_Models/issues"
+Homepage = "https://github.com/SidRichardsQuantum/Quantum_Lattice_Models"
+Issues = "https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/issues"
+
+[project.scripts]
+quantum-lattice = "quantum_lattice_models.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

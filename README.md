@@ -10,16 +10,16 @@
 <img src="https://img.shields.io/pypi/pyversions/quantum-lattice-models?style=flat-square" alt="Python Versions">
 </a>
 
-<a href="https://github.com/SidRichardsQuantum/Variational_Quantum_Eigensolver/actions/workflows/tests.yml">
-<img src="https://img.shields.io/github/actions/workflow/status/SidRichardsQuantum/Variational_Quantum_Eigensolver/tests.yml?label=tests&style=flat-square" alt="Tests">
+<a href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/actions/workflows/tests.yml">
+<img src="https://img.shields.io/github/actions/workflow/status/SidRichardsQuantum/Quantum_Lattice_Models/tests.yml?label=tests&style=flat-square" alt="Tests">
 </a>
 
-<a href="https://sidrichardsquantum.github.io/Variational_Quantum_Eigensolver/">
-<img src="https://img.shields.io/github/actions/workflow/status/SidRichardsQuantum/Variational_Quantum_Eigensolver/pages.yml?label=docs&style=flat-square" alt="Docs">
+<a href="https://sidrichardsquantum.github.io/Quantum_Lattice_Models/">
+<img src="https://img.shields.io/github/actions/workflow/status/SidRichardsQuantum/Quantum_Lattice_Models/pages.yml?label=docs&style=flat-square" alt="Docs">
 </a>
 
 <a href="LICENSE">
-<img src="https://img.shields.io/github/license/SidRichardsQuantum/Variational_Quantum_Eigensolver?style=flat-square" alt="License">
+<img src="https://img.shields.io/github/license/SidRichardsQuantum/Quantum_Lattice_Models?style=flat-square" alt="License">
 </a>
 
 <a href="https://github.com/sponsors/SidRichardsQuantum">
@@ -30,18 +30,34 @@
 
 Quantum Lattice Models is a lightweight, package-first Python library for constructing, analyzing, plotting, and exporting small lattice Hamiltonians used in physics workflows and quantum algorithm research prototypes.
 
-PyPI: placeholder  
-Website: placeholder
+PyPI: [https://pypi.org/project/quantum-lattice-models/](https://pypi.org/project/quantum-lattice-models/)  
 
 This repository is organized as an installable package first.
 The real logic lives in `src/quantum_lattice_models/`; notebooks, scripts, and examples should stay thin and import the public package API.
+`quantum_lattice_models.models` remains the compatibility import surface, while implementations are split across focused modules such as `spin`, `tight_binding`, `hubbard`, and `topological`.
 
 ## Implemented Models
 
 - Transverse-field Ising spin chain
+- Longitudinal-field Ising spin chain
+- Next-nearest-neighbor Ising spin chain
 - Anisotropic Heisenberg spin chain
+- XY spin chain
+- XXZ spin chain
+- Frustrated J1-J2 Heisenberg spin chain
+- Two-leg Heisenberg spin ladder
+- Truncated Bose-Hubbard chain
+- Spinful Fermi-Hubbard chain
+- Kitaev-chain Bogoliubov-de Gennes matrix
 - Su-Schrieffer-Heeger single-particle tight-binding model
+- Rice-Mele single-particle chain
 - Generic one-dimensional single-particle tight-binding chain
+- Square-lattice single-particle tight-binding model
+- Harper-Hofstadter square-lattice model
+- Aubry-Andre-Harper quasiperiodic tight-binding chain
+- Haldane honeycomb-lattice model
+- Triangular-lattice single-particle tight-binding model
+- Kagome-lattice single-particle tight-binding model
 
 Spin-chain Hamiltonians are dense qubit-space matrices
 Tight-binding Hamiltonians are single-particle matrices.
@@ -109,10 +125,25 @@ weights = ssh_edge_state_localizations(vectors, n_cells=8, edge_cells=2)
 src/quantum_lattice_models/  Package source
 tests/                       Pytest test suite
 examples/                    Command-line examples that save plots
+notebooks/                   Thin-client exploratory notebooks
 README.md                    Project overview
+CHANGELOG.md                 Release notes
 USAGE.md                     API examples
 THEORY.md                    Model and method notes
-RESULTS.md                   Placeholder for generated results
+RESULTS.md                   Generated results
+```
+
+Key package modules:
+
+```text
+spin.py                      Dense spin-chain and ladder builders
+tight_binding.py             Single-particle tight-binding builders
+hubbard.py                   Bose-Hubbard and Fermi-Hubbard builders
+topological.py               Haldane, Hofstadter, and Kitaev builders
+geometry.py                  Coordinate helpers for plotting
+registry.py                  Structured model metadata
+cli.py                       quantum-lattice command-line entry point
+models.py                    Backwards-compatible re-export layer
 ```
 
 ## Notebooks as Thin Clients
@@ -120,6 +151,19 @@ RESULTS.md                   Placeholder for generated results
 Notebooks should import from `quantum_lattice_models` rather than defining their own model logic.
 A notebook can choose parameters, run spectra, plot results, and tell a story.
 The package should remain the source of truth.
+
+Current notebooks:
+
+- `notebooks/ising_spin_chains.ipynb`
+- `notebooks/ssh_rice_mele_comparison.ipynb`
+- `notebooks/hofstadter_flux_sweep.ipynb`
+- `notebooks/hubbard_exact_diagonalization.ipynb`
+- `notebooks/haldane_kagome_lattices.ipynb`
+- `notebooks/model_registry_and_cli.ipynb`
+- `notebooks/kitaev_bdg_symmetry.ipynb`
+- `notebooks/heisenberg_ladder_spectrum.ipynb`
+- `notebooks/sparse_dense_scaling.ipynb`
+- `notebooks/cli_plot_walkthrough.ipynb`
 
 ## Development
 
@@ -138,7 +182,11 @@ The `Makefile` runs Black one file at a time to avoid multi-file formatter stall
 
 - Dense spin-chain matrices scale as `2**n_sites` by `2**n_sites`.
 - These tools are for small systems, education, exact diagonalization, and research prototypes.
-- The SSH and generic tight-binding builders return single-particle matrices, not many-body Fock-space Hamiltonians.
+- SSH, Rice-Mele, square, Harper-Hofstadter, Haldane, triangular, kagome, and generic tight-binding builders return single-particle matrices, not many-body Fock-space Hamiltonians.
+- The Bose-Hubbard builder uses a truncated local occupation basis.
+- The Fermi-Hubbard builder uses a dense occupation-number basis with explicit fermionic signs.
+- The Kitaev-chain builder returns a Bogoliubov-de Gennes matrix, not a many-body Hamiltonian.
+- Sparse builders are available for selected tight-binding and Hubbard chains, but exact diagonalization remains a small-system workflow.
 - PennyLane is optional and only used when explicitly installed.
 - The project is a backend for experiments, not a benchmark suite proving speedup or quantum advantage.
 
