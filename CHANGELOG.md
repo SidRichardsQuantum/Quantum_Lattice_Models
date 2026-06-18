@@ -22,6 +22,9 @@ lattice workflows.
 - CLI `--bond` arguments for custom graph models.
 - `.gitattributes` rules for LF text normalization, binary assets, and generated
   documentation classification.
+- Tag-triggered PyPI publishing through GitHub Actions and PyPI Trusted
+  Publishing, with version, formatting, lint, test, build, and distribution
+  checks before upload.
 
 ### Changed
 

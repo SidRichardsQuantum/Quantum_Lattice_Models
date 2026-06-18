@@ -238,6 +238,24 @@ python -m pytest -q
 Install `.[pennylane]` before the test command to exercise the optional
 PennyLane export test instead of skipping it.
 
+### Publishing a release
+
+Pushing a tag such as `v0.1.2` runs
+`.github/workflows/publish.yml`. The workflow verifies that the tag matches the
+version in `pyproject.toml`, runs the release checks, builds the wheel and source
+distribution, and publishes them to PyPI.
+
+Configure a PyPI Trusted Publisher for this repository before pushing the first
+release tag:
+
+- Owner: `SidRichardsQuantum`
+- Repository: `Quantum_Lattice_Models`
+- Workflow filename: `publish.yml`
+- Environment name: `pypi`
+
+No PyPI API token is required. The GitHub `pypi` environment can optionally
+require manual approval before publication.
+
 ## Limitations / Truth Contract
 
 - Dense spin-chain matrices scale as `2**n_sites` by `2**n_sites`.
