@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 470" role="img" aria-labelledby="title desc">
+  <title id="title">Aubry-Andre quasiperiodic potential and localization</title>
+  <desc id="desc">A tight-binding chain with quasiperiodic onsite energies and representative extended and localized probability profiles.</desc>
+  <defs>
+    <style>
+      .panel{fill:#f8fafc;stroke:#cbd5e1;stroke-width:2}.bond{stroke:#6b7280;stroke-width:5}
+      .site{stroke:#20242a;stroke-width:2}.guide{stroke:#cbd5e1;stroke-width:1}.wave{fill:none;stroke-width:5}
+      .title{font:23px sans-serif;font-weight:700;fill:#20242a}.label{font:18px sans-serif;fill:#20242a}
+      .note{font:16px sans-serif;fill:#4b5563}
+    </style>
+  </defs>
+  <rect width="1050" height="470" fill="#fff"/>
+  <rect class="panel" x="30" y="35" width="990" height="205" rx="18"/>
+  <text class="title" x="60" y="75">Quasiperiodic onsite potential Vᵢ = λ cos(2πβi + φ)</text>
+  <line class="bond" x1="85" y1="170" x2="965" y2="170"/>
+  <g>
+    <line class="guide" x1="85" y1="95" x2="85" y2="195"/><line class="guide" x1="165" y1="95" x2="165" y2="195"/>
+    <line class="guide" x1="245" y1="95" x2="245" y2="195"/><line class="guide" x1="325" y1="95" x2="325" y2="195"/>
+    <line class="guide" x1="405" y1="95" x2="405" y2="195"/><line class="guide" x1="485" y1="95" x2="485" y2="195"/>
+    <line class="guide" x1="565" y1="95" x2="565" y2="195"/><line class="guide" x1="645" y1="95" x2="645" y2="195"/>
+    <line class="guide" x1="725" y1="95" x2="725" y2="195"/><line class="guide" x1="805" y1="95" x2="805" y2="195"/>
+    <line class="guide" x1="885" y1="95" x2="885" y2="195"/><line class="guide" x1="965" y1="95" x2="965" y2="195"/>
+  </g>
+  <g>
+    <circle class="site" cx="85" cy="132" r="15" fill="#56b4e9"/><circle class="site" cx="165" cy="105" r="15" fill="#0072b2"/>
+    <circle class="site" cx="245" cy="184" r="15" fill="#e69f00"/><circle class="site" cx="325" cy="148" r="15" fill="#56b4e9"/>
+    <circle class="site" cx="405" cy="98" r="15" fill="#0072b2"/><circle class="site" cx="485" cy="190" r="15" fill="#d55e00"/>
+    <circle class="site" cx="565" cy="122" r="15" fill="#56b4e9"/><circle class="site" cx="645" cy="116" r="15" fill="#56b4e9"/>
+    <circle class="site" cx="725" cy="192" r="15" fill="#d55e00"/><circle class="site" cx="805" cy="100" r="15" fill="#0072b2"/>
+    <circle class="site" cx="885" cy="155" r="15" fill="#e69f00"/><circle class="site" cx="965" cy="178" r="15" fill="#e69f00"/>
+  </g>
+  <text class="note" x="60" y="222">vertical position and color encode Vᵢ; neighboring sites retain uniform hopping t</text>
+
+  <rect class="panel" x="30" y="270" width="475" height="165" rx="18"/>
+  <text class="title" x="55" y="307">Weak potential: extended state</text>
+  <line x1="70" y1="400" x2="465" y2="400" stroke="#6b7280" stroke-width="2"/>
+  <path class="wave" d="M75 382 C115 350 150 370 190 348 S265 370 305 350 S385 370 455 345" stroke="#0072b2"/>
+  <text class="note" x="55" y="424">probability weight spans many sites; low inverse participation ratio</text>
+
+  <rect class="panel" x="545" y="270" width="475" height="165" rx="18"/>
+  <text class="title" x="570" y="307">Strong potential: localized state</text>
+  <line x1="585" y1="400" x2="980" y2="400" stroke="#6b7280" stroke-width="2"/>
+  <path class="wave" d="M590 398 C690 398 735 394 775 370 C795 350 805 315 825 350 C850 387 900 397 975 398" stroke="#d55e00"/>
+  <text class="note" x="570" y="424">weight concentrates near one site; high inverse participation ratio</text>
+</svg>

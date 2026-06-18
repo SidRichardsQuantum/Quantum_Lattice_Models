@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 430" role="img" aria-labelledby="title desc">
+  <title id="title">Bose-Hubbard and Fermi-Hubbard basis conventions</title>
+  <desc id="desc">Bosonic occupation basis with truncated local states and spinful fermionic orbital ordering.</desc>
+  <defs>
+    <style>
+      .panel{fill:#f8fafc;stroke:#cbd5e1;stroke-width:2}.site{fill:#fff;stroke:#0072b2;stroke-width:4}
+      .orb{fill:#fff;stroke:#d55e00;stroke-width:3}.bond{stroke:#6b7280;stroke-width:5}
+      .title{font:24px sans-serif;font-weight:700;fill:#20242a}.label{font:20px sans-serif;fill:#20242a}
+      .note{font:17px sans-serif;fill:#4b5563}
+    </style>
+  </defs>
+  <rect width="1000" height="430" fill="#fff"/>
+  <rect class="panel" x="35" y="40" width="435" height="340" rx="18"/>
+  <rect class="panel" x="530" y="40" width="435" height="340" rx="18"/>
+  <text class="title" x="65" y="82">Bose-Hubbard basis</text>
+  <line class="bond" x1="115" y1="185" x2="385" y2="185"/>
+  <circle class="site" cx="115" cy="185" r="36"/><circle class="site" cx="250" cy="185" r="36"/><circle class="site" cx="385" cy="185" r="36"/>
+  <text class="label" x="103" y="192">n₀</text><text class="label" x="238" y="192">n₁</text><text class="label" x="373" y="192">n₂</text>
+  <text class="note" x="70" y="265">basis state: |n₀, n₁, n₂⟩</text>
+  <text class="note" x="70" y="300">local occupation: nᵢ ∈ {0,…,nmax}</text>
+  <text class="note" x="70" y="335">dimension: (nmax+1)ᴺ</text>
+  <text class="title" x="560" y="82">Spinful Fermi-Hubbard basis</text>
+  <g>
+    <rect class="orb" x="570" y="145" width="75" height="70" rx="10"/><rect class="orb" x="650" y="145" width="75" height="70" rx="10"/>
+    <rect class="orb" x="755" y="145" width="75" height="70" rx="10"/><rect class="orb" x="835" y="145" width="75" height="70" rx="10"/>
+  </g>
+  <text class="label" x="594" y="188">0↑</text><text class="label" x="674" y="188">0↓</text>
+  <text class="label" x="779" y="188">1↑</text><text class="label" x="859" y="188">1↓</text>
+  <text class="note" x="570" y="265">orbital order: site0↑, site0↓, site1↑, site1↓, …</text>
+  <text class="note" x="570" y="300">occupation bit: 0 or 1 per orbital</text>
+  <text class="note" x="570" y="335">fermionic hopping includes parity signs</text>
+</svg>

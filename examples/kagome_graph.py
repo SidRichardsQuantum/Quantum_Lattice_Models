@@ -20,7 +20,18 @@ def main() -> None:
     n_cols = 3
     H = kagome_lattice_tight_binding(n_rows=n_rows, n_cols=n_cols)
     positions = kagome_lattice_positions(n_rows=n_rows, n_cols=n_cols)
-    ax = plot_lattice_graph(H, positions, node_size=48, edge_color_by="magnitude")
+    sublattices = [index % 3 for index in range(H.shape[0])]
+    unit_cells = [index // 3 for index in range(H.shape[0])]
+    ax = plot_lattice_graph(
+        H,
+        positions,
+        node_size=52,
+        edge_color_by="magnitude",
+        sublattices=sublattices,
+        unit_cells=unit_cells,
+        show_unit_cells=True,
+        show_sublattice_legend=True,
+    )
     ax.set_title("Kagome lattice connectivity")
     ax.figure.tight_layout()
     ax.figure.savefig(output_dir / "kagome_graph.png", dpi=160)

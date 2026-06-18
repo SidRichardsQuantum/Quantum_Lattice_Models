@@ -27,8 +27,9 @@ from quantum_lattice_models.plotting import (
 
 def test_new_plotting_helpers_return_axes() -> None:
     H = tight_binding_chain(n_sites=4)
-    ax = plot_lattice_spectrum(H)
+    ax = plot_lattice_spectrum(H, highlight_gap=True, zero_line=True)
     assert ax.get_xlabel() == "Eigenvalue index"
+    assert len(ax.lines) >= 2
     plt.close(ax.figure)
 
     ax = plot_density(np.arange(5), bins=2)
@@ -40,8 +41,15 @@ def test_new_plotting_helpers_return_axes() -> None:
     plt.close(ax.figure)
 
     positions = np.array([[0, 0], [1, 0], [2, 0], [3, 0]], dtype=float)
-    ax = plot_lattice_graph(H, positions)
+    ax = plot_lattice_graph(
+        H,
+        positions,
+        sublattices=np.array([0, 1, 0, 1]),
+        unit_cells=np.array([0, 0, 1, 1]),
+        show_unit_cells=True,
+    )
     assert ax.get_title() == "Lattice graph"
+    assert len(ax.patches) == 2
     plt.close(ax.figure)
 
 
@@ -58,6 +66,11 @@ def test_metadata_aware_lattice_graph_and_state_plotters() -> None:
 
     ax = plot_lattice_state(H, np.ones(3, dtype=complex))
     assert ax.get_title() == "Lattice state"
+    assert [tick.get_text() for tick in ax.figure.axes[1].get_yticklabels()] == [
+        r"$-\pi$",
+        "0",
+        r"$\pi$",
+    ]
     plt.close(ax.figure)
 
 

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 500" role="img" aria-labelledby="title desc">
+  <title id="title">Fermi-Hubbard orbital ordering and hopping parity sign</title>
+  <desc id="desc">Spin orbitals ordered by site and spin, with a representative fermion hop whose matrix-element sign depends on occupied orbitals crossed in the ordering.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#d55e00"/>
+    </marker>
+    <style>
+      .panel{fill:#f8fafc;stroke:#cbd5e1;stroke-width:2}.orb{fill:#fff;stroke:#6b7280;stroke-width:3}
+      .occupied{fill:#0072b2;stroke:#20242a;stroke-width:3}.crossed{fill:#f0e442;stroke:#20242a;stroke-width:3}
+      .hop{stroke:#d55e00;stroke-width:5;fill:none;marker-end:url(#arrow)}.sitebox{fill:none;stroke:#009e73;stroke-width:2;stroke-dasharray:8 6}
+      .title{font:23px sans-serif;font-weight:700;fill:#20242a}.label{font:18px sans-serif;fill:#20242a}
+      .white{font:18px sans-serif;fill:#fff}.note{font:16px sans-serif;fill:#4b5563}
+    </style>
+  </defs>
+  <rect width="1080" height="500" fill="#fff"/>
+  <rect class="panel" x="30" y="35" width="1020" height="195" rx="18"/>
+  <text class="title" x="60" y="76">Spin-orbital ordering used by the Fermi-Hubbard builder</text>
+  <g>
+    <rect class="sitebox" x="72" y="100" width="190" height="92" rx="12"/><rect class="sitebox" x="292" y="100" width="190" height="92" rx="12"/>
+    <rect class="sitebox" x="512" y="100" width="190" height="92" rx="12"/><rect class="sitebox" x="732" y="100" width="190" height="92" rx="12"/>
+    <rect class="orb" x="85" y="118" width="72" height="52" rx="8"/><rect class="orb" x="165" y="118" width="72" height="52" rx="8"/>
+    <rect class="orb" x="305" y="118" width="72" height="52" rx="8"/><rect class="orb" x="385" y="118" width="72" height="52" rx="8"/>
+    <rect class="orb" x="525" y="118" width="72" height="52" rx="8"/><rect class="orb" x="605" y="118" width="72" height="52" rx="8"/>
+    <rect class="orb" x="745" y="118" width="72" height="52" rx="8"/><rect class="orb" x="825" y="118" width="72" height="52" rx="8"/>
+  </g>
+  <text class="label" x="104" y="151">0↑</text><text class="label" x="184" y="151">0↓</text>
+  <text class="label" x="324" y="151">1↑</text><text class="label" x="404" y="151">1↓</text>
+  <text class="label" x="544" y="151">2↑</text><text class="label" x="624" y="151">2↓</text>
+  <text class="label" x="764" y="151">3↑</text><text class="label" x="844" y="151">3↓</text>
+  <text class="note" x="80" y="215">bit index increases left to right: site0↑, site0↓, site1↑, site1↓, …</text>
+
+  <rect class="panel" x="30" y="260" width="1020" height="205" rx="18"/>
+  <text class="title" x="60" y="301">Nearest-neighbor hop: c†₁↑ c₀↑ and its occupation-order parity</text>
+  <g>
+    <rect class="occupied" x="100" y="345" width="80" height="58" rx="8"/>
+    <rect class="crossed" x="195" y="345" width="80" height="58" rx="8"/>
+    <rect class="orb" x="290" y="345" width="80" height="58" rx="8"/>
+    <rect class="orb" x="385" y="345" width="80" height="58" rx="8"/>
+  </g>
+  <text class="white" x="124" y="380">0↑: 1</text><text class="label" x="217" y="380">0↓: n₁</text>
+  <text class="label" x="314" y="380">1↑: 0</text><text class="label" x="409" y="380">1↓: n₃</text>
+  <path class="hop" d="M140 335 Q235 280 330 335"/>
+  <text class="label" x="165" y="324" fill="#d55e00">move one ↑ fermion</text>
+  <text class="label" x="610" y="350">matrix element = −t (−1)ᴾ</text>
+  <text class="label" x="610" y="385">P = n₁</text>
+  <text class="note" x="610" y="420">the yellow orbital lies strictly between source and destination</text>
+  <text class="note" x="60" y="450">The sign changes whenever the hop crosses an odd number of occupied spin orbitals.</text>
+</svg>

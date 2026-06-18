@@ -1,5 +1,66 @@
 # Changelog
 
+## v0.1.3
+
+This release reorganizes the project documentation into a numbered learning
+curriculum, expands the executed notebook coverage, and improves plot
+readability for spectra, lattice structure, and complex Hamiltonians.
+
+### Added
+
+- Seven notebook workflows covering:
+  - Spin observables and correlations
+  - XY, XXZ, and J1-J2 spin-chain comparisons
+  - Boundary conditions and finite-size effects
+  - Aubry-Andre localization
+  - Custom lattice construction and registration
+  - Hamiltonian magnitude and phase structure
+  - PennyLane export validation
+- `plot_spectrum` options to highlight the ground-state gap and draw an
+  energy-zero reference line.
+- Sublattice coloring, legends, and dashed unit-cell outlines for
+  `plot_lattice_graph`.
+- Explicit $-\pi$, $0$, and $\pi$ ticks for phase colorbars.
+- A colorblind-friendly plotting palette.
+- A Hamiltonian matrix example showing the magnitude and phase of a finite
+  Haldane model.
+- Theory diagrams for spin-chain couplings, Heisenberg ladders, Hubbard basis
+  and fermionic-sign conventions, the Kitaev Nambu representation, SSH and
+  Rice-Mele unit cells and boundary conditions, Aubry-Andre localization,
+  two-dimensional lattice geometries, Hofstadter flux phases, and Haldane
+  hoppings.
+- A notebook-summary script and Makefile targets for rebuilding example and
+  documentation assets.
+
+### Changed
+
+- Renamed and ordered the notebook collection as a 17-part learning curriculum.
+- Rebuilt the executed notebooks, rendered HTML, output figures, results
+  summary, usage guide, and Pages notebook index around the new curriculum.
+- Standardized documentation equations on dollar-delimited LaTeX and defined
+  theory variables at first use.
+- Expanded the example gallery with clearer parameter captions and refreshed
+  Ising, SSH, Hofstadter, kagome, and other model figures.
+- Increased the Hofstadter example to an $8\times8$ lattice and 121 flux
+  values.
+- Moved reproducible example images to the top-level `images/` directory and
+  updated the Pages workflow to stage them with the documentation site.
+- Updated lattice and matrix plots to distinguish sublattices, unit cells,
+  hopping magnitudes, and hopping phases more clearly.
+
+### Fixed
+
+- Masked zero matrix elements in phase plots so absent couplings are not
+  displayed as zero-phase hoppings.
+- Standardized phase color scales to the full $[-\pi,\pi]$ interval.
+
+### Notes
+
+- The notebook numbering defines the recommended reading order.
+- Generated notebook HTML and figures remain published under `docs/`.
+
+---
+
 ## v0.1.2
 
 This release adds user-defined lattice models, makes model registration usable
@@ -136,7 +197,7 @@ documentation.
 
 ### Notes
 
-- Dense spin-chain matrices still scale as `2**n_sites`.
+- Dense spin-chain matrices still scale as $2^N$ for $N$ sites.
 - Hubbard models remain small-system exact diagonalization tools even when sparse
   builders are used.
 - SSH, Rice-Mele, tight-binding, Haldane, Hofstadter, triangular, kagome, and AAH

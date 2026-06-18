@@ -16,7 +16,7 @@ def main() -> None:
     output_dir.mkdir(exist_ok=True)
 
     H = transverse_field_ising(n_sites=5, j=1.0, h=0.7, periodic=False)
-    ax = plot_spectrum(H)
+    ax = plot_spectrum(H, highlight_gap=True)
     ax.figure.tight_layout()
     ax.figure.savefig(output_dir / "ising_spectrum.png", dpi=160)
     plt.close(ax.figure)

@@ -13,19 +13,26 @@ python -m pip install -e ".[notebooks]"
 python -m ipykernel install --user --name quantum-lattice-models --display-name "Quantum Lattice Models"
 ```
 
-Notebook workflows:
+Notebook workflows, numbered in the recommended learning order:
 
 ```text
-notebooks/ising_spin_chains.ipynb
-notebooks/ssh_rice_mele_comparison.ipynb
-notebooks/hofstadter_flux_sweep.ipynb
-notebooks/hubbard_exact_diagonalization.ipynb
-notebooks/haldane_kagome_lattices.ipynb
-notebooks/model_registry_and_cli.ipynb
-notebooks/kitaev_bdg_symmetry.ipynb
-notebooks/heisenberg_ladder_spectrum.ipynb
-notebooks/sparse_dense_scaling.ipynb
-notebooks/cli_plot_walkthrough.ipynb
+notebooks/01_ising_spin_chains.ipynb
+notebooks/02_spin_observables_and_correlations.ipynb
+notebooks/03_spin_chain_model_comparison.ipynb
+notebooks/04_heisenberg_ladder_spectrum.ipynb
+notebooks/05_hubbard_exact_diagonalization.ipynb
+notebooks/06_ssh_rice_mele_comparison.ipynb
+notebooks/07_boundary_conditions_and_finite_size.ipynb
+notebooks/08_aubry_andre_localization.ipynb
+notebooks/09_kitaev_bdg_symmetry.ipynb
+notebooks/10_hofstadter_flux_sweep.ipynb
+notebooks/11_haldane_kagome_lattices.ipynb
+notebooks/12_custom_lattice_workflow.ipynb
+notebooks/13_hamiltonian_structure_gallery.ipynb
+notebooks/14_sparse_dense_scaling.ipynb
+notebooks/15_pennylane_export.ipynb
+notebooks/16_model_registry_and_cli.ipynb
+notebooks/17_cli_plot_walkthrough.ipynb
 ```
 
 ## Transverse-Field Ising Chain
@@ -44,9 +51,9 @@ print(spectral_gap(H))
 
 The convention is:
 
-```text
-H = -J sum_i Z_i Z_{i+1} - h sum_i X_i
-```
+$$
+H=-J\sum_i Z_iZ_{i+1}-h\sum_iX_i.
+$$
 
 ## Ising Variants
 
@@ -60,8 +67,8 @@ H_lfi = longitudinal_field_ising(n_sites=4, j=1.0, h_x=0.5, h_z=0.1)
 H_nnn = next_nearest_neighbor_ising(n_sites=5, j1=1.0, j2=0.25, h=0.5)
 ```
 
-The longitudinal-field model adds `-h_z sum_i Z_i`.
-The next-nearest-neighbor model adds `-J2 sum_i Z_i Z_{i+2}`.
+The longitudinal-field model adds $-h_z\sum_iZ_i$.
+The next-nearest-neighbor model adds $-J_2\sum_iZ_iZ_{i+2}$.
 
 ## Heisenberg Chain
 
@@ -80,10 +87,11 @@ H = heisenberg_chain(
 
 The convention is:
 
-```text
-H = sum_i (Jx X_i X_{i+1} + Jy Y_i Y_{i+1} + Jz Z_i Z_{i+1})
-    + field sum_i Z_i
-```
+$$
+H=\sum_i\left(
+J_xX_iX_{i+1}+J_yY_iY_{i+1}+J_zZ_iZ_{i+1}
+\right)+g\sum_iZ_i.
+$$
 
 ## XY Chain
 
@@ -101,11 +109,12 @@ H = xy_chain(
 
 The convention is:
 
-```text
-H = -J sum_i [((1 + gamma) / 2) X_i X_{i+1}
-             + ((1 - gamma) / 2) Y_i Y_{i+1}]
-    - field sum_i Z_i
-```
+$$
+H=-J\sum_i\left[
+\frac{1+\gamma}{2}X_iX_{i+1}
++\frac{1-\gamma}{2}Y_iY_{i+1}
+\right]-g\sum_iZ_i.
+$$
 
 ## XXZ Chain
 
@@ -116,7 +125,8 @@ H = xxz_chain(n_sites=5, coupling=1.0, anisotropy=0.7, field=0.0)
 ```
 
 The XXZ chain is a convenience wrapper around the anisotropic Heisenberg builder
-with `Jx = Jy = coupling` and `Jz = coupling * anisotropy`.
+with $J_x=J_y=J$ and $J_z=J\Delta$, where $J$ is `coupling` and
+$\Delta$ is `anisotropy`.
 
 ## J1-J2 Heisenberg Chain
 
@@ -137,8 +147,8 @@ from quantum_lattice_models.models import heisenberg_ladder
 H = heisenberg_ladder(n_rungs=3, leg_coupling=1.0, rung_coupling=0.7)
 ```
 
-Sites are ordered as the top leg first, then the bottom leg. Rung `r` connects
-sites `r` and `n_rungs + r`.
+Sites are ordered as the top leg first, then the bottom leg. Rung $r$ connects
+sites $r$ and $N_r+r$, where $N_r$ is `n_rungs`.
 
 ## Hubbard Models
 
@@ -161,9 +171,11 @@ H_fermi = fermi_hubbard_chain(
 )
 ```
 
-The Bose-Hubbard builder uses the local basis `|0>, ..., |max_occupancy>`.
+The Bose-Hubbard builder uses the local basis
+$\{|0\rangle,\ldots,|n_{\max}\rangle\}$, where $n_{\max}$ is
+`max_occupancy`.
 The Fermi-Hubbard builder uses orbital order
-`site0_up, site0_down, site1_up, site1_down, ...`.
+$(0\uparrow,0\downarrow,1\uparrow,1\downarrow,\ldots)$.
 
 Sparse variants are available for larger small-system workflows:
 
@@ -201,7 +213,7 @@ from quantum_lattice_models.models import kitaev_chain_bdg
 H = kitaev_chain_bdg(n_sites=8, hopping=1.0, chemical_potential=0.0, pairing=0.5)
 ```
 
-This returns a `2 * n_sites` Bogoliubov-de Gennes matrix.
+This returns a $2N\times2N$ Bogoliubov-de Gennes matrix for $N$ sites.
 
 ## SSH Model
 
@@ -220,7 +232,8 @@ print(values[near_zero])
 print(edge_weights)
 ```
 
-`ssh_model` returns a single-particle matrix with dimension `2 * n_cells`.
+`ssh_model` returns a single-particle matrix with dimension $2N_c$, where
+$N_c$ is `n_cells`.
 
 ## Rice-Mele Model
 
@@ -245,7 +258,7 @@ from quantum_lattice_models.models import tight_binding_chain
 H = tight_binding_chain(n_sites=8, hopping=1.0, onsite=0.0, periodic=False)
 ```
 
-The `onsite` argument can be a scalar or a length-`n_sites` iterable.
+The `onsite` argument can be a scalar or a length-$N$ iterable for $N$ sites.
 
 ## User-Defined Lattices and Models
 
@@ -345,6 +358,12 @@ values, vectors = eigensystem(H)
 plot_lattice_state(H, vectors[:, 0])
 ```
 
+`plot_spectrum(..., highlight_gap=True, zero_line=True)` can emphasize the
+ground/first-excited pair and add an energy-zero reference. Lattice graph plots
+also accept per-site `sublattices` and `unit_cells` arrays for color coding and
+dashed unit-cell outlines. Phase colorbars use explicit `-π`, `0`, and `π`
+ticks.
+
 Parameter sweeps work with any builder that accepts one parameter value:
 
 ```python
@@ -373,8 +392,9 @@ H = square_lattice_tight_binding(
 )
 ```
 
-Sites are ordered row-major, so matrix index `row * n_cols + col` represents
-the lattice coordinate `(row, col)`.
+Sites are ordered row-major, so matrix index $rN_c+c$ represents lattice
+coordinate $(r,c)$, where $r$ is the row, $c$ is the column, and $N_c$ is
+`n_cols`.
 
 ## Harper-Hofstadter Square Lattice
 
@@ -390,7 +410,7 @@ H = harper_hofstadter_square_lattice(
 ```
 
 Landau gauge is used: horizontal hoppings are real and vertical hoppings carry
-phase `exp(2 pi i flux * col)`.
+phase $\exp(2\pi i f x)$, where $f$ is `flux` and $x$ is the column index.
 
 ## Aubry-Andre-Harper Chain
 
@@ -406,7 +426,9 @@ H = aubry_andre_harper_chain(
 )
 ```
 
-The onsite potential is `potential * cos(2 pi beta i + phase)`.
+The onsite potential is
+$V_i=\lambda\cos(2\pi\beta i+\phi)$, where $\lambda$ is `potential`,
+$\beta$ is `beta`, and $\phi$ is `phase`.
 
 ## Haldane, Triangular, and Kagome Lattices
 
@@ -535,4 +557,5 @@ python examples/hofstadter_butterfly.py
 python examples/bose_hubbard_spectrum.py
 python examples/haldane_spectrum.py
 python examples/kagome_graph.py
+python examples/hamiltonian_matrix.py
 ```

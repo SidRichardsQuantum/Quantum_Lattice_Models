@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 620" role="img" aria-labelledby="title desc">
+  <title id="title">Comparison of square, triangular, honeycomb, and kagome lattice geometries</title>
+  <desc id="desc">Four finite lattice patches with consistent site colors, primitive cells, and nearest-neighbor bonds.</desc>
+  <defs>
+    <style>
+      .panel{fill:#f8fafc;stroke:#cbd5e1;stroke-width:2}.bond{stroke:#59636f;stroke-width:5;stroke-linecap:round}
+      .a{fill:#0072b2}.b{fill:#e69f00}.c{fill:#009e73}.cell{fill:none;stroke:#d55e00;stroke-width:2;stroke-dasharray:8 6}
+      .title{font:23px sans-serif;font-weight:700;fill:#20242a}.note{font:16px sans-serif;fill:#4b5563}
+    </style>
+  </defs>
+  <rect width="1100" height="620" fill="#fff"/>
+  <text class="title" x="35" y="38">Two-dimensional lattice geometry and unit-cell conventions</text>
+
+  <rect class="panel" x="30" y="60" width="505" height="245" rx="16"/>
+  <text class="title" x="55" y="94">Square: one site per cell, z = 4</text>
+  <g class="bond">
+    <path d="M110 145 H430 M110 215 H430"/><path d="M110 145 V215 M190 145 V215 M270 145 V215 M350 145 V215 M430 145 V215"/>
+  </g>
+  <g class="a">
+    <circle cx="110" cy="145" r="13"/><circle cx="190" cy="145" r="13"/><circle cx="270" cy="145" r="13"/>
+    <circle cx="350" cy="145" r="13"/><circle cx="430" cy="145" r="13"/><circle cx="110" cy="215" r="13"/>
+    <circle cx="190" cy="215" r="13"/><circle cx="270" cy="215" r="13"/><circle cx="350" cy="215" r="13"/><circle cx="430" cy="215" r="13"/>
+  </g>
+  <rect class="cell" x="177" y="132" width="106" height="96" rx="8"/>
+  <text class="note" x="55" y="282">orthogonal primitive directions; row-major finite patch</text>
+
+  <rect class="panel" x="565" y="60" width="505" height="245" rx="16"/>
+  <text class="title" x="590" y="94">Triangular: one site per cell, z = 6</text>
+  <g class="bond">
+    <path d="M625 145 H945 M665 215 H985"/>
+    <path d="M625 145 L665 215 M705 145 L745 215 M785 145 L825 215 M865 145 L905 215 M945 145 L985 215"/>
+    <path d="M705 145 L665 215 M785 145 L745 215 M865 145 L825 215 M945 145 L905 215"/>
+  </g>
+  <g class="a">
+    <circle cx="625" cy="145" r="13"/><circle cx="705" cy="145" r="13"/><circle cx="785" cy="145" r="13"/>
+    <circle cx="865" cy="145" r="13"/><circle cx="945" cy="145" r="13"/><circle cx="665" cy="215" r="13"/>
+    <circle cx="745" cy="215" r="13"/><circle cx="825" cy="215" r="13"/><circle cx="905" cy="215" r="13"/><circle cx="985" cy="215" r="13"/>
+  </g>
+  <path class="cell" d="M692 130 L772 130 L812 228 L732 228 Z"/>
+  <text class="note" x="590" y="282">diagonal bonds create triangular plaquettes and frustration</text>
+
+  <rect class="panel" x="30" y="335" width="505" height="245" rx="16"/>
+  <text class="title" x="55" y="369">Honeycomb: A/B sites, z = 3</text>
+  <g class="bond">
+    <path d="M115 445 L185 405 L255 445 L325 405 L395 445 L465 405"/>
+    <path d="M115 445 L185 485 L255 445 L325 485 L395 445 L465 485"/>
+    <path d="M185 405 V485 M325 405 V485 M465 405 V485"/>
+  </g>
+  <g class="a">
+    <circle cx="115" cy="445" r="14"/><circle cx="255" cy="445" r="14"/><circle cx="395" cy="445" r="14"/>
+  </g>
+  <g class="b">
+    <circle cx="185" cy="405" r="14"/><circle cx="185" cy="485" r="14"/><circle cx="325" cy="405" r="14"/>
+    <circle cx="325" cy="485" r="14"/><circle cx="465" cy="405" r="14"/><circle cx="465" cy="485" r="14"/>
+  </g>
+  <path class="cell" d="M235 445 L305 405 L345 430 L305 470 L235 445 Z"/>
+  <text class="note" x="55" y="555">two-site basis on a triangular Bravais lattice</text>
+
+  <rect class="panel" x="565" y="335" width="505" height="245" rx="16"/>
+  <text class="title" x="590" y="369">Kagome: three sublattices, z = 4</text>
+  <g class="bond">
+    <path d="M635 485 L705 405 L775 485 Z M775 485 L845 405 L915 485 Z"/>
+    <path d="M705 405 L845 405 M705 405 L775 485 M845 405 L775 485"/>
+    <path d="M915 485 L985 405 M845 405 L985 405"/>
+  </g>
+  <g class="a"><circle cx="635" cy="485" r="14"/><circle cx="775" cy="485" r="14"/><circle cx="915" cy="485" r="14"/></g>
+  <g class="b"><circle cx="705" cy="405" r="14"/><circle cx="845" cy="405" r="14"/><circle cx="985" cy="405" r="14"/></g>
+  <g class="c"><circle cx="705" cy="485" r="14"/><circle cx="845" cy="485" r="14"/></g>
+  <path class="cell" d="M690 390 L860 390 L790 505 L620 505 Z"/>
+  <text class="note" x="590" y="555">corner-sharing triangles; three-site basis and flat-band structure</text>
+</svg>

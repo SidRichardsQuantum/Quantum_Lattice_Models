@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 520" role="img" aria-labelledby="title desc">
+  <title id="title">Spin-chain coupling conventions</title>
+  <desc id="desc">A unified comparison of nearest-neighbor, next-nearest-neighbor, anisotropic, and field terms in the implemented Ising, XY, XXZ, and J1-J2 chains.</desc>
+  <defs>
+    <style>
+      .panel{fill:#f8fafc;stroke:#cbd5e1;stroke-width:2}.site{fill:#fff;stroke:#20242a;stroke-width:3}
+      .nn{stroke:#0072b2;stroke-width:7;stroke-linecap:round}.nnn{stroke:#d55e00;stroke-width:4;stroke-dasharray:11 8;fill:none}
+      .field{stroke:#009e73;stroke-width:4}.arrow{fill:#009e73}
+      .title{font:23px sans-serif;font-weight:700;fill:#20242a}.label{font:18px sans-serif;fill:#20242a}
+      .note{font:16px sans-serif;fill:#4b5563}
+    </style>
+  </defs>
+  <rect width="1100" height="520" fill="#fff"/>
+  <text class="title" x="35" y="38">Implemented one-dimensional spin couplings</text>
+
+  <rect class="panel" x="30" y="60" width="505" height="190" rx="16"/>
+  <text class="title" x="55" y="92">Ising variants</text>
+  <g class="nn">
+    <line x1="95" y1="155" x2="195" y2="155"/><line x1="195" y1="155" x2="295" y2="155"/>
+    <line x1="295" y1="155" x2="395" y2="155"/><line x1="395" y1="155" x2="475" y2="155"/>
+  </g>
+  <g>
+    <circle class="site" cx="95" cy="155" r="16"/><circle class="site" cx="195" cy="155" r="16"/>
+    <circle class="site" cx="295" cy="155" r="16"/><circle class="site" cx="395" cy="155" r="16"/>
+    <circle class="site" cx="475" cy="155" r="16"/>
+  </g>
+  <path class="nnn" d="M95 143 Q195 92 295 143"/><path class="nnn" d="M195 143 Q295 92 395 143"/>
+  <g class="field">
+    <line x1="95" y1="210" x2="95" y2="177"/><line x1="195" y1="210" x2="195" y2="177"/>
+    <line x1="295" y1="210" x2="295" y2="177"/><line x1="395" y1="210" x2="395" y2="177"/>
+    <line x1="475" y1="210" x2="475" y2="177"/>
+  </g>
+  <g class="arrow">
+    <path d="M95 174 l-7 11 h14z"/><path d="M195 174 l-7 11 h14z"/><path d="M295 174 l-7 11 h14z"/>
+    <path d="M395 174 l-7 11 h14z"/><path d="M475 174 l-7 11 h14z"/>
+  </g>
+  <text class="label" x="205" y="137">J ZZ</text><text class="label" x="285" y="106" fill="#d55e00">J₂ ZZ</text>
+  <text class="note" x="55" y="235">field arrows: hₓX and/or h_zZ</text>
+
+  <rect class="panel" x="565" y="60" width="505" height="190" rx="16"/>
+  <text class="title" x="590" y="92">XY and XXZ chains</text>
+  <g class="nn">
+    <line x1="630" y1="155" x2="730" y2="155"/><line x1="730" y1="155" x2="830" y2="155"/>
+    <line x1="830" y1="155" x2="930" y2="155"/><line x1="930" y1="155" x2="1010" y2="155"/>
+  </g>
+  <g>
+    <circle class="site" cx="630" cy="155" r="16"/><circle class="site" cx="730" cy="155" r="16"/>
+    <circle class="site" cx="830" cy="155" r="16"/><circle class="site" cx="930" cy="155" r="16"/>
+    <circle class="site" cx="1010" cy="155" r="16"/>
+  </g>
+  <g class="field">
+    <line x1="630" y1="210" x2="630" y2="177"/><line x1="730" y1="210" x2="730" y2="177"/>
+    <line x1="830" y1="210" x2="830" y2="177"/><line x1="930" y1="210" x2="930" y2="177"/>
+    <line x1="1010" y1="210" x2="1010" y2="177"/>
+  </g>
+  <g class="arrow">
+    <path d="M630 174 l-7 11 h14z"/><path d="M730 174 l-7 11 h14z"/><path d="M830 174 l-7 11 h14z"/>
+    <path d="M930 174 l-7 11 h14z"/><path d="M1010 174 l-7 11 h14z"/>
+  </g>
+  <text class="label" x="700" y="137">JₓXX + JᵧYY + J_zZZ</text>
+  <text class="note" x="590" y="235">XY: J_z=0; XXZ: Jₓ=Jᵧ=J and J_z=JΔ</text>
+
+  <rect class="panel" x="30" y="280" width="1040" height="190" rx="16"/>
+  <text class="title" x="55" y="314">J1-J2 Heisenberg chain: frustration from competing exchange paths</text>
+  <g class="nn">
+    <line x1="105" y1="390" x2="275" y2="390"/><line x1="275" y1="390" x2="445" y2="390"/>
+    <line x1="445" y1="390" x2="615" y2="390"/><line x1="615" y1="390" x2="785" y2="390"/>
+    <line x1="785" y1="390" x2="955" y2="390"/>
+  </g>
+  <path class="nnn" d="M105 375 Q275 310 445 375"/><path class="nnn" d="M275 375 Q445 310 615 375"/>
+  <path class="nnn" d="M445 375 Q615 310 785 375"/><path class="nnn" d="M615 375 Q785 310 955 375"/>
+  <g>
+    <circle class="site" cx="105" cy="390" r="18"/><circle class="site" cx="275" cy="390" r="18"/>
+    <circle class="site" cx="445" cy="390" r="18"/><circle class="site" cx="615" cy="390" r="18"/>
+    <circle class="site" cx="785" cy="390" r="18"/><circle class="site" cx="955" cy="390" r="18"/>
+  </g>
+  <text class="label" x="180" y="416">J₁</text><text class="label" x="255" y="342" fill="#d55e00">J₂</text>
+  <text class="note" x="640" y="450">Sᵢ·Sⱼ = XᵢXⱼ + YᵢYⱼ + ZᵢZⱼ</text>
+</svg>

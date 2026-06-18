@@ -8,8 +8,26 @@ import scipy.sparse as sp
 from quantum_lattice_models.models import ssh_edge_state_localization
 from quantum_lattice_models.spectra import density_of_states, eigenvalues
 
+COLORBLIND_PALETTE = {
+    "blue": "#0072B2",
+    "orange": "#E69F00",
+    "green": "#009E73",
+    "red": "#D55E00",
+    "purple": "#CC79A7",
+    "sky": "#56B4E9",
+    "yellow": "#F0E442",
+    "black": "#000000",
+}
 
-def plot_spectrum(H: np.ndarray, ax=None, **scatter_kwargs):
+
+def plot_spectrum(
+    H: np.ndarray,
+    ax=None,
+    *,
+    highlight_gap: bool = False,
+    zero_line: bool = False,
+    **scatter_kwargs,
+):
     """Plot sorted eigenvalues and return the Matplotlib axes."""
 
     import matplotlib.pyplot as plt
@@ -17,9 +35,40 @@ def plot_spectrum(H: np.ndarray, ax=None, **scatter_kwargs):
     if ax is None:
         _, ax = plt.subplots()
     values = np.real_if_close(eigenvalues(_as_dense(H))).real
-    kwargs = {"s": 24, "color": "tab:blue"}
+    values = np.sort(values)
+    kwargs = {"s": 24, "color": COLORBLIND_PALETTE["blue"]}
     kwargs.update(scatter_kwargs)
-    ax.scatter(np.arange(values.size), np.sort(values), **kwargs)
+    ax.scatter(np.arange(values.size), values, **kwargs)
+    if highlight_gap and values.size:
+        count = min(2, values.size)
+        ax.scatter(
+            np.arange(count),
+            values[:count],
+            s=max(float(kwargs.get("s", 24)) * 2.2, 44),
+            color=[COLORBLIND_PALETTE["red"], COLORBLIND_PALETTE["orange"]][:count],
+            edgecolor="black",
+            linewidth=0.55,
+            zorder=4,
+        )
+        if values.size > 1:
+            ax.annotate(
+                "",
+                xy=(0.5, values[1]),
+                xytext=(0.5, values[0]),
+                arrowprops={"arrowstyle": "<->", "color": "0.35", "linewidth": 0.9},
+            )
+            ax.annotate(
+                f"E₀ = {values[0]:.3g}\ngap = {values[1] - values[0]:.3g}",
+                xy=(0.5, 0.5 * (values[0] + values[1])),
+                xytext=(8, 0),
+                textcoords="offset points",
+                va="center",
+                fontsize=9,
+                color="0.25",
+            )
+            ax.plot([0, 1], [values[0], values[0]], color="0.45", linewidth=0.8, alpha=0.7)
+    if zero_line:
+        ax.axhline(0.0, color="0.35", linewidth=0.9, linestyle="--", alpha=0.8)
     ax.set_xlabel("Eigenvalue index")
     ax.set_ylabel("Energy")
     ax.set_title("Spectrum")
@@ -38,7 +87,7 @@ def plot_density_of_states(H: np.ndarray, bins: int = 50, ax=None, **bar_kwargs)
     widths = np.diff(edges)
     kwargs = {
         "align": "edge",
-        "color": "tab:green",
+        "color": COLORBLIND_PALETTE["green"],
         "edgecolor": "black",
         "alpha": 0.75,
     }
@@ -73,7 +122,7 @@ def plot_ssh_edge_state(
     probability = probability / probability.sum()
     localization = ssh_edge_state_localization(vector, n_cells, edge_cells=edge_cells)
 
-    kwargs = {"marker": "o", "color": "tab:red"}
+    kwargs = {"marker": "o", "color": COLORBLIND_PALETTE["red"]}
     kwargs.update(line_kwargs)
     ax.plot(np.arange(vector.size), probability, **kwargs)
     ax.set_xlabel("SSH site")
@@ -98,7 +147,12 @@ def plot_density(values: np.ndarray, ax=None, *, bins: int = 50, **bar_kwargs):
         _, ax = plt.subplots()
     data = np.asarray(values, dtype=float).reshape(-1)
     counts, edges = np.histogram(data, bins=bins)
-    kwargs = {"align": "edge", "color": "tab:purple", "edgecolor": "black", "alpha": 0.75}
+    kwargs = {
+        "align": "edge",
+        "color": COLORBLIND_PALETTE["purple"],
+        "edgecolor": "black",
+        "alpha": 0.75,
+    }
     kwargs.update(bar_kwargs)
     ax.bar(edges[:-1], counts, width=np.diff(edges), **kwargs)
     ax.set_xlabel("Value")
@@ -129,7 +183,7 @@ def plot_site_probabilities(
         if norm == 0:
             raise ValueError("state must have nonzero norm when normalize=True.")
         probabilities = probabilities / norm
-    kwargs = {"marker": "o", "color": "tab:red"}
+    kwargs = {"marker": "o", "color": COLORBLIND_PALETTE["red"]}
     kwargs.update(line_kwargs)
     ax.plot(np.arange(probabilities.size), probabilities, **kwargs)
     ax.set_xlabel("Site")
@@ -179,7 +233,7 @@ def plot_parameter_sweep(
     if ax is None:
         _, ax = plt.subplots()
     parameters = np.asarray(values, dtype=float).reshape(-1)
-    kwargs = {"s": 8, "color": "tab:blue", "alpha": 0.65}
+    kwargs = {"s": 8, "color": COLORBLIND_PALETTE["blue"], "alpha": 0.65}
     kwargs.update(scatter_kwargs)
     for parameter in parameters:
         eigs = np.real_if_close(eigenvalues(_as_dense(builder(float(parameter))))).real
@@ -198,7 +252,16 @@ def plot_lattice_graph(
     *,
     threshold: float = 1e-12,
     node_size: float = 34,
-    node_color: str = "tab:blue",
+    node_color: str | list[str] | np.ndarray = COLORBLIND_PALETTE["blue"],
+    sublattices: np.ndarray | None = None,
+    sublattice_colors: tuple[str, ...] = (
+        COLORBLIND_PALETTE["blue"],
+        COLORBLIND_PALETTE["orange"],
+        COLORBLIND_PALETTE["green"],
+    ),
+    unit_cells: np.ndarray | None = None,
+    show_unit_cells: bool = False,
+    show_sublattice_legend: bool = False,
     edge_color_by: str = "phase",
     scale_edges: bool = True,
     show_colorbar: bool = False,
@@ -210,7 +273,9 @@ def plot_lattice_graph(
 
     When ``positions`` is omitted, the function uses ``H.metadata["positions"]``
     if present. Edge widths can encode hopping magnitude, and edge colors can
-    encode hopping phase for complex-valued models.
+    encode hopping phase for complex-valued models. Optional per-site
+    ``sublattices`` and ``unit_cells`` arrays control node colors and dashed
+    unit-cell outlines.
     """
 
     import matplotlib.pyplot as plt
@@ -260,9 +325,39 @@ def plot_lattice_graph(
         if show_colorbar and not explicit_color and edge_color_by in ("phase", "magnitude"):
             cbar = ax.figure.colorbar(collection, ax=ax, fraction=0.046, pad=0.04)
             cbar.set_label("Hopping phase" if edge_color_by == "phase" else "Hopping magnitude")
+            if edge_color_by == "phase":
+                _set_phase_colorbar_ticks(cbar)
         if arrows:
             _draw_arrows(ax, coords, arrow_edges, threshold)
 
+    if sublattices is not None:
+        labels_array = np.asarray(sublattices).reshape(-1)
+        if labels_array.size != matrix.shape[0]:
+            raise ValueError("sublattices must contain one label per lattice site.")
+        unique_labels = list(dict.fromkeys(labels_array.tolist()))
+        color_map = {
+            label: sublattice_colors[index % len(sublattice_colors)]
+            for index, label in enumerate(unique_labels)
+        }
+        node_color = [color_map[label] for label in labels_array]
+        if show_sublattice_legend:
+            from matplotlib.lines import Line2D
+
+            handles = [
+                Line2D(
+                    [],
+                    [],
+                    marker="o",
+                    linestyle="none",
+                    markerfacecolor=color_map[label],
+                    markeredgecolor="none",
+                    label=f"sublattice {label}",
+                )
+                for label in unique_labels
+            ]
+            ax.legend(handles=handles, loc="best", frameon=False, fontsize=8)
+    if show_unit_cells:
+        _draw_unit_cell_outlines(ax, coords, unit_cells)
     ax.scatter(coords[:, 0], coords[:, 1], s=node_size, color=node_color, zorder=3)
     if labels:
         for index, (x_coord, y_coord) in enumerate(coords):
@@ -330,6 +425,7 @@ def plot_lattice_state(
     if show_colorbar:
         cbar = ax.figure.colorbar(scatter, ax=ax, fraction=0.046, pad=0.04)
         cbar.set_label("State phase")
+        _set_phase_colorbar_ticks(cbar)
     ax.set_aspect("equal", adjustable="box")
     ax.set_xticks([])
     ax.set_yticks([])
@@ -360,6 +456,9 @@ def plot_hamiltonian_matrix(
     if show_colorbar:
         cbar = ax.figure.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
         cbar.set_label(label)
+        if mode == "phase":
+            image.set_clim(-np.pi, np.pi)
+            _set_phase_colorbar_ticks(cbar)
     ax.set_xlabel("Ket index")
     ax.set_ylabel("Bra index")
     ax.set_title(f"Hamiltonian {mode}")
@@ -424,7 +523,40 @@ def _draw_arrows(
             ax.add_patch(patch)
 
 
-def _matrix_image_data(matrix: np.ndarray, mode: str) -> tuple[np.ndarray, str, str]:
+def _set_phase_colorbar_ticks(colorbar) -> None:
+    colorbar.set_ticks([-np.pi, 0.0, np.pi])
+    colorbar.set_ticklabels([r"$-\pi$", "0", r"$\pi$"])
+
+
+def _draw_unit_cell_outlines(ax, coords: np.ndarray, unit_cells: np.ndarray | None) -> None:
+    from matplotlib.patches import FancyBboxPatch
+
+    if unit_cells is None:
+        raise ValueError("unit_cells must be provided when show_unit_cells=True.")
+    cell_labels = np.asarray(unit_cells).reshape(-1)
+    if cell_labels.size != coords.shape[0]:
+        raise ValueError("unit_cells must contain one label per lattice site.")
+    for label in dict.fromkeys(cell_labels.tolist()):
+        cell_coords = coords[cell_labels == label]
+        x_min, y_min = cell_coords.min(axis=0)
+        x_max, y_max = cell_coords.max(axis=0)
+        padding = 0.16
+        outline = FancyBboxPatch(
+            (x_min - padding, y_min - padding),
+            max(x_max - x_min + 2 * padding, 2 * padding),
+            max(y_max - y_min + 2 * padding, 2 * padding),
+            boxstyle="round,pad=0.02",
+            fill=False,
+            edgecolor="0.45",
+            linewidth=0.8,
+            linestyle="--",
+            alpha=0.65,
+            zorder=1,
+        )
+        ax.add_patch(outline)
+
+
+def _matrix_image_data(matrix: np.ndarray, mode: str) -> tuple[np.ndarray, str, object]:
     if mode == "real":
         return matrix.real, "Real part", "coolwarm"
     if mode == "imag":
@@ -432,5 +564,10 @@ def _matrix_image_data(matrix: np.ndarray, mode: str) -> tuple[np.ndarray, str, 
     if mode == "magnitude":
         return np.abs(matrix), "Magnitude", "viridis"
     if mode == "phase":
-        return np.angle(matrix), "Phase", "twilight"
+        from matplotlib import colormaps
+
+        cmap = colormaps["twilight"].copy()
+        cmap.set_bad("#f5f5f5")
+        phases = np.ma.masked_where(np.abs(matrix) <= 1e-14, np.angle(matrix))
+        return phases, "Phase", cmap
     raise ValueError("mode must be one of 'real', 'imag', 'magnitude', or 'phase'.")

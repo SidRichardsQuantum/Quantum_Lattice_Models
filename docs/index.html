@@ -325,39 +325,43 @@ print(spectral_gap(H))</code></pre>
           <div class="result-grid">
             <figure>
               <img src="images/ising_spectrum.png" alt="Transverse-field Ising spectrum plot">
-              <figcaption>Transverse-field Ising spectrum</figcaption>
+              <figcaption>TFIM spectrum: n=5, J=1.0, h=0.7</figcaption>
             </figure>
             <figure>
               <img src="images/heisenberg_density.png" alt="Heisenberg chain density plot">
-              <figcaption>Heisenberg spectral density</figcaption>
+              <figcaption>Heisenberg density: n=5, J=1.0, field=0.2</figcaption>
             </figure>
             <figure>
               <img src="images/ssh_edge_state.png" alt="SSH edge-state localization plot">
-              <figcaption>SSH edge-state localization</figcaption>
+              <figcaption>SSH edge state: 12 cells, t₁=0.4, t₂=1.0</figcaption>
             </figure>
             <figure>
               <img src="images/tight_binding_spectrum.png" alt="Tight-binding spectrum plot">
-              <figcaption>Tight-binding spectrum</figcaption>
+              <figcaption>Open chain: 16 sites, hopping=1.0</figcaption>
             </figure>
             <figure>
               <img src="images/rice_mele_spectrum.png" alt="Rice-Mele finite-chain spectrum plot">
-              <figcaption>Rice-Mele spectrum</figcaption>
+              <figcaption>Rice-Mele: 12 cells, δ=0.35, Δ=0.4</figcaption>
             </figure>
             <figure>
               <img src="images/hofstadter_butterfly.png" alt="Harper-Hofstadter flux spectrum plot">
-              <figcaption>Hofstadter flux spectrum</figcaption>
+              <figcaption>Finite Hofstadter spectrum: 8×8, 121 flux values</figcaption>
             </figure>
             <figure>
               <img src="images/bose_hubbard_spectrum.png" alt="Truncated Bose-Hubbard spectrum plot">
-              <figcaption>Bose-Hubbard spectrum</figcaption>
+              <figcaption>Bose-Hubbard: 3 sites, U=1.5, t=0.6</figcaption>
             </figure>
             <figure>
               <img src="images/haldane_spectrum.png" alt="Finite Haldane honeycomb spectrum plot">
-              <figcaption>Haldane spectrum</figcaption>
+              <figcaption>Haldane: 3×3 cells, t₂=0.18, φ=π/2</figcaption>
             </figure>
             <figure>
               <img src="images/kagome_graph.png" alt="Kagome lattice graph connectivity plot">
-              <figcaption>Kagome graph</figcaption>
+              <figcaption>Kagome: 2×3 cells with sublattice colors</figcaption>
+            </figure>
+            <figure>
+              <img src="images/hamiltonian_matrix.png" alt="Haldane Hamiltonian magnitude and phase matrices">
+              <figcaption>Haldane matrix magnitude and hopping phase</figcaption>
             </figure>
           </div>
         </section>
@@ -369,69 +373,166 @@ print(spectral_gap(H))</code></pre>
             <p>
               The notebooks are executed with saved outputs and exported to HTML
               under <code>docs/notebooks/</code>. They include printed spectra,
-              parameter summaries, tables, and generated plots.
+              parameter summaries, tables, and generated plots. The numeric
+              prefixes define the recommended learning order.
             </p>
           </div>
 
           <div class="package-list">
             <article class="package-row">
               <div>
-                <h3>Spin-chain workflows</h3>
-                <p>Ising variants and Heisenberg ladder spectra with gap sweeps.</p>
+                <h3>01. Ising spin chains</h3>
+                <p>TFIM, longitudinal, and next-nearest-neighbor spectra.</p>
               </div>
-              <code>notebooks/ising_spin_chains.ipynb</code>
-              <a href="notebooks/ising_spin_chains.html">HTML</a>
+              <code>notebooks/01_ising_spin_chains.ipynb</code>
+              <a href="notebooks/01_ising_spin_chains.html">HTML</a>
             </article>
             <article class="package-row">
               <div>
-                <h3>Topological chains</h3>
-                <p>SSH/Rice-Mele edge localization and Kitaev BdG particle-hole symmetry.</p>
+                <h3>02. Spin observables</h3>
+                <p>Magnetization, correlations, and finite-size gap sweeps.</p>
               </div>
-              <code>notebooks/kitaev_bdg_symmetry.ipynb</code>
-              <a href="notebooks/kitaev_bdg_symmetry.html">HTML</a>
+              <code>notebooks/02_spin_observables_and_correlations.ipynb</code>
+              <a href="notebooks/02_spin_observables_and_correlations.html">HTML</a>
             </article>
             <article class="package-row">
               <div>
-                <h3>Flux and lattice geometry</h3>
-                <p>Hofstadter flux sweep plus Haldane, triangular, and kagome graphs.</p>
+                <h3>03. Spin-model comparison</h3>
+                <p>XY, XXZ, and J1-J2 spectra and parameter sweeps.</p>
               </div>
-              <code>notebooks/hofstadter_flux_sweep.ipynb</code>
-              <a href="notebooks/hofstadter_flux_sweep.html">HTML</a>
+              <code>notebooks/03_spin_chain_model_comparison.ipynb</code>
+              <a href="notebooks/03_spin_chain_model_comparison.html">HTML</a>
             </article>
             <article class="package-row">
               <div>
-                <h3>Hubbard and sparse workflows</h3>
-                <p>Dense/sparse exact diagonalization and sparse scaling summaries.</p>
+                <h3>04. Heisenberg ladder</h3>
+                <p>Ladder spectrum, density of states, and rung-coupling gap.</p>
               </div>
-              <code>notebooks/hubbard_exact_diagonalization.ipynb</code>
-              <a href="notebooks/hubbard_exact_diagonalization.html">HTML</a>
+              <code>notebooks/04_heisenberg_ladder_spectrum.ipynb</code>
+              <a href="notebooks/04_heisenberg_ladder_spectrum.html">HTML</a>
             </article>
             <article class="package-row">
               <div>
-                <h3>Registry and CLI</h3>
-                <p>Model registry table and command-line plot walkthrough.</p>
+                <h3>05. Hubbard exact diagonalization</h3>
+                <p>Bose/Fermi dense and sparse low-energy workflows.</p>
               </div>
-              <code>notebooks/model_registry_and_cli.ipynb</code>
-              <a href="notebooks/model_registry_and_cli.html">HTML</a>
+              <code>notebooks/05_hubbard_exact_diagonalization.ipynb</code>
+              <a href="notebooks/05_hubbard_exact_diagonalization.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>06. SSH and Rice-Mele</h3>
+                <p>Finite spectra and near-zero edge localization.</p>
+              </div>
+              <code>notebooks/06_ssh_rice_mele_comparison.ipynb</code>
+              <a href="notebooks/06_ssh_rice_mele_comparison.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>07. Boundaries and finite size</h3>
+                <p>Open/periodic SSH states and TFIM size scaling.</p>
+              </div>
+              <code>notebooks/07_boundary_conditions_and_finite_size.ipynb</code>
+              <a href="notebooks/07_boundary_conditions_and_finite_size.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>08. Aubry-André localization</h3>
+                <p>IPR crossover and representative localized states.</p>
+              </div>
+              <code>notebooks/08_aubry_andre_localization.ipynb</code>
+              <a href="notebooks/08_aubry_andre_localization.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>09. Kitaev BdG symmetry</h3>
+                <p>Particle-hole pairing and chemical-potential gap sweep.</p>
+              </div>
+              <code>notebooks/09_kitaev_bdg_symmetry.ipynb</code>
+              <a href="notebooks/09_kitaev_bdg_symmetry.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>10. Hofstadter flux sweep</h3>
+                <p>Fixed-flux geometry and finite-lattice butterfly.</p>
+              </div>
+              <code>notebooks/10_hofstadter_flux_sweep.ipynb</code>
+              <a href="notebooks/10_hofstadter_flux_sweep.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>11. Haldane, triangular, and kagome</h3>
+                <p>Two-dimensional spectra and lattice connectivity.</p>
+              </div>
+              <code>notebooks/11_haldane_kagome_lattices.ipynb</code>
+              <a href="notebooks/11_haldane_kagome_lattices.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>12. Custom lattice workflow</h3>
+                <p>Complex bonds, dense/sparse agreement, and registration.</p>
+              </div>
+              <code>notebooks/12_custom_lattice_workflow.ipynb</code>
+              <a href="notebooks/12_custom_lattice_workflow.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>13. Hamiltonian structure gallery</h3>
+                <p>Magnitude patterns and complex hopping phases.</p>
+              </div>
+              <code>notebooks/13_hamiltonian_structure_gallery.ipynb</code>
+              <a href="notebooks/13_hamiltonian_structure_gallery.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>14. Sparse and dense scaling</h3>
+                <p>Matrix density, storage reduction, and solver agreement.</p>
+              </div>
+              <code>notebooks/14_sparse_dense_scaling.ipynb</code>
+              <a href="notebooks/14_sparse_dense_scaling.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>15. PennyLane export</h3>
+                <p>Pauli-term conversion and matrix-level validation.</p>
+              </div>
+              <code>notebooks/15_pennylane_export.ipynb</code>
+              <a href="notebooks/15_pennylane_export.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>16. Model registry and CLI</h3>
+                <p>Structured model discovery and registry metadata.</p>
+              </div>
+              <code>notebooks/16_model_registry_and_cli.ipynb</code>
+              <a href="notebooks/16_model_registry_and_cli.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>17. CLI plot walkthrough</h3>
+                <p>Command-line spectra and reproducible PNG output.</p>
+              </div>
+              <code>notebooks/17_cli_plot_walkthrough.ipynb</code>
+              <a href="notebooks/17_cli_plot_walkthrough.html">HTML</a>
             </article>
           </div>
 
           <div class="result-grid notebook-grid">
             <figure>
-              <img src="notebook_outputs/ising_spin_chains_1.png" alt="Notebook-generated Ising spectra">
+              <img src="notebook_outputs/01_ising_spin_chains_1.png" alt="Notebook-generated Ising spectra">
               <figcaption>Ising notebook spectra</figcaption>
             </figure>
             <figure>
-              <img src="notebook_outputs/kitaev_bdg_symmetry_1.png" alt="Notebook-generated Kitaev BdG spectrum">
-              <figcaption>Kitaev BdG notebook</figcaption>
+              <img src="notebook_outputs/02_spin_observables_and_correlations_1.png" alt="Notebook-generated spin observable sweep">
+              <figcaption>Spin observables and correlations</figcaption>
             </figure>
             <figure>
-              <img src="notebook_outputs/hofstadter_flux_sweep_2.png" alt="Notebook-generated Hofstadter flux sweep">
-              <figcaption>Hofstadter notebook sweep</figcaption>
+              <img src="notebook_outputs/08_aubry_andre_localization_1.png" alt="Notebook-generated Aubry-Andre localization sweep">
+              <figcaption>Aubry-André localization</figcaption>
             </figure>
             <figure>
-              <img src="notebook_outputs/sparse_dense_scaling_1.png" alt="Notebook-generated sparse dense scaling summary">
-              <figcaption>Sparse scaling notebook</figcaption>
+              <img src="notebook_outputs/13_hamiltonian_structure_gallery_1.png" alt="Notebook-generated Hamiltonian structure gallery">
+              <figcaption>Hamiltonian structure gallery</figcaption>
             </figure>
           </div>
         </section>
@@ -453,7 +554,7 @@ print(spectral_gap(H))</code></pre>
             <a class="button" href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/USAGE.md">Usage</a>
             <a class="button" href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/THEORY.md">Theory</a>
             <a class="button" href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/RESULTS.md">Results</a>
-            <a class="button" href="notebooks/model_registry_and_cli.html">Notebooks</a>
+            <a class="button" href="notebooks/01_ising_spin_chains.html">Notebooks</a>
           </div>
         </section>
       </main>

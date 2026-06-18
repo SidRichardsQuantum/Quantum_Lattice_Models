@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 440" role="img" aria-labelledby="title desc">
+  <title id="title">Open and periodic boundary conditions in an SSH chain</title>
+  <desc id="desc">An open dimerized chain with exposed ends and localized edge weight compared with a periodic ring where the final and first sites are coupled.</desc>
+  <defs>
+    <style>
+      .panel{fill:#f8fafc;stroke:#cbd5e1;stroke-width:2}.strong{stroke:#20242a;stroke-width:8;stroke-linecap:round}
+      .weak{stroke:#8b95a1;stroke-width:4;stroke-dasharray:10 7}.wrap{stroke:#d55e00;stroke-width:5;fill:none}
+      .a{fill:#0072b2}.b{fill:#e69f00}.halo{fill:#f0e442;opacity:.55}
+      .title{font:24px sans-serif;font-weight:700;fill:#20242a}.label{font:18px sans-serif;fill:#20242a}
+      .note{font:16px sans-serif;fill:#4b5563}
+    </style>
+  </defs>
+  <rect width="1050" height="440" fill="#fff"/>
+  <rect class="panel" x="30" y="35" width="990" height="175" rx="18"/>
+  <text class="title" x="60" y="76">Open SSH chain: physical ends support edge-localized modes when t₁ &lt; t₂</text>
+  <g>
+    <line class="weak" x1="120" y1="135" x2="220" y2="135"/><line class="strong" x1="220" y1="135" x2="330" y2="135"/>
+    <line class="weak" x1="330" y1="135" x2="430" y2="135"/><line class="strong" x1="430" y1="135" x2="540" y2="135"/>
+    <line class="weak" x1="540" y1="135" x2="640" y2="135"/><line class="strong" x1="640" y1="135" x2="750" y2="135"/>
+    <line class="weak" x1="750" y1="135" x2="850" y2="135"/>
+  </g>
+  <circle class="halo" cx="120" cy="135" r="38"/><circle class="halo" cx="850" cy="135" r="38"/>
+  <g class="a"><circle cx="120" cy="135" r="17"/><circle cx="330" cy="135" r="17"/><circle cx="540" cy="135" r="17"/><circle cx="750" cy="135" r="17"/></g>
+  <g class="b"><circle cx="220" cy="135" r="17"/><circle cx="430" cy="135" r="17"/><circle cx="640" cy="135" r="17"/><circle cx="850" cy="135" r="17"/></g>
+  <text class="label" x="160" y="116">t₁</text><text class="label" x="265" y="116">t₂</text>
+  <text class="note" x="60" y="190">yellow halos: representative near-zero edge-state probability</text>
+
+  <rect class="panel" x="30" y="235" width="990" height="170" rx="18"/>
+  <text class="title" x="60" y="276">Periodic boundary: site N−1 reconnects to site 0, removing physical edges</text>
+  <g>
+    <line class="weak" x1="195" y1="340" x2="285" y2="300"/><line class="strong" x1="285" y1="300" x2="395" y2="285"/>
+    <line class="weak" x1="395" y1="285" x2="505" y2="300"/><line class="strong" x1="505" y1="300" x2="595" y2="340"/>
+    <line class="weak" x1="595" y1="340" x2="505" y2="380"/><line class="strong" x1="505" y1="380" x2="395" y2="395"/>
+    <line class="weak" x1="395" y1="395" x2="285" y2="380"/>
+    <path class="wrap" d="M285 380 Q170 365 195 340"/>
+  </g>
+  <g class="a"><circle cx="195" cy="340" r="17"/><circle cx="395" cy="285" r="17"/><circle cx="595" cy="340" r="17"/><circle cx="395" cy="395" r="17"/></g>
+  <g class="b"><circle cx="285" cy="300" r="17"/><circle cx="505" cy="300" r="17"/><circle cx="505" cy="380" r="17"/><circle cx="285" cy="380" r="17"/></g>
+  <text class="label" x="620" y="333" fill="#d55e00">boundary bond</text>
+  <text class="note" x="620" y="362">translation closes the chain into a ring</text>
+  <text class="note" x="620" y="388">the isolated end modes are no longer present</text>
+</svg>

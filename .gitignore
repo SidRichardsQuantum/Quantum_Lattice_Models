@@ -32,9 +32,9 @@ build/
 # Notebook and plotting caches
 .ipynb_checkpoints/
 .matplotlib-cache/
+docs/images/
 
-# Locally generated outputs; published copies live under docs/.
-/images/*.png
+# Notebook scratch outputs are local; reproducible example images are tracked.
 /results/
 
 # Editor and operating-system files

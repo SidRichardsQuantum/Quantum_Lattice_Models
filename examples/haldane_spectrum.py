@@ -23,7 +23,7 @@ def main() -> None:
         phi=1.5707963267948966,
         sublattice_potential=0.1,
     )
-    ax = plot_lattice_spectrum(H, color="tab:orange")
+    ax = plot_lattice_spectrum(H, highlight_gap=True, zero_line=True, color="#E69F00")
     ax.set_title("Finite Haldane honeycomb spectrum")
     ax.figure.tight_layout()
     ax.figure.savefig(output_dir / "haldane_spectrum.png", dpi=160)

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" role="img" aria-labelledby="title desc">
+  <title id="title">Harper-Hofstadter plaquette in Landau gauge</title>
+  <desc id="desc">Square plaquette with real horizontal hopping, phase-carrying vertical hopping, and magnetic flux through the plaquette.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#d55e00"/>
+    </marker>
+    <style>
+      .real{stroke:#0072b2;stroke-width:8}.phase{stroke:#d55e00;stroke-width:7;marker-end:url(#arrow)}
+      .site{fill:#fff;stroke:#20242a;stroke-width:4}
+      .label{font:22px sans-serif;fill:#20242a}.note{font:18px sans-serif;fill:#4b5563}
+    </style>
+  </defs>
+  <rect width="900" height="360" fill="#fff"/>
+  <rect x="245" y="65" width="310" height="220" fill="#f0f7fb" stroke="#c7d9e5" stroke-width="2"/>
+  <line class="real" x1="245" y1="65" x2="555" y2="65"/><line class="real" x1="245" y1="285" x2="555" y2="285"/>
+  <line class="phase" x1="245" y1="285" x2="245" y2="70"/><line class="phase" x1="555" y1="70" x2="555" y2="280"/>
+  <circle class="site" cx="245" cy="65" r="20"/><circle class="site" cx="555" cy="65" r="20"/>
+  <circle class="site" cx="245" cy="285" r="20"/><circle class="site" cx="555" cy="285" r="20"/>
+  <text class="label" x="387" y="45">−t</text><text class="label" x="387" y="325">−t</text>
+  <text class="label" x="82" y="174" fill="#d55e00">−t eⁱ²πᶠˣ</text>
+  <text class="label" x="592" y="174" fill="#d55e00">−t eⁱ²πᶠ⁽ˣ⁺¹⁾</text>
+  <text class="label" x="374" y="168">flux f</text><text class="note" x="330" y="203">phase around loop = 2πf</text>
+  <text class="note" x="205" y="350">Landau gauge: horizontal bonds real, vertical phase depends on column x</text>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" aria-labelledby="title desc">
+  <title id="title">SSH and Rice-Mele unit-cell convention</title>
+  <desc id="desc">Alternating A and B sites with intracell hopping t1, intercell hopping t2, and staggered onsite energies plus and minus Delta.</desc>
+  <defs>
+    <style>
+      .bond{stroke:#3f4854;stroke-width:8;stroke-linecap:round}
+      .weak{stroke:#88919c;stroke-width:5;stroke-dasharray:12 9}
+      .a{fill:#0072b2}.b{fill:#e69f00}
+      .cell{fill:none;stroke:#6b7280;stroke-width:2;stroke-dasharray:8 7}
+      .label{font:22px sans-serif;fill:#20242a}.small{font:18px sans-serif;fill:#4b5563}
+    </style>
+  </defs>
+  <rect width="900" height="260" fill="#fff"/>
+  <rect class="cell" x="105" y="40" width="290" height="175" rx="18"/>
+  <rect class="cell" x="505" y="40" width="290" height="175" rx="18"/>
+  <line class="bond" x1="175" y1="130" x2="325" y2="130"/>
+  <line class="weak" x1="325" y1="130" x2="575" y2="130"/>
+  <line class="bond" x1="575" y1="130" x2="725" y2="130"/>
+  <circle class="a" cx="175" cy="130" r="24"/><circle class="b" cx="325" cy="130" r="24"/>
+  <circle class="a" cx="575" cy="130" r="24"/><circle class="b" cx="725" cy="130" r="24"/>
+  <text class="label" x="244" y="112">t₁</text><text class="label" x="442" y="112">t₂</text>
+  <text class="label" x="644" y="112">t₁</text>
+  <text class="label" x="167" y="137" fill="#fff">A</text><text class="label" x="317" y="137" fill="#fff">B</text>
+  <text class="label" x="567" y="137" fill="#fff">A</text><text class="label" x="717" y="137" fill="#fff">B</text>
+  <text class="small" x="136" y="185">+Δ</text><text class="small" x="299" y="185">−Δ</text>
+  <text class="small" x="536" y="185">+Δ</text><text class="small" x="699" y="185">−Δ</text>
+  <text class="small" x="166" y="235">unit cell n</text><text class="small" x="557" y="235">unit cell n+1</text>
+</svg>

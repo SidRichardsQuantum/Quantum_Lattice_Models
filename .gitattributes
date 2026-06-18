@@ -15,4 +15,4 @@
 # Rendered documentation is generated from notebooks and examples.
 docs/notebooks/*.html linguist-generated=true
 docs/notebook_outputs/*.png linguist-generated=true
-docs/images/*.png linguist-generated=true
+images/*.png linguist-generated=true

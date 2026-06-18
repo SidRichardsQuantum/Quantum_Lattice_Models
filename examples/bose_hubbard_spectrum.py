@@ -22,7 +22,7 @@ def main() -> None:
         chemical_potential=0.2,
         max_occupancy=2,
     )
-    ax = plot_lattice_spectrum(H, color="tab:green")
+    ax = plot_lattice_spectrum(H, highlight_gap=True, color="#009E73")
     ax.set_title("Truncated Bose-Hubbard spectrum")
     ax.figure.tight_layout()
     ax.figure.savefig(output_dir / "bose_hubbard_spectrum.png", dpi=160)
