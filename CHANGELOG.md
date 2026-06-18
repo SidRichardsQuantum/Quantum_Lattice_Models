@@ -1,5 +1,62 @@
 # Changelog
 
+## v0.1.2
+
+This release adds user-defined lattice models, makes model registration usable
+at runtime, and expands the plotting and command-line interfaces for generic
+lattice workflows.
+
+### Added
+
+- `Bond` and `Lattice` containers for finite user-defined lattice geometries.
+- `TightBindingModel` plus dense and sparse `custom_tight_binding` builders.
+- Support for per-bond complex matrix elements, Hermitian conjugate completion,
+  onsite terms, inferred site counts, and lattice position metadata.
+- Runtime `register_model` and `unregister_model` helpers.
+- Registry entries for dense and sparse custom tight-binding models.
+- Plotting helpers:
+  - `plot_lattice_state` for probability- and phase-resolved lattice states
+  - `plot_hamiltonian_matrix` for real, imaginary, magnitude, and phase views
+  - `plot_parameter_sweep` for generic one-parameter spectra
+  - `apply_plot_style` for consistent axes styling
+- CLI `--bond` arguments for custom graph models.
+- `.gitattributes` rules for LF text normalization, binary assets, and generated
+  documentation classification.
+
+### Changed
+
+- The CLI now builds every supported model through `MODEL_REGISTRY`, uses each
+  builder's registered defaults, and exposes all registered models as choices.
+- `plot_lattice_graph` can read positions from Hamiltonian metadata and encode
+  hopping phase or magnitude with edge color and width.
+- Existing plotting helpers now apply a consistent visual style.
+- `plot_hofstadter_butterfly` now delegates to the generic parameter-sweep
+  implementation.
+- The Hofstadter, kagome, and SSH examples use the generalized plotting API.
+- Regenerated the example plot gallery with the updated plotting style.
+- Exported the custom lattice types, builders, and registry mutation helpers
+  from the package's public API.
+- Expanded `README.md` and `USAGE.md` with custom model, registration,
+  visualization, and sparse-builder examples.
+- Expanded `.gitignore` coverage for Python tooling, coverage reports, virtual
+  environments, editors, operating-system files, and local generated outputs.
+
+### Fixed
+
+- Wrapped long notebook source lines so full-repository Black and Ruff checks
+  pass without changing the saved notebook output.
+
+### Notes
+
+- Two-item bonds use `-hopping` as their matrix element; three-item bonds use
+  the supplied value directly.
+- Custom tight-binding builders remain single-particle Hamiltonians rather than
+  many-body Fock-space models.
+- The optional PennyLane export test is exercised when the `pennylane` extra is
+  installed.
+
+---
+
 ## v0.1.1
 
 This release expands Quantum Lattice Models from a small set of dense toy

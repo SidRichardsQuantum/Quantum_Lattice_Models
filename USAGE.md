@@ -247,6 +247,117 @@ H = tight_binding_chain(n_sites=8, hopping=1.0, onsite=0.0, periodic=False)
 
 The `onsite` argument can be a scalar or a length-`n_sites` iterable.
 
+## User-Defined Lattices and Models
+
+Use `Lattice` when the model geometry is easier to express as sites and bonds
+than as one of the built-in lattice families:
+
+```python
+from quantum_lattice_models import Lattice, TightBindingModel
+
+lattice = Lattice(
+    positions=[(0.0, 0.0), (1.0, 0.0), (0.5, 0.8)],
+    bonds=[(0, 1), (1, 2, 0.25j), (2, 0)],
+)
+
+H = TightBindingModel(lattice).hamiltonian(
+    hopping=1.0,
+    onsite=[0.0, 0.1, 0.0],
+)
+```
+
+Two-item bonds use `-hopping` as the matrix element.
+Three-item bonds use the third value directly:
+
+```python
+from quantum_lattice_models import custom_tight_binding
+
+H = custom_tight_binding(
+    n_sites=4,
+    bonds=[(0, 1), (1, 2, -0.5), (2, 3, 0.2j)],
+    hopping=1.0,
+)
+```
+
+Sparse custom models use the same inputs:
+
+```python
+from quantum_lattice_models import custom_tight_binding_sparse
+
+H_sparse = custom_tight_binding_sparse(
+    n_sites=128,
+    bonds=[(i, i + 1) for i in range(127)],
+    hopping=1.0,
+)
+```
+
+Register a custom builder when you want it to appear in model discovery helpers
+and CLI model choices:
+
+```python
+from quantum_lattice_models.registry import register_model
+
+
+def three_site_chain(hopping: float = 1.0):
+    return custom_tight_binding(n_sites=3, bonds=[(0, 1), (1, 2)], hopping=hopping)
+
+
+register_model(
+    "three_site_chain",
+    category="user",
+    basis="single particle",
+    dimension="3",
+    return_type="LatticeHamiltonian",
+    description="Three-site user-defined chain",
+    builder=three_site_chain,
+    defaults={"hopping": 1.0},
+)
+```
+
+## Visualization Helpers
+
+The plotting helpers understand dense and sparse Hamiltonians. Custom
+Hamiltonians built from `Lattice` can carry positions in their metadata, so
+graph and state plots do not need duplicate coordinate arguments:
+
+```python
+import numpy as np
+
+from quantum_lattice_models import Lattice, custom_tight_binding
+from quantum_lattice_models.plotting import (
+    plot_hamiltonian_matrix,
+    plot_lattice_graph,
+    plot_lattice_state,
+    plot_parameter_sweep,
+)
+from quantum_lattice_models.spectra import eigensystem
+
+lattice = Lattice(
+    positions=[(0.0, 0.0), (1.0, 0.0), (0.5, 0.8)],
+    bonds=[(0, 1), (1, 2, 0.25j), (2, 0)],
+)
+H = custom_tight_binding(lattice=lattice)
+
+plot_lattice_graph(H, show_colorbar=True)
+plot_hamiltonian_matrix(H, mode="phase")
+
+values, vectors = eigensystem(H)
+plot_lattice_state(H, vectors[:, 0])
+```
+
+Parameter sweeps work with any builder that accepts one parameter value:
+
+```python
+from quantum_lattice_models.models import ssh_model
+
+plot_parameter_sweep(
+    lambda t1: ssh_model(n_cells=8, t1=t1, t2=1.0),
+    np.linspace(0.2, 1.8, 32),
+    parameter_name="Intracell hopping",
+    title="SSH finite-chain spectrum",
+)
+```
+
 ## Square-Lattice Tight Binding
 
 ```python
@@ -350,7 +461,12 @@ After installation, use the `quantum-lattice` entry point:
 quantum-lattice models
 quantum-lattice spectrum --model ssh_model --n-cells 8
 quantum-lattice plot --model harper_hofstadter_square_lattice --n-rows 4 --n-cols 4 --flux 0.25 --output images/hofstadter_cli.png
+quantum-lattice spectrum --model custom_tight_binding --n-sites 3 --bond 0,1 --bond 1,2,0.25j
 ```
+
+Model choices and defaults come from the model registry. Custom bonds use
+`source,target` or `source,target,value`; the optional value accepts complex
+numbers.
 
 ## Observables
 
@@ -387,7 +503,11 @@ Additional plotting helpers include:
 - `plot_density`
 - `plot_site_probabilities`
 - `plot_hofstadter_butterfly`
+- `plot_parameter_sweep`
 - `plot_lattice_graph`
+- `plot_lattice_state`
+- `plot_hamiltonian_matrix`
+- `apply_plot_style`
 
 ## Optional PennyLane Export
 

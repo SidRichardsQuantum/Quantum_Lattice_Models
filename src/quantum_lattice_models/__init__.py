@@ -12,9 +12,14 @@ from quantum_lattice_models.geometry import (
     triangular_lattice_positions,
 )
 from quantum_lattice_models.models import (
+    Bond,
+    Lattice,
+    TightBindingModel,
     aubry_andre_harper_chain,
     bose_hubbard_chain,
     bose_hubbard_chain_sparse,
+    custom_tight_binding,
+    custom_tight_binding_sparse,
     fermi_hubbard_chain,
     fermi_hubbard_chain_sparse,
     haldane_honeycomb_lattice,
@@ -44,12 +49,21 @@ from quantum_lattice_models.models import (
     xxz_chain,
     xy_chain,
 )
-from quantum_lattice_models.registry import get_model_info, list_models, model_table
+from quantum_lattice_models.registry import (
+    get_model_info,
+    list_models,
+    model_table,
+    register_model,
+    unregister_model,
+)
 
 __all__ = [
     "aubry_andre_harper_chain",
+    "Bond",
     "bose_hubbard_chain",
     "bose_hubbard_chain_sparse",
+    "custom_tight_binding",
+    "custom_tight_binding_sparse",
     "fermi_hubbard_chain",
     "fermi_hubbard_chain_sparse",
     "haldane_honeycomb_lattice",
@@ -64,6 +78,7 @@ __all__ = [
     "kagome_lattice_tight_binding",
     "kagome_lattice_tight_binding_sparse",
     "kitaev_chain_bdg",
+    "Lattice",
     "longitudinal_field_ising",
     "next_nearest_neighbor_ising",
     "rice_mele_model",
@@ -73,6 +88,7 @@ __all__ = [
     "square_lattice_tight_binding_sparse",
     "tight_binding_chain",
     "tight_binding_chain_sparse",
+    "TightBindingModel",
     "triangular_lattice_tight_binding",
     "triangular_lattice_tight_binding_sparse",
     "transverse_field_ising",
@@ -85,4 +101,6 @@ __all__ = [
     "get_model_info",
     "list_models",
     "model_table",
+    "register_model",
+    "unregister_model",
 ]

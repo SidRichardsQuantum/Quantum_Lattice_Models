@@ -3,20 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 from pathlib import Path
 
 import numpy as np
 
-from quantum_lattice_models.models import (
-    bose_hubbard_chain,
-    haldane_honeycomb_lattice,
-    harper_hofstadter_square_lattice,
-    heisenberg_chain,
-    rice_mele_model,
-    ssh_model,
-    tight_binding_chain,
-    transverse_field_ising,
-)
 from quantum_lattice_models.plotting import plot_lattice_spectrum
 from quantum_lattice_models.registry import MODEL_REGISTRY
 from quantum_lattice_models.spectra import eigenvalues
@@ -70,70 +61,77 @@ def _add_model_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--model",
         required=True,
-        choices=(
-            "bose_hubbard_chain",
-            "haldane_honeycomb_lattice",
-            "harper_hofstadter_square_lattice",
-            "heisenberg_chain",
-            "rice_mele_model",
-            "ssh_model",
-            "tight_binding_chain",
-            "transverse_field_ising",
-        ),
+        choices=tuple(sorted(MODEL_REGISTRY)),
     )
-    parser.add_argument("--n-sites", type=int, default=4)
-    parser.add_argument("--n-cells", type=int, default=6)
-    parser.add_argument("--n-rows", type=int, default=3)
-    parser.add_argument("--n-cols", type=int, default=3)
-    parser.add_argument("--hopping", type=float, default=1.0)
-    parser.add_argument("--onsite", type=float, default=0.0)
-    parser.add_argument("--j", type=float, default=1.0)
-    parser.add_argument("--h", type=float, default=0.5)
-    parser.add_argument("--field", type=float, default=0.0)
-    parser.add_argument("--t1", type=float, default=0.5)
-    parser.add_argument("--t2", type=float, default=1.0)
-    parser.add_argument("--dimerization", type=float, default=0.25)
-    parser.add_argument("--staggering", type=float, default=0.5)
-    parser.add_argument("--flux", type=float, default=0.25)
-    parser.add_argument("--interaction", type=float, default=1.0)
-    parser.add_argument("--max-occupancy", type=int, default=2)
-    parser.add_argument("--periodic", action="store_true")
+    parser.add_argument("--n-sites", type=int, default=None)
+    parser.add_argument("--n-cells", type=int, default=None)
+    parser.add_argument("--n-rows", type=int, default=None)
+    parser.add_argument("--n-cols", type=int, default=None)
+    parser.add_argument("--n-rungs", type=int, default=None)
+    parser.add_argument("--hopping", type=complex, default=None)
+    parser.add_argument("--onsite", type=float, default=None)
+    parser.add_argument("--j", type=float, default=None)
+    parser.add_argument("--jx", type=float, default=None)
+    parser.add_argument("--jy", type=float, default=None)
+    parser.add_argument("--jz", type=float, default=None)
+    parser.add_argument("--j1", type=float, default=None)
+    parser.add_argument("--j2", type=float, default=None)
+    parser.add_argument("--h", type=float, default=None)
+    parser.add_argument("--h-x", type=float, default=None)
+    parser.add_argument("--h-z", type=float, default=None)
+    parser.add_argument("--field", type=float, default=None)
+    parser.add_argument("--coupling", type=float, default=None)
+    parser.add_argument("--anisotropy", type=float, default=None)
+    parser.add_argument("--leg-coupling", type=float, default=None)
+    parser.add_argument("--rung-coupling", type=float, default=None)
+    parser.add_argument("--t1", type=float, default=None)
+    parser.add_argument("--t2", type=float, default=None)
+    parser.add_argument("--dimerization", type=float, default=None)
+    parser.add_argument("--staggering", type=float, default=None)
+    parser.add_argument("--flux", type=float, default=None)
+    parser.add_argument("--potential", type=float, default=None)
+    parser.add_argument("--beta", type=float, default=None)
+    parser.add_argument("--phase", type=float, default=None)
+    parser.add_argument("--chemical-potential", type=float, default=None)
+    parser.add_argument("--interaction", type=float, default=None)
+    parser.add_argument("--max-occupancy", type=int, default=None)
+    parser.add_argument("--periodic", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--periodic-x", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--periodic-y", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--hermitian", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument(
+        "--bond",
+        action="append",
+        default=None,
+        help="Custom model bond as source,target or source,target,value",
+    )
 
 
 def _build_model(args: argparse.Namespace):
-    if args.model == "transverse_field_ising":
-        return transverse_field_ising(args.n_sites, j=args.j, h=args.h, periodic=args.periodic)
-    if args.model == "heisenberg_chain":
-        return heisenberg_chain(args.n_sites, field=args.field, periodic=args.periodic)
-    if args.model == "ssh_model":
-        return ssh_model(args.n_cells, t1=args.t1, t2=args.t2, periodic=args.periodic)
-    if args.model == "rice_mele_model":
-        return rice_mele_model(
-            args.n_cells,
-            hopping=args.hopping,
-            dimerization=args.dimerization,
-            staggering=args.staggering,
-            periodic=args.periodic,
-        )
-    if args.model == "tight_binding_chain":
-        return tight_binding_chain(
-            args.n_sites, hopping=args.hopping, onsite=args.onsite, periodic=args.periodic
-        )
-    if args.model == "harper_hofstadter_square_lattice":
-        return harper_hofstadter_square_lattice(
-            args.n_rows, args.n_cols, hopping=args.hopping, flux=args.flux
-        )
-    if args.model == "haldane_honeycomb_lattice":
-        return haldane_honeycomb_lattice(args.n_rows, args.n_cols)
-    if args.model == "bose_hubbard_chain":
-        return bose_hubbard_chain(
-            args.n_sites,
-            hopping=args.hopping,
-            interaction=args.interaction,
-            max_occupancy=args.max_occupancy,
-            periodic=args.periodic,
-        )
-    raise ValueError(f"Unsupported model {args.model!r}.")
+    info = MODEL_REGISTRY[args.model]
+    if info.builder is None:
+        raise ValueError(f"Registered model {args.model!r} does not define a builder.")
+
+    kwargs = dict(info.defaults)
+    cli_values = vars(args)
+    signature = inspect.signature(info.builder)
+    accepted = set(signature.parameters)
+    for name in accepted:
+        arg_name = name.replace("-", "_")
+        if arg_name in cli_values and cli_values[arg_name] is not None:
+            kwargs[name] = cli_values[arg_name]
+    if "bonds" in accepted and args.bond is not None:
+        kwargs["bonds"] = tuple(_parse_bond(value) for value in args.bond)
+    return info.builder(**kwargs)
+
+
+def _parse_bond(value: str) -> tuple[object, ...]:
+    parts = [part.strip() for part in value.split(",")]
+    if len(parts) == 2:
+        return int(parts[0]), int(parts[1])
+    if len(parts) == 3:
+        return int(parts[0]), int(parts[1]), complex(parts[2])
+    raise argparse.ArgumentTypeError("Bond must be source,target or source,target,value.")
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from quantum_lattice_models.models import harper_hofstadter_square_lattice
-from quantum_lattice_models.plotting import plot_hofstadter_butterfly
+from quantum_lattice_models.plotting import plot_parameter_sweep
 
 
 def main() -> None:
@@ -17,9 +17,11 @@ def main() -> None:
     output_dir.mkdir(exist_ok=True)
 
     fluxes = np.linspace(0.0, 1.0, 41)
-    ax = plot_hofstadter_butterfly(
+    ax = plot_parameter_sweep(
         lambda flux: harper_hofstadter_square_lattice(n_rows=4, n_cols=4, flux=flux),
         fluxes,
+        parameter_name="Flux per plaquette",
+        title="Hofstadter spectrum",
         s=7,
         color="tab:purple",
     )

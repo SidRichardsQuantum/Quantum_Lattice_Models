@@ -4,9 +4,12 @@ import numpy as np
 import scipy.sparse as sp
 
 from quantum_lattice_models.models import (
+    Lattice,
     aubry_andre_harper_chain,
     bose_hubbard_chain,
     bose_hubbard_chain_sparse,
+    custom_tight_binding,
+    custom_tight_binding_sparse,
     fermi_hubbard_chain,
     fermi_hubbard_chain_sparse,
     haldane_honeycomb_lattice,
@@ -119,6 +122,36 @@ def test_public_lattice_indices() -> None:
     assert square_lattice_index(row=2, col=1, n_cols=4) == 9
     assert honeycomb_lattice_index(row=1, col=2, sublattice=1, n_cols=3) == 11
     assert kagome_lattice_index(row=1, col=1, sublattice=2, n_cols=2) == 11
+
+
+def test_custom_lattice_tight_binding_builder() -> None:
+    lattice = Lattice(
+        positions=[(0.0, 0.0), (1.0, 0.0), (0.5, 0.8)],
+        bonds=[(0, 1), (1, 2, 0.5j)],
+        metadata={"label": "triangle fragment"},
+    )
+
+    H = custom_tight_binding(lattice=lattice, hopping=2.0, onsite=[0.0, 0.1, 0.2])
+
+    assert H.shape == (3, 3)
+    assert H.model_name == "custom_tight_binding"
+    assert H.basis == "single_particle"
+    assert H.metadata["label"] == "triangle fragment"
+    assert np.allclose(np.diag(H), [0.0, 0.1, 0.2])
+    assert H[0, 1] == -2.0
+    assert H[1, 0] == -2.0
+    assert H[1, 2] == 0.5j
+    assert H[2, 1] == -0.5j
+    assert_hermitian(H)
+
+
+def test_custom_lattice_infers_site_count_and_sparse_matches_dense() -> None:
+    dense = custom_tight_binding(bonds=[(0, 1), (1, 3)], hopping=0.7, onsite=0.2)
+    sparse = custom_tight_binding_sparse(bonds=[(0, 1), (1, 3)], hopping=0.7, onsite=0.2)
+
+    assert dense.shape == (4, 4)
+    assert sp.issparse(sparse)
+    assert np.allclose(sparse.toarray(), dense)
 
 
 def test_sparse_builders_match_dense_models() -> None:

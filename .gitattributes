@@ -1,0 +1,18 @@
+# Normalize text files across platforms.
+* text=auto eol=lf
+
+# Binary assets and release archives must not receive text conversion.
+*.gif binary
+*.ico binary
+*.jpeg binary
+*.jpg binary
+*.pdf binary
+*.png binary
+*.tar.gz binary
+*.whl binary
+*.zip binary
+
+# Rendered documentation is generated from notebooks and examples.
+docs/notebooks/*.html linguist-generated=true
+docs/notebook_outputs/*.png linguist-generated=true
+docs/images/*.png linguist-generated=true

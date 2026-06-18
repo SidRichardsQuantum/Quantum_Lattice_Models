@@ -58,6 +58,7 @@ The real logic lives in `src/quantum_lattice_models/`; notebooks, scripts, and e
 - Haldane honeycomb-lattice model
 - Triangular-lattice single-particle tight-binding model
 - Kagome-lattice single-particle tight-binding model
+- User-defined graph/lattice tight-binding models
 
 Spin-chain Hamiltonians are dense qubit-space matrices
 Tight-binding Hamiltonians are single-particle matrices.
@@ -119,6 +120,54 @@ values, vectors = eigensystem(H)
 weights = ssh_edge_state_localizations(vectors, n_cells=8, edge_cells=2)
 ```
 
+## User-Defined Lattices
+
+Users can build custom single-particle tight-binding models without adding a
+new function to the package:
+
+```python
+from quantum_lattice_models import Lattice, TightBindingModel
+
+lattice = Lattice(
+    positions=[(0.0, 0.0), (1.0, 0.0), (0.5, 0.8)],
+    bonds=[(0, 1), (1, 2, 0.25j), (2, 0)],
+)
+
+H = TightBindingModel(lattice).hamiltonian(hopping=1.0, onsite=[0.0, 0.1, 0.0])
+```
+
+Two-item bonds use `-hopping` as the matrix element.
+Three-item bonds use the third value directly, which allows complex hoppings
+and Peierls phases.
+
+Custom builders can also be registered for discovery in notebooks and the CLI:
+
+```python
+from quantum_lattice_models.registry import register_model
+
+register_model(
+    "my_model",
+    category="user",
+    basis="single particle",
+    dimension="n_sites",
+    return_type="LatticeHamiltonian",
+    description="My custom tight-binding model",
+    builder=my_builder,
+    defaults={"n_sites": 4},
+)
+```
+
+The plotting helpers can use lattice position metadata directly:
+
+```python
+from quantum_lattice_models.plotting import plot_lattice_graph, plot_lattice_state
+from quantum_lattice_models.spectra import eigensystem
+
+plot_lattice_graph(H, show_colorbar=True)
+values, vectors = eigensystem(H)
+plot_lattice_state(H, vectors[:, 0])
+```
+
 ## Repository Structure
 
 ```text
@@ -141,6 +190,7 @@ tight_binding.py             Single-particle tight-binding builders
 hubbard.py                   Bose-Hubbard and Fermi-Hubbard builders
 topological.py               Haldane, Hofstadter, and Kitaev builders
 geometry.py                  Coordinate helpers for plotting
+lattice.py                   User-defined lattice containers and custom builders
 registry.py                  Structured model metadata
 cli.py                       quantum-lattice command-line entry point
 models.py                    Backwards-compatible re-export layer
@@ -177,6 +227,16 @@ make test
 ```
 
 The `Makefile` runs Black one file at a time to avoid multi-file formatter stalls observed in some Codespace environments.
+Before a release, also run Ruff across the full repository so notebook code
+cells are checked:
+
+```bash
+python -m ruff check .
+python -m pytest -q
+```
+
+Install `.[pennylane]` before the test command to exercise the optional
+PennyLane export test instead of skipping it.
 
 ## Limitations / Truth Contract
 

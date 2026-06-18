@@ -8,6 +8,13 @@ from quantum_lattice_models.hubbard import (
     fermi_hubbard_chain,
     fermi_hubbard_chain_sparse,
 )
+from quantum_lattice_models.lattice import (
+    Bond,
+    Lattice,
+    TightBindingModel,
+    custom_tight_binding,
+    custom_tight_binding_sparse,
+)
 from quantum_lattice_models.spin import (
     heisenberg_chain,
     heisenberg_ladder,
@@ -46,8 +53,11 @@ from quantum_lattice_models.topological import (
 
 __all__ = [
     "aubry_andre_harper_chain",
+    "Bond",
     "bose_hubbard_chain",
     "bose_hubbard_chain_sparse",
+    "custom_tight_binding",
+    "custom_tight_binding_sparse",
     "fermi_hubbard_chain",
     "fermi_hubbard_chain_sparse",
     "haldane_honeycomb_lattice",
@@ -62,6 +72,7 @@ __all__ = [
     "kagome_lattice_tight_binding",
     "kagome_lattice_tight_binding_sparse",
     "kitaev_chain_bdg",
+    "Lattice",
     "longitudinal_field_ising",
     "next_nearest_neighbor_ising",
     "rice_mele_model",
@@ -73,6 +84,7 @@ __all__ = [
     "ssh_model",
     "tight_binding_chain",
     "tight_binding_chain_sparse",
+    "TightBindingModel",
     "transverse_field_ising",
     "triangular_lattice_tight_binding",
     "triangular_lattice_tight_binding_sparse",

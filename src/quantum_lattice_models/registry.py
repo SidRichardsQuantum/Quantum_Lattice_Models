@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from quantum_lattice_models import hubbard, spin, tight_binding, topological
+from quantum_lattice_models import hubbard, lattice, spin, tight_binding, topological
 
 
 @dataclass(frozen=True)
@@ -155,6 +155,26 @@ MODEL_REGISTRY: dict[str, ModelInfo] = {
         "Sparse spinful Fermi-Hubbard chain",
         hubbard.fermi_hubbard_chain_sparse,
         {"n_sites": 3, "hopping": 0.5, "interaction": 3.0},
+    ),
+    "custom_tight_binding": _info(
+        "custom_tight_binding",
+        "user",
+        "single particle",
+        "n_sites",
+        "LatticeHamiltonian",
+        "User-defined graph tight-binding model",
+        lattice.custom_tight_binding,
+        {"n_sites": 3, "bonds": ((0, 1), (1, 2)), "hopping": 1.0},
+    ),
+    "custom_tight_binding_sparse": _info(
+        "custom_tight_binding_sparse",
+        "user",
+        "single particle",
+        "n_sites",
+        "scipy.sparse.csr_matrix",
+        "Sparse user-defined graph tight-binding model",
+        lattice.custom_tight_binding_sparse,
+        {"n_sites": 16, "bonds": ((0, 1), (1, 2)), "hopping": 1.0},
     ),
     "ssh_model": _info(
         "ssh_model",
@@ -332,6 +352,47 @@ def get_model_info(name: str) -> ModelInfo:
 
     try:
         return MODEL_REGISTRY[name]
+    except KeyError as exc:
+        raise KeyError(f"Unknown model {name!r}.") from exc
+
+
+def register_model(
+    name: str,
+    *,
+    category: str,
+    basis: str,
+    dimension: str,
+    return_type: str,
+    description: str,
+    builder: Callable[..., object],
+    defaults: dict[str, object] | None = None,
+    overwrite: bool = False,
+) -> ModelInfo:
+    """Register a model builder for discovery by notebooks, docs, and the CLI."""
+
+    if not name:
+        raise ValueError("name must be nonempty.")
+    if name in MODEL_REGISTRY and not overwrite:
+        raise ValueError(f"Model {name!r} is already registered.")
+    info = ModelInfo(
+        name=name,
+        category=category,
+        basis=basis,
+        dimension=dimension,
+        return_type=return_type,
+        description=description,
+        builder=builder,
+        defaults=dict(defaults or {}),
+    )
+    MODEL_REGISTRY[name] = info
+    return info
+
+
+def unregister_model(name: str) -> ModelInfo:
+    """Remove and return a registered model."""
+
+    try:
+        return MODEL_REGISTRY.pop(name)
     except KeyError as exc:
         raise KeyError(f"Unknown model {name!r}.") from exc
 
