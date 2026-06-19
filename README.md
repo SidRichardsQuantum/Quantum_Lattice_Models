@@ -30,6 +30,13 @@
 
 Quantum Lattice Models is a lightweight, package-first Python library for constructing, analyzing, plotting, and exporting small lattice Hamiltonians used in physics workflows and quantum algorithm research prototypes.
 
+Its core scope is model and lattice data: creation or import, validation,
+construction, metadata preservation, and interchange. Lightweight spectra,
+observables, entanglement, dynamics, topology, and plotting tools are included
+when they help users inspect or validate those models; specialized large-scale
+simulation and workflow execution remain the responsibility of external
+packages.
+
 PyPI: [https://pypi.org/project/quantum-lattice-models/](https://pypi.org/project/quantum-lattice-models/)
 
 Website: [https://sidrichardsquantum.github.io/Quantum_Lattice_Models/](https://sidrichardsquantum.github.io/Quantum_Lattice_Models/)
@@ -76,6 +83,80 @@ reuse the same construction path to keep both representations consistent.
 Versioned `ModelSpec` and `LatticeSpec` objects provide portable model
 parameters and finite-lattice geometry. Specifications can be saved as JSON,
 validated in a new process, and rebuilt as dense or sparse Hamiltonians.
+`HamiltonianResult` keeps the matrix associated with its model, basis,
+representation, and construction metadata without relying on NumPy subclass
+attributes.
+
+Model files can be analyzed and exported directly:
+
+```bash
+quantum-lattice spectrum ssh.json
+quantum-lattice export ssh.json --format npz --output ssh-hamiltonian.npz
+```
+
+Models can be filtered and inspected before allocating a matrix:
+
+```bash
+quantum-lattice models --category spin --sparse --json
+quantum-lattice presets --model ssh_model
+quantum-lattice dry-run --preset ssh_topological --n-cells 20 --json
+quantum-lattice compare trivial.json topological.json --json
+```
+
+Named presets remain ordinary, transparent model specifications:
+
+```python
+from quantum_lattice_models import (
+    compare_models,
+    create_model_from_preset,
+    inspect_model,
+)
+
+topological = create_model_from_preset("ssh_topological")
+trivial = create_model_from_preset("ssh_trivial")
+report = inspect_model("transverse_field_ising", n_sites=12)
+comparison = compare_models(topological, trivial)
+```
+
+NPZ exports are self-contained and preserve metadata for dense and CSR sparse
+matrices. NPY exports support dense matrices and write a matching
+`.npy.json` metadata sidecar.
+
+Spin models now share a graph-based sparse construction backend. Existing dense
+builders retain their return types, while matching sparse builders are
+available with a `_sparse` suffix. Arbitrary spin graphs can use
+`SpinInteraction`, `SpinField`, and `graph_spin_hamiltonian_sparse`.
+
+XXZ and Heisenberg chains with equal $XX$ and $YY$ couplings can also be built
+directly in a fixed total Pauli-$Z$ magnetization sector:
+
+```python
+from quantum_lattice_models import xxz_chain_sector
+
+sector = xxz_chain_sector(n_sites=12, magnetization=0, anisotropy=0.8)
+H = sector.matrix
+print(sector.basis.dimension)
+```
+
+Spin observables and entanglement routines work with both full and
+fixed-magnetization state vectors without requiring reduced states to be
+expanded:
+
+```python
+from quantum_lattice_models import (
+    bipartite_entanglement_entropy,
+    site_magnetization_z,
+    spin_correlation_matrix,
+)
+from quantum_lattice_models.spectra import ground_state
+
+_, state = ground_state(H)
+magnetization = site_magnetization_z(state, 12, basis=sector.basis)
+correlations = spin_correlation_matrix(state, 12, basis=sector.basis, connected=True)
+entropy = bipartite_entanglement_entropy(
+    state, 12, subsystem=range(6), basis=sector.basis
+)
+```
 
 ## Why Lattice Models Matter
 
@@ -196,10 +277,15 @@ USAGE.md                     API examples
 THEORY.md                    Shared theory, basis, and numerical conventions
 docs/models/                 Per-model Markdown references and generated HTML
 RESULTS.md                   Generated results
+SCHEMA.md                    Portable schema and compatibility policy
+IMPORTING.md                 CSV, GraphML, and transformation workflow
 ```
 
 Future capabilities and their recommended implementation order are documented
 in [ROADMAP.md](ROADMAP.md).
+Portable fields and compatibility guarantees are documented in
+[SCHEMA.md](SCHEMA.md), with import and transformation examples in
+[IMPORTING.md](IMPORTING.md).
 Implemented analytic checks and the model-validation matrix are documented in
 [VALIDATION.md](VALIDATION.md).
 Concise equations, variables, examples, and cautions for each model family are
@@ -214,8 +300,13 @@ hubbard.py                   Bose-Hubbard and Fermi-Hubbard builders
 topological.py               Haldane, Hofstadter, and Kitaev builders
 geometry.py                  Coordinate helpers for plotting
 lattice.py                   User-defined lattice containers and custom builders
+interchange.py               CSV, NetworkX, and GraphML adapters
+transformations.py           Immutable lattice transformations
+diagnostics.py               Matrix and pre-build resource diagnostics
+comparison.py                Model parameter, matrix, spectrum, and gap comparison
 registry.py                  Structured model metadata
 specs.py                     Versioned portable model and lattice specifications
+storage.py                   Metadata-preserving NPY and NPZ persistence
 cli.py                       quantum-lattice command-line entry point
 models.py                    Backwards-compatible re-export layer
 ```

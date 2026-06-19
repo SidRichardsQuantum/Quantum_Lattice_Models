@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import get_args, get_type_hints
 
 from quantum_lattice_models import hubbard, lattice, spin, tight_binding, topological
@@ -38,6 +38,17 @@ class ModelInfo:
     builder: Callable[..., object] | None = None
     defaults: dict[str, object] = field(default_factory=dict)
     parameters: tuple[ParameterInfo, ...] = ()
+    validation_status: str = "tested"
+
+
+@dataclass(frozen=True)
+class ModelPreset:
+    """Named parameter set for a canonical phase or reference limit."""
+
+    name: str
+    model: str
+    description: str
+    parameters: dict[str, object]
 
 
 _PARAMETER_DESCRIPTIONS = {
@@ -58,6 +69,7 @@ _PARAMETER_DESCRIPTIONS = {
     "h_x": "Transverse x-field strength.",
     "h_z": "Longitudinal z-field strength.",
     "field": "Uniform z-field strength.",
+    "magnetization": "Total Pauli-Z eigenvalue for a conserved spin sector.",
     "coupling": "Overall interaction strength.",
     "anisotropy": "Interaction anisotropy.",
     "leg_coupling": "Spin-ladder leg coupling.",
@@ -95,6 +107,7 @@ def _info(
     description: str,
     builder: Callable[..., object],
     defaults: dict[str, object],
+    validation_status: str = "tested",
 ) -> ModelInfo:
     parameters = _parameter_schema(builder, defaults)
     return ModelInfo(
@@ -107,6 +120,7 @@ def _info(
         builder,
         defaults,
         parameters,
+        validation_status,
     )
 
 
@@ -477,13 +491,205 @@ MODEL_REGISTRY: dict[str, ModelInfo] = {
     ),
 }
 
+MODEL_PRESETS: dict[str, ModelPreset] = {
+    "ssh_trivial": ModelPreset(
+        "ssh_trivial",
+        "ssh_model",
+        "Trivial SSH phase with stronger intracell hopping.",
+        {"n_cells": 8, "t1": 1.0, "t2": 0.5, "periodic": False},
+    ),
+    "ssh_topological": ModelPreset(
+        "ssh_topological",
+        "ssh_model",
+        "Topological SSH phase with open-boundary edge states.",
+        {"n_cells": 8, "t1": 0.5, "t2": 1.0, "periodic": False},
+    ),
+    "ising_zero_field": ModelPreset(
+        "ising_zero_field",
+        "transverse_field_ising",
+        "Classical zero-field Ising reference limit.",
+        {"n_sites": 4, "j": 1.0, "h": 0.0, "periodic": False},
+    ),
+    "ising_critical": ModelPreset(
+        "ising_critical",
+        "transverse_field_ising",
+        "Finite-chain transverse-field Ising critical reference J=h.",
+        {"n_sites": 8, "j": 1.0, "h": 1.0, "periodic": False},
+    ),
+    "xxz_heisenberg": ModelPreset(
+        "xxz_heisenberg",
+        "xxz_chain",
+        "Isotropic Heisenberg point of the XXZ chain.",
+        {"n_sites": 6, "coupling": 1.0, "anisotropy": 1.0, "field": 0.0},
+    ),
+    "aubry_andre_localized": ModelPreset(
+        "aubry_andre_localized",
+        "aubry_andre_harper_chain",
+        "Localized Aubry-Andre regime with potential greater than 2t.",
+        {"n_sites": 34, "hopping": 1.0, "potential": 3.0},
+    ),
+    "kitaev_particle_hole": ModelPreset(
+        "kitaev_particle_hole",
+        "kitaev_chain_bdg",
+        "Kitaev BdG particle-hole symmetry reference parameters.",
+        {"n_sites": 8, "hopping": 1.0, "pairing": 0.5, "chemical_potential": 0.3},
+    ),
+}
 
-def list_models(category: str | None = None) -> tuple[str, ...]:
-    """Return registered model names, optionally filtered by category."""
+for _sparse_spin_builder, _description, _defaults, _dimension in (
+    (
+        spin.transverse_field_ising_sparse,
+        "Sparse TFIM spin chain",
+        {"n_sites": 4, "j": 1.0, "h": 0.5},
+        "2**n_sites",
+    ),
+    (
+        spin.longitudinal_field_ising_sparse,
+        "Sparse Ising chain with transverse and longitudinal fields",
+        {"n_sites": 4, "j": 1.0, "h_x": 0.5, "h_z": 0.1},
+        "2**n_sites",
+    ),
+    (
+        spin.next_nearest_neighbor_ising_sparse,
+        "Sparse frustrated Ising chain",
+        {"n_sites": 5, "j1": 1.0, "j2": 0.25, "h": 0.5},
+        "2**n_sites",
+    ),
+    (
+        spin.heisenberg_chain_sparse,
+        "Sparse anisotropic Heisenberg chain",
+        {"n_sites": 4, "jx": 1.0, "jy": 1.0, "jz": 1.0},
+        "2**n_sites",
+    ),
+    (
+        spin.xy_chain_sparse,
+        "Sparse anisotropic XY chain",
+        {"n_sites": 4, "coupling": 1.0, "anisotropy": 0.3},
+        "2**n_sites",
+    ),
+    (
+        spin.xxz_chain_sparse,
+        "Sparse XXZ spin chain",
+        {"n_sites": 4, "coupling": 1.0, "anisotropy": 0.7},
+        "2**n_sites",
+    ),
+    (
+        spin.j1_j2_heisenberg_chain_sparse,
+        "Sparse frustrated J1-J2 Heisenberg chain",
+        {"n_sites": 5, "j1": 1.0, "j2": 0.4},
+        "2**n_sites",
+    ),
+    (
+        spin.heisenberg_ladder_sparse,
+        "Sparse two-leg Heisenberg ladder",
+        {"n_rungs": 2, "leg_coupling": 1.0, "rung_coupling": 0.7},
+        "2**(2*n_rungs)",
+    ),
+):
+    MODEL_REGISTRY[_sparse_spin_builder.__name__] = _info(
+        "spin",
+        "qubit",
+        _dimension,
+        "scipy.sparse.csr_matrix",
+        _description,
+        _sparse_spin_builder,
+        _defaults,
+    )
 
-    if category is None:
-        return tuple(sorted(MODEL_REGISTRY))
-    return tuple(sorted(name for name, info in MODEL_REGISTRY.items() if info.category == category))
+for _sector_builder, _description, _defaults in (
+    (
+        spin.heisenberg_chain_sector_sparse,
+        "Fixed-magnetization anisotropic Heisenberg chain",
+        {
+            "n_sites": 6,
+            "magnetization": 0,
+            "jx": 1.0,
+            "jy": 1.0,
+            "jz": 1.0,
+        },
+    ),
+    (
+        spin.xxz_chain_sector_sparse,
+        "Fixed-magnetization XXZ spin chain",
+        {"n_sites": 6, "magnetization": 0, "coupling": 1.0, "anisotropy": 1.0},
+    ),
+):
+    MODEL_REGISTRY[_sector_builder.__name__] = _info(
+        "spin",
+        "fixed magnetization qubit",
+        "comb(n_sites,(n_sites-magnetization)//2)",
+        "SpinSectorHamiltonian",
+        _description,
+        _sector_builder,
+        _defaults,
+    )
+
+for _validated_model in (
+    "transverse_field_ising",
+    "tight_binding_chain",
+    "tight_binding_chain_sparse",
+    "ssh_model",
+    "bose_hubbard_chain",
+    "bose_hubbard_chain_sparse",
+    "fermi_hubbard_chain",
+    "fermi_hubbard_chain_sparse",
+    "kitaev_chain_bdg",
+    "haldane_honeycomb_lattice",
+    "haldane_honeycomb_lattice_sparse",
+    "heisenberg_chain_sector_sparse",
+    "xxz_chain_sector_sparse",
+):
+    MODEL_REGISTRY[_validated_model] = replace(
+        MODEL_REGISTRY[_validated_model],
+        validation_status="validated",
+    )
+
+
+def list_models(
+    category: str | None = None,
+    *,
+    basis: str | None = None,
+    sparse: bool | None = None,
+    validation_status: str | None = None,
+) -> tuple[str, ...]:
+    """Return registered model names filtered by discovery metadata."""
+
+    return tuple(
+        sorted(
+            name
+            for name, info in MODEL_REGISTRY.items()
+            if (category is None or info.category == category)
+            and (basis is None or info.basis == basis)
+            and (sparse is None or supports_sparse(name) is sparse)
+            and (validation_status is None or info.validation_status == validation_status)
+        )
+    )
+
+
+def supports_sparse(name: str) -> bool:
+    """Return whether a registered model can construct a sparse Hamiltonian."""
+
+    base = name.removesuffix("_sparse")
+    return f"{base}_sparse" in MODEL_REGISTRY
+
+
+def list_presets(model: str | None = None) -> tuple[str, ...]:
+    """Return named presets, optionally restricted to one model."""
+
+    return tuple(
+        sorted(
+            name for name, preset in MODEL_PRESETS.items() if model is None or preset.model == model
+        )
+    )
+
+
+def get_preset(name: str) -> ModelPreset:
+    """Return one named model preset."""
+
+    try:
+        return MODEL_PRESETS[name]
+    except KeyError as exc:
+        raise KeyError(f"Unknown preset {name!r}.") from exc
 
 
 def get_model_info(name: str) -> ModelInfo:
@@ -507,6 +713,7 @@ def register_model(
     defaults: dict[str, object] | None = None,
     parameters: tuple[ParameterInfo, ...] | None = None,
     overwrite: bool = False,
+    validation_status: str = "unvalidated",
 ) -> ModelInfo:
     """Register a model builder for discovery by notebooks, docs, and the CLI."""
 
@@ -525,6 +732,7 @@ def register_model(
         builder=builder,
         defaults=registered_defaults,
         parameters=parameters or _parameter_schema(builder, registered_defaults),
+        validation_status=validation_status,
     )
     MODEL_REGISTRY[name] = info
     return info
@@ -539,7 +747,7 @@ def unregister_model(name: str) -> ModelInfo:
         raise KeyError(f"Unknown model {name!r}.") from exc
 
 
-def model_table() -> list[dict[str, str]]:
+def model_table() -> list[dict[str, object]]:
     """Return registry metadata as dictionaries for docs, CLIs, or notebooks."""
 
     return [
@@ -550,8 +758,10 @@ def model_table() -> list[dict[str, str]]:
             "dimension": info.dimension,
             "return_type": info.return_type,
             "description": info.description,
-            "defaults": repr(info.defaults),
-            "parameters": repr(tuple(parameter.name for parameter in info.parameters)),
+            "defaults": dict(info.defaults),
+            "parameters": tuple(parameter.name for parameter in info.parameters),
+            "supports_sparse": supports_sparse(info.name),
+            "validation_status": info.validation_status,
         }
-        for info in MODEL_REGISTRY.values()
+        for info in sorted(MODEL_REGISTRY.values(), key=lambda item: item.name)
     ]

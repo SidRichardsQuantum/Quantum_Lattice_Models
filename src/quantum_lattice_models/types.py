@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numpy as np
+import scipy.sparse as sp
+
+if TYPE_CHECKING:
+    from quantum_lattice_models.specs import ModelSpec
 
 
 @dataclass(frozen=True)
@@ -13,6 +18,46 @@ class PauliTerm:
 
     coefficient: complex
     operators: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class HamiltonianResult:
+    """Hamiltonian matrix together with portable construction metadata."""
+
+    matrix: np.ndarray | sp.csr_matrix
+    model: ModelSpec
+    basis: str
+    representation: str
+    metadata: dict[str, object]
+
+    def __post_init__(self) -> None:
+        if self.representation not in {"dense", "sparse"}:
+            raise ValueError("representation must be 'dense' or 'sparse'.")
+        if self.representation == "sparse" and not sp.issparse(self.matrix):
+            raise ValueError("Sparse Hamiltonian results require a SciPy sparse matrix.")
+        if self.representation == "dense" and sp.issparse(self.matrix):
+            raise ValueError("Dense Hamiltonian results require a NumPy array.")
+        shape = self.matrix.shape
+        if len(shape) != 2 or shape[0] != shape[1]:
+            raise ValueError("Hamiltonian result matrices must be square.")
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        """Return the matrix shape."""
+
+        return self.matrix.shape
+
+    def to_metadata(self) -> dict[str, object]:
+        """Return JSON-compatible metadata for persistence and inspection."""
+
+        return {
+            "model": self.model.to_dict(),
+            "basis": self.basis,
+            "representation": self.representation,
+            "matrix_shape": list(self.matrix.shape),
+            "matrix_dtype": str(self.matrix.dtype),
+            "metadata": dict(self.metadata),
+        }
 
 
 class DenseHamiltonian(np.ndarray):

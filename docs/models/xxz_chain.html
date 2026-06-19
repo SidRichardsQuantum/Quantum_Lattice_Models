@@ -32,10 +32,14 @@ $$</p>
 <p>It is useful for anisotropy, magnetization, gap, and conserved-$S^z$
 benchmarks.</p>
 <h2>Basis and use</h2>
-<p>The dense computational-basis matrix has dimension $2^N$.</p>
-<pre><code class="language-python">from quantum_lattice_models import xxz_chain
+<p>The full computational-basis matrix has dimension $2^N$. Dense and CSR sparse
+builders are available. A fixed total Pauli-$Z$ magnetization sector
+$M=\sum_i Z_i$ has dimension $\binom{N}{(N-M)/2}$.</p>
+<pre><code class="language-python">from quantum_lattice_models import xxz_chain, xxz_chain_sector
 
 H = xxz_chain(n_sites=6, coupling=1.0, anisotropy=0.7)
+sector = xxz_chain_sector(n_sites=10, magnetization=0, anisotropy=0.7)
+H_sector = sector.matrix
 </code></pre>
 <h2>Parameters</h2>
 <table>
@@ -84,11 +88,90 @@ H = xxz_chain(n_sites=6, coupling=1.0, anisotropy=0.7)
 <td style="text-align:right"><code>False</code></td>
 <td></td>
 </tr>
+<tr>
+<td><code>xxz_chain_sparse</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>xxz_chain_sparse</code></td>
+<td><code>coupling</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain_sparse</code></td>
+<td><code>anisotropy</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.7</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain_sparse</code></td>
+<td><code>field</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain_sparse</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain_sector_sparse</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>6</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>xxz_chain_sector_sparse</code></td>
+<td><code>magnetization</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain_sector_sparse</code></td>
+<td><code>coupling</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain_sector_sparse</code></td>
+<td><code>anisotropy</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain_sector_sparse</code></td>
+<td><code>field</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain_sector_sparse</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <h2>User notes</h2>
 <p><code>xxz_chain</code> delegates to <code>heisenberg_chain</code>; its field term therefore has a
-positive sign. Fixed-magnetization sectors are planned but not yet available.</p>
+positive sign. <code>magnetization</code> is the total Pauli-$Z$ eigenvalue, so it must
+have the same parity as <code>n_sites</code> and satisfy $|M|\le N$. Sector basis mappings
+support projection from and embedding into the full computational basis.</p>
 <p>Related: <a href="heisenberg_chain.html">Heisenberg chain</a>, <a href="xy_chain.html">XY chain</a>.</p>
 
       </article>

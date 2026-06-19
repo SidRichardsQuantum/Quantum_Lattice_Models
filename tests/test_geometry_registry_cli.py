@@ -19,6 +19,7 @@ from quantum_lattice_models.registry import (
     list_models,
     model_table,
     register_model,
+    supports_sparse,
     unregister_model,
 )
 
@@ -52,6 +53,8 @@ def test_model_registry_helpers() -> None:
     assert n_cells.cli_name == "--n-cells"
     assert all(get_model_info(name).name == name for name in names)
     assert any(row["name"] == "bose_hubbard_chain" for row in model_table())
+    assert supports_sparse("tight_binding_chain")
+    assert get_model_info("ssh_model").validation_status == "validated"
 
 
 def test_register_and_unregister_model() -> None:
@@ -91,6 +94,7 @@ def test_register_and_unregister_model() -> None:
 
     assert removed.name == info.name
     assert info.name not in list_models()
+    assert info.validation_status == "unvalidated"
 
 
 def test_cli_models_and_spectrum(capsys: pytest.CaptureFixture[str]) -> None:

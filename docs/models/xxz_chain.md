@@ -1,4 +1,4 @@
-<!-- builders: xxz_chain -->
+<!-- builders: xxz_chain, xxz_chain_sparse, xxz_chain_sector_sparse -->
 # XXZ Chain
 
 ## Purpose and Hamiltonian
@@ -16,12 +16,16 @@ benchmarks.
 
 ## Basis and use
 
-The dense computational-basis matrix has dimension $2^N$.
+The full computational-basis matrix has dimension $2^N$. Dense and CSR sparse
+builders are available. A fixed total Pauli-$Z$ magnetization sector
+$M=\sum_i Z_i$ has dimension $\binom{N}{(N-M)/2}$.
 
 ```python
-from quantum_lattice_models import xxz_chain
+from quantum_lattice_models import xxz_chain, xxz_chain_sector
 
 H = xxz_chain(n_sites=6, coupling=1.0, anisotropy=0.7)
+sector = xxz_chain_sector(n_sites=10, magnetization=0, anisotropy=0.7)
+H_sector = sector.matrix
 ```
 
 ## Parameters
@@ -31,6 +35,8 @@ H = xxz_chain(n_sites=6, coupling=1.0, anisotropy=0.7)
 ## User notes
 
 `xxz_chain` delegates to `heisenberg_chain`; its field term therefore has a
-positive sign. Fixed-magnetization sectors are planned but not yet available.
+positive sign. `magnetization` is the total Pauli-$Z$ eigenvalue, so it must
+have the same parity as `n_sites` and satisfy $|M|\le N$. Sector basis mappings
+support projection from and embedding into the full computational basis.
 
 Related: [Heisenberg chain](heisenberg_chain.md), [XY chain](xy_chain.md).

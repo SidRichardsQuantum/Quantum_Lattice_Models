@@ -79,6 +79,14 @@ equivalence.</p>
 but it does not change exponential Hilbert-space growth in many-body models.
 Use <code>estimate_model_dimension</code>, <code>estimate_dense_memory</code>, and <code>diagnose_matrix</code>
 before constructing larger systems.</p>
+<p>For XXZ and Heisenberg chains with $J_x=J_y$, fixed-magnetization builders
+restrict the basis to a total Pauli-$Z$ eigenvalue</p>
+<p>$$
+M=\sum_i Z_i=N-2n_1.
+$$</p>
+<p>The reduced dimension is $\binom{N}{(N-M)/2}$. Reduced basis states are stored
+as their integer indices in the full computational basis, allowing explicit
+projection, embedding, and full-space block validation.</p>
 <h2>Exact diagonalization</h2>
 <p>Exact diagonalization solves</p>
 <p>$$
@@ -92,9 +100,16 @@ spectra.</p>
 reference workflows, not large-scale many-body simulation.</p>
 <h2>Observables and states</h2>
 <p>State vectors are expected to use the same basis ordering as their
-Hamiltonian. <code>expectation</code> computes $\langle\psi|O|\psi\rangle`;
-spin helpers provide $Z$ magnetization and correlations, and localization
-helpers provide inverse participation ratios or SSH edge weights.</p>
+Hamiltonian. <code>expectation</code> computes $\langle\psi|O|\psi\rangle<code>; spin helpers provide site-resolved and total $Z$ magnetization, same-axis correlation matrices, connected correlations, and static structure factors. These routines accept either the full computational basis or a </code>FixedMagnetizationBasis`.</p>
+<p>Reduced density matrices group amplitudes by subsystem and environment bit
+patterns. Sector states are handled directly from their full-basis integer
+labels rather than first allocating a vector of length $2^N$. Bipartite
+entanglement uses the von Neumann entropy</p>
+<p>$$
+S_A=-\operatorname{Tr}(\rho_A\log \rho_A).
+$$</p>
+<p>The default logarithm base is two, so Bell-state entropy is one bit.
+Localization helpers provide inverse participation ratios or SSH edge weights.</p>
 <p>Probability plots normalize $|\psi_i|^2$ by default. Phase-resolved lattice
 plots use the complex argument of each amplitude.</p>
 <h2>Symmetries and diagnostics</h2>
@@ -102,15 +117,15 @@ plots use the complex argument of each amplitude.</p>
 currently test spectral pairing $E\leftrightarrow-E$ rather than constructing
 the full antiunitary symmetry operator. Numerical tolerances must be chosen for
 the problem scale.</p>
-<p>Further conserved-sector, commutator, degeneracy, and topological diagnostics
-are listed in <a href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/ROADMAP.md">ROADMAP.md</a>.</p>
+<p>Further parity, translation-sector, commutator, degeneracy, and topological
+diagnostics are listed in <a href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/ROADMAP.md">ROADMAP.md</a>.</p>
 <h2>Portable model specifications</h2>
 <p><code>ModelSpec</code> records a registered model family, parameters, basis, requested
 dense or sparse representation, and optional <code>LatticeSpec</code>. JSON encodes
 complex values explicitly. Loading a specification validates it against the
 registry before reconstruction.</p>
-<p>Specifications improve reproducibility but do not yet preserve every piece of
-runtime matrix metadata in a structured result container.</p>
+<p><code>HamiltonianResult</code> preserves matrix construction metadata, including reduced
+spin-sector basis information where applicable.</p>
 <h2>Quantum-algorithm testbeds</h2>
 <p>Small lattice Hamiltonians provide classically verifiable inputs for VQE, QPE,
 Hamiltonian simulation, QSVT, and quantum-walk prototypes. The package supplies

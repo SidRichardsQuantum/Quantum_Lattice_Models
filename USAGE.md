@@ -542,9 +542,14 @@ After installation, use the `quantum-lattice` entry point:
 
 ```bash
 quantum-lattice models
+quantum-lattice models --category spin --sparse --json
+quantum-lattice presets --model ssh_model
+quantum-lattice dry-run --preset ssh_topological --n-cells 20 --json
 quantum-lattice create ssh_model --n-cells 12 --t1 0.4 --output ssh.json
+quantum-lattice create --preset ssh_topological --n-cells 12 --output ssh.json
 quantum-lattice inspect ssh.json
 quantum-lattice validate ssh.json
+quantum-lattice compare ssh.json other-ssh.json --json
 quantum-lattice spectrum --model ssh_model --n-cells 8
 quantum-lattice plot --model harper_hofstadter_square_lattice --n-rows 4 --n-cols 4 --flux 0.25 --output images/hofstadter_cli.png
 quantum-lattice spectrum --model custom_tight_binding --n-sites 3 --bond 0,1 --bond 1,2,0.25j
@@ -556,20 +561,38 @@ numbers. `create` writes a versioned JSON specification, `inspect` reports its
 model and resource summary, and `validate` checks the schema, registered
 parameters, geometry, and requested dense or sparse representation.
 
+`models` supports category, basis, sparse-capability, and validation-status
+filters. `dry-run` reports dimensions, dense-memory requirements,
+representation, basis, sparse availability, validation status, and warnings
+without constructing a matrix. Add `--json` for deterministic
+machine-readable output. Presets are transparent parameter dictionaries and
+can be overridden with normal model options.
+
 ## Observables
 
 ```python
+from quantum_lattice_models import (
+    bipartite_entanglement_entropy,
+    site_magnetization_z,
+    spin_correlation_matrix,
+    static_spin_structure_factor,
+)
 from quantum_lattice_models.models import transverse_field_ising
-from quantum_lattice_models.observables import correlation_zz, magnetization_z
 from quantum_lattice_models.spectra import eigensystem
 
 H = transverse_field_ising(n_sites=4, j=1.0, h=0.5)
 values, vectors = eigensystem(H)
 ground_state = vectors[:, 0]
 
-print(magnetization_z(ground_state, n_sites=4))
-print(correlation_zz(ground_state, n_sites=4, i=0, j=1))
+print(site_magnetization_z(ground_state, n_sites=4))
+print(spin_correlation_matrix(ground_state, n_sites=4, connected=True))
+print(static_spin_structure_factor(ground_state, n_sites=4, momenta=[0.0, 3.14159]))
+print(bipartite_entanglement_entropy(ground_state, n_sites=4, subsystem=[0, 1]))
 ```
+
+Pass `basis=sector.basis` to the same functions when the state comes from
+`xxz_chain_sector` or `heisenberg_chain_sector`. Correlations and reduced
+density matrices operate directly on the reduced state vector.
 
 ## Plotting
 

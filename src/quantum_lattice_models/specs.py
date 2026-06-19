@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +13,35 @@ import scipy.sparse as sp
 from quantum_lattice_models.lattice import Bond, Lattice
 
 SPEC_SCHEMA_VERSION = "1.0"
+_MODEL_FIELDS = {
+    "schema_version",
+    "family",
+    "parameters",
+    "lattice",
+    "basis",
+    "representation",
+    "units",
+    "conventions",
+    "references",
+    "provenance",
+    "metadata",
+}
+_LATTICE_FIELDS = {
+    "schema_version",
+    "n_sites",
+    "positions",
+    "bonds",
+    "site_labels",
+    "orbital_labels",
+    "sublattice_labels",
+    "unit_cells",
+    "boundary_conditions",
+    "units",
+    "conventions",
+    "references",
+    "provenance",
+    "metadata",
+}
 
 
 @dataclass(frozen=True)
@@ -27,6 +56,10 @@ class LatticeSpec:
     sublattice_labels: tuple[str, ...] = ()
     unit_cells: tuple[int, ...] = ()
     boundary_conditions: dict[str, str] = field(default_factory=dict)
+    units: dict[str, str] = field(default_factory=dict)
+    conventions: dict[str, str] = field(default_factory=dict)
+    references: tuple[str, ...] = ()
+    provenance: tuple[dict[str, object], ...] = ()
     metadata: dict[str, object] = field(default_factory=dict)
     schema_version: str = SPEC_SCHEMA_VERSION
 
@@ -48,9 +81,17 @@ class LatticeSpec:
                 raise ValueError(
                     "lattice.positions must contain consistently 2D or 3D coordinates."
                 )
+            if not all(np.isfinite(value) for position in self.positions for value in position):
+                raise ValueError("lattice.positions must contain only finite coordinates.")
         for bond in self.bonds:
+            if not isinstance(bond.source, int) or not isinstance(bond.target, int):
+                raise ValueError("lattice bond indices must be integers.")
             if not 0 <= bond.source < self.n_sites or not 0 <= bond.target < self.n_sites:
                 raise ValueError("lattice bond indices must satisfy 0 <= index < n_sites.")
+            if bond.value is not None and not isinstance(
+                bond.value, (int, float, complex, np.number)
+            ):
+                raise ValueError("lattice bond values must be numeric or null.")
         for name, labels in (
             ("site_labels", self.site_labels),
             ("orbital_labels", self.orbital_labels),
@@ -66,6 +107,16 @@ class LatticeSpec:
         }
         if invalid_boundaries:
             raise ValueError("lattice boundary conditions must be 'open' or 'periodic'.")
+        if not all(isinstance(axis, str) and axis for axis in self.boundary_conditions):
+            raise ValueError("lattice boundary-condition axes must be nonempty strings.")
+        _validate_string_mapping(self.units, "lattice.units")
+        _validate_string_mapping(self.conventions, "lattice.conventions")
+        if not all(isinstance(reference, str) for reference in self.references):
+            raise ValueError("lattice.references must contain strings.")
+        if not all(isinstance(record, dict) for record in self.provenance):
+            raise ValueError("lattice.provenance must contain objects.")
+        _validate_json_value(self.provenance, "lattice.provenance")
+        _validate_json_value(self.metadata, "lattice.metadata")
 
     def to_lattice(self) -> Lattice:
         """Return the runtime ``Lattice`` represented by this specification."""
@@ -82,6 +133,14 @@ class LatticeSpec:
             metadata["unit_cells"] = self.unit_cells
         if self.boundary_conditions:
             metadata["boundary_conditions"] = dict(self.boundary_conditions)
+        if self.units:
+            metadata["units"] = dict(self.units)
+        if self.conventions:
+            metadata["conventions"] = dict(self.conventions)
+        if self.references:
+            metadata["references"] = self.references
+        if self.provenance:
+            metadata["provenance"] = self.provenance
         return Lattice(
             n_sites=self.n_sites,
             positions=self.positions or None,
@@ -110,6 +169,10 @@ class LatticeSpec:
             "sublattice_labels": list(self.sublattice_labels),
             "unit_cells": list(self.unit_cells),
             "boundary_conditions": dict(self.boundary_conditions),
+            "units": dict(self.units),
+            "conventions": dict(self.conventions),
+            "references": list(self.references),
+            "provenance": _encode_value(self.provenance),
             "metadata": _encode_value(self.metadata),
         }
 
@@ -117,17 +180,17 @@ class LatticeSpec:
     def from_dict(cls, data: dict[str, object]) -> LatticeSpec:
         """Construct a lattice specification from decoded JSON data."""
 
+        data = migrate_spec_data(data, kind="lattice")
+        _validate_fields(data, _LATTICE_FIELDS, "lattice")
+        _require_fields(data, {"n_sites"}, "lattice")
+        _require_type(data["n_sites"], int, "lattice.n_sites")
         bonds = tuple(
-            Bond(
-                source=int(record["source"]),
-                target=int(record["target"]),
-                value=_decode_value(record.get("value")),
-            )
+            _bond_from_record(record)
             for record in _record_list(data.get("bonds", []), "lattice.bonds")
         )
         spec = cls(
             schema_version=str(data.get("schema_version", "")),
-            n_sites=int(data["n_sites"]),
+            n_sites=data["n_sites"],
             positions=tuple(
                 tuple(float(value) for value in position) for position in data.get("positions", [])
             ),
@@ -140,6 +203,14 @@ class LatticeSpec:
                 str(key): str(value)
                 for key, value in _mapping(data.get("boundary_conditions", {})).items()
             },
+            units={str(key): str(value) for key, value in _mapping(data.get("units", {})).items()},
+            conventions={
+                str(key): str(value) for key, value in _mapping(data.get("conventions", {})).items()
+            },
+            references=tuple(str(value) for value in data.get("references", [])),
+            provenance=tuple(
+                _mapping(_decode_value(record)) for record in data.get("provenance", [])
+            ),
             metadata=_mapping(_decode_value(data.get("metadata", {}))),
         )
         spec.validate()
@@ -156,6 +227,7 @@ class ModelSpec:
     basis: str | None = None
     representation: str = "dense"
     units: dict[str, str] = field(default_factory=dict)
+    conventions: dict[str, str] = field(default_factory=dict)
     references: tuple[str, ...] = ()
     provenance: dict[str, object] = field(default_factory=dict)
     metadata: dict[str, object] = field(default_factory=dict)
@@ -173,6 +245,12 @@ class ModelSpec:
             )
         if self.representation not in {"dense", "sparse"}:
             raise ValueError("model.representation must be 'dense' or 'sparse'.")
+        if not isinstance(self.family, str) or not self.family:
+            raise ValueError("model.family must be a nonempty string.")
+        if not isinstance(self.parameters, dict) or not all(
+            isinstance(name, str) for name in self.parameters
+        ):
+            raise ValueError("model.parameters must be an object with string keys.")
         try:
             info = get_model_info(self.family)
         except KeyError as exc:
@@ -197,15 +275,65 @@ class ModelSpec:
             if "n_sites" not in values and "bonds" not in values:
                 raise ValueError("Custom tight-binding specifications require a lattice.")
         _resolve_builder_name(self.family, self.representation)
+        _validate_string_mapping(self.units, "model.units")
+        _validate_string_mapping(self.conventions, "model.conventions")
+        if not all(isinstance(reference, str) for reference in self.references):
+            raise ValueError("model.references must contain strings.")
+        _validate_json_value(self.parameters, "model.parameters")
+        _validate_json_value(self.provenance, "model.provenance")
+        _validate_json_value(self.metadata, "model.metadata")
 
     def hamiltonian(self, *, sparse: bool | None = None) -> np.ndarray | sp.csr_matrix:
         """Build the represented Hamiltonian in dense or sparse form."""
 
-        from quantum_lattice_models.registry import get_model_info
+        representation = (
+            self.representation if sparse is None else ("sparse" if sparse else "dense")
+        )
+        built = self._build_value(representation)
+        return getattr(built, "matrix", built)
+
+    def build_result(self, *, sparse: bool | None = None):
+        """Build a Hamiltonian with its model, basis, and construction metadata."""
+
+        from quantum_lattice_models.types import HamiltonianResult
 
         representation = (
             self.representation if sparse is None else ("sparse" if sparse else "dense")
         )
+        built = self._build_value(representation)
+        matrix = getattr(built, "matrix", built)
+        result_model = (
+            self
+            if representation == self.representation
+            else replace(self, representation=representation)
+        )
+        matrix_metadata = dict(getattr(matrix, "metadata", {}))
+        if built is not matrix and hasattr(built, "to_metadata"):
+            matrix_metadata.update(built.to_metadata())
+        for name in ("model_name", "n_sites", "lattice_shape"):
+            value = getattr(matrix, name, None)
+            if value is not None:
+                matrix_metadata[name] = value
+        terms = getattr(matrix, "terms", ())
+        if terms:
+            matrix_metadata["pauli_terms"] = [
+                {
+                    "coefficient": _encode_value(term.coefficient),
+                    "operators": list(term.operators),
+                }
+                for term in terms
+            ]
+        return HamiltonianResult(
+            matrix=matrix,
+            model=result_model,
+            basis=self.basis or "",
+            representation=representation,
+            metadata=matrix_metadata,
+        )
+
+    def _build_value(self, representation: str) -> object:
+        from quantum_lattice_models.registry import get_model_info
+
         self.validate()
         builder_name = _resolve_builder_name(self.family, representation)
         info = get_model_info(builder_name)
@@ -231,6 +359,7 @@ class ModelSpec:
             "basis": self.basis,
             "representation": self.representation,
             "units": dict(self.units),
+            "conventions": dict(self.conventions),
             "references": list(self.references),
             "provenance": _encode_value(self.provenance),
             "metadata": _encode_value(self.metadata),
@@ -240,7 +369,14 @@ class ModelSpec:
     def from_dict(cls, data: dict[str, object]) -> ModelSpec:
         """Construct a model specification from decoded JSON data."""
 
+        data = migrate_spec_data(data, kind="model")
+        _validate_fields(data, _MODEL_FIELDS, "model")
+        _require_fields(data, {"family"}, "model")
+        _require_type(data["family"], str, "model.family")
+        _require_type(data.get("parameters", {}), dict, "model.parameters")
         lattice_data = data.get("lattice")
+        if lattice_data is not None:
+            _require_type(lattice_data, dict, "model.lattice")
         spec = cls(
             schema_version=str(data.get("schema_version", "")),
             family=str(data["family"]),
@@ -251,6 +387,9 @@ class ModelSpec:
             basis=None if data.get("basis") is None else str(data["basis"]),
             representation=str(data.get("representation", "dense")),
             units={str(key): str(value) for key, value in _mapping(data.get("units", {})).items()},
+            conventions={
+                str(key): str(value) for key, value in _mapping(data.get("conventions", {})).items()
+            },
             references=tuple(str(value) for value in data.get("references", [])),
             provenance=_mapping(_decode_value(data.get("provenance", {}))),
             metadata=_mapping(_decode_value(data.get("metadata", {}))),
@@ -281,7 +420,24 @@ class ModelSpec:
             "representation": self.representation,
             "parameters": dict(sorted(self.parameters.items())),
             "has_lattice": self.lattice is not None,
+            "units": dict(sorted(self.units.items())),
+            "conventions": dict(sorted(self.conventions.items())),
+            "references": list(self.references),
+            "provenance": dict(self.provenance),
+            "metadata": dict(self.metadata),
         }
+        if self.lattice is not None:
+            summary["lattice"] = {
+                "n_sites": self.lattice.n_sites,
+                "n_bonds": len(self.lattice.bonds),
+                "coordinate_dimension": (
+                    len(self.lattice.positions[0]) if self.lattice.positions else None
+                ),
+                "units": dict(sorted(self.lattice.units.items())),
+                "conventions": dict(sorted(self.lattice.conventions.items())),
+                "references": list(self.lattice.references),
+                "provenance": list(self.lattice.provenance),
+            }
         dimension_parameters = dict(self.parameters)
         if self.lattice is not None:
             dimension_parameters.setdefault("n_sites", self.lattice.n_sites)
@@ -301,6 +457,11 @@ def create_model_spec(
     parameters: dict[str, object] | None = None,
     lattice: LatticeSpec | None = None,
     representation: str | None = None,
+    units: dict[str, str] | None = None,
+    conventions: dict[str, str] | None = None,
+    references: tuple[str, ...] = (),
+    provenance: dict[str, object] | None = None,
+    metadata: dict[str, object] | None = None,
 ) -> ModelSpec:
     """Create a validated specification using registered defaults."""
 
@@ -324,9 +485,36 @@ def create_model_spec(
         lattice=lattice,
         basis=info.basis,
         representation=inferred_representation,
+        units=dict(units or {}),
+        conventions=dict(conventions or {}),
+        references=tuple(references),
+        provenance=dict(provenance or {}),
+        metadata=dict(metadata or {}),
     )
     spec.validate()
     return spec
+
+
+def create_model_from_preset(
+    preset_name: str,
+    *,
+    parameters: dict[str, object] | None = None,
+    representation: str | None = None,
+) -> ModelSpec:
+    """Create a model specification from a named preset with optional overrides."""
+
+    from quantum_lattice_models.registry import get_preset
+
+    preset = get_preset(preset_name)
+    resolved = dict(preset.parameters)
+    resolved.update(parameters or {})
+    return create_model_spec(
+        preset.model,
+        parameters=resolved,
+        representation=representation,
+        provenance={"preset": preset.name},
+        metadata={"preset_description": preset.description},
+    )
 
 
 def load_model(path: str | Path) -> ModelSpec:
@@ -336,6 +524,37 @@ def load_model(path: str | Path) -> ModelSpec:
     if not isinstance(data, dict):
         raise ValueError("Model specification JSON must contain an object.")
     return ModelSpec.from_dict(data)
+
+
+def migrate_spec_data(
+    data: dict[str, object],
+    *,
+    kind: str,
+) -> dict[str, object]:
+    """Migrate decoded model or lattice data to the current schema.
+
+    Unversioned files from the pre-schema prototype are treated as legacy
+    version ``0`` and receive the current version marker. Unknown past and all
+    future versions are rejected until an explicit migration is implemented.
+    """
+
+    if kind not in {"model", "lattice"}:
+        raise ValueError("kind must be 'model' or 'lattice'.")
+    if not isinstance(data, dict):
+        raise ValueError(f"{kind} specification must contain an object.")
+    migrated = dict(data)
+    version = migrated.get("schema_version")
+    if version is None:
+        migrated["schema_version"] = SPEC_SCHEMA_VERSION
+        return migrated
+    if not isinstance(version, str):
+        raise ValueError(f"{kind}.schema_version must be a string.")
+    if version == SPEC_SCHEMA_VERSION:
+        return migrated
+    raise ValueError(
+        f"Unsupported {kind} schema_version {version!r}; no migration to "
+        f"{SPEC_SCHEMA_VERSION!r} is registered."
+    )
 
 
 def _resolve_builder_name(family: str, representation: str) -> str:
@@ -387,3 +606,54 @@ def _record_list(value: object, field_name: str) -> list[dict[str, Any]]:
     if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
         raise ValueError(f"{field_name} must be a list of objects.")
     return value
+
+
+def _validate_fields(data: dict[str, object], allowed: set[str], field_name: str) -> None:
+    unknown = sorted(set(data) - allowed)
+    if unknown:
+        raise ValueError(f"{field_name} contains unknown fields: {', '.join(unknown)}.")
+
+
+def _require_fields(data: dict[str, object], required: set[str], field_name: str) -> None:
+    missing = sorted(required - set(data))
+    if missing:
+        raise ValueError(f"{field_name} is missing required fields: {', '.join(missing)}.")
+
+
+def _require_type(value: object, expected: type, field_name: str) -> None:
+    if expected is int:
+        valid = isinstance(value, int) and not isinstance(value, bool)
+    else:
+        valid = isinstance(value, expected)
+    if not valid:
+        raise ValueError(f"{field_name} must have type {expected.__name__}.")
+
+
+def _required_int(record: dict[str, Any], name: str, field_name: str) -> int:
+    if name not in record:
+        raise ValueError(f"{field_name} entries require {name!r}.")
+    _require_type(record[name], int, f"{field_name}.{name}")
+    return record[name]
+
+
+def _bond_from_record(record: dict[str, Any]) -> Bond:
+    _validate_fields(record, {"source", "target", "value"}, "lattice.bonds entry")
+    return Bond(
+        source=_required_int(record, "source", "lattice.bonds"),
+        target=_required_int(record, "target", "lattice.bonds"),
+        value=_decode_value(record.get("value")),
+    )
+
+
+def _validate_json_value(value: object, field_name: str) -> None:
+    try:
+        json.dumps(_encode_value(value))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{field_name} must contain portable JSON values.") from exc
+
+
+def _validate_string_mapping(value: object, field_name: str) -> None:
+    if not isinstance(value, dict) or not all(
+        isinstance(key, str) and isinstance(item, str) for key, item in value.items()
+    ):
+        raise ValueError(f"{field_name} must map strings to strings.")

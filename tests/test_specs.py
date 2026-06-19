@@ -7,10 +7,12 @@ import pytest
 import scipy.sparse as sp
 
 from quantum_lattice_models import (
+    HamiltonianResult,
     LatticeSpec,
     ModelSpec,
     create_model_spec,
     load_model,
+    migrate_spec_data,
 )
 from quantum_lattice_models.cli import main
 from quantum_lattice_models.lattice import Bond
@@ -24,6 +26,10 @@ def test_lattice_spec_round_trip_preserves_complex_bonds() -> None:
         sublattice_labels=("A", "B", "A"),
         unit_cells=(0, 0, 1),
         boundary_conditions={"x": "open"},
+        units={"position": "lattice_constant"},
+        conventions={"bond_sign": "explicit matrix element"},
+        references=("doi:10.0000/example",),
+        provenance=({"operation": "created", "parameters": {}},),
         metadata={"label": "triangle fragment"},
     )
 
@@ -37,6 +43,11 @@ def test_model_spec_json_round_trip_and_dense_sparse_construction(tmp_path) -> N
     spec = create_model_spec(
         "tight_binding_chain",
         parameters={"n_sites": 5, "hopping": 0.7, "periodic": True},
+        units={"hopping": "eV"},
+        conventions={"hopping_sign": "H_ij=-t"},
+        references=("doi:10.0000/example",),
+        provenance={"source": "test"},
+        metadata={"purpose": "round-trip"},
     )
     path = spec.save(tmp_path / "chain.json")
     restored = load_model(path)
@@ -50,6 +61,8 @@ def test_model_spec_json_round_trip_and_dense_sparse_construction(tmp_path) -> N
     assert np.allclose(sparse.toarray(), dense)
     assert json.loads(path.read_text())["schema_version"] == "1.0"
     assert restored.parameters["onsite"] == 0.0
+    assert restored.units["hopping"] == "eV"
+    assert restored.conventions["hopping_sign"] == "H_ij=-t"
 
     onsite_spec = create_model_spec(
         "tight_binding_chain",
@@ -89,12 +102,11 @@ def test_model_spec_validation_rejects_invalid_schema_and_representation() -> No
         ModelSpec(family="ssh_model", schema_version="2.0").validate()
     with pytest.raises(ValueError, match="representation"):
         ModelSpec(family="ssh_model", representation="gpu").validate()
-    with pytest.raises(ValueError, match="does not provide a sparse builder"):
-        ModelSpec(
-            family="transverse_field_ising",
-            parameters={"n_sites": 2},
-            representation="sparse",
-        ).validate()
+    ModelSpec(
+        family="transverse_field_ising",
+        parameters={"n_sites": 2},
+        representation="sparse",
+    ).validate()
     with pytest.raises(ValueError, match="must have type int"):
         ModelSpec(
             family="ssh_model",
@@ -137,3 +149,42 @@ def test_create_inspect_and_validate_cli(tmp_path, capsys) -> None:
 
     assert main(["validate", str(path)]) == 0
     assert capsys.readouterr().out.startswith("valid\tssh_model\t1.0")
+
+
+def test_schema_migration_and_strict_file_validation() -> None:
+    legacy = {
+        "family": "ssh_model",
+        "parameters": {"n_cells": 2},
+        "basis": "single particle",
+    }
+    migrated = migrate_spec_data(legacy, kind="model")
+    assert migrated["schema_version"] == "1.0"
+    assert ModelSpec.from_dict(legacy).schema_version == "1.0"
+
+    with pytest.raises(ValueError, match="no migration"):
+        ModelSpec.from_dict({**legacy, "schema_version": "2.0"})
+    with pytest.raises(ValueError, match="unknown fields"):
+        ModelSpec.from_dict({**legacy, "unexpected": True})
+    with pytest.raises(ValueError, match="entries require 'target'"):
+        LatticeSpec.from_dict({"n_sites": 2, "bonds": [{"source": 0}]})
+    with pytest.raises(ValueError, match="finite coordinates"):
+        LatticeSpec(n_sites=1, positions=((float("nan"), 0.0),)).validate()
+    with pytest.raises(ValueError, match="conventions"):
+        ModelSpec(family="ssh_model", conventions={"gauge": 2}).validate()
+    with pytest.raises(ValueError, match="provenance"):
+        LatticeSpec(n_sites=1, provenance=("invalid",)).validate()
+
+
+def test_model_spec_build_result_preserves_model_and_representation() -> None:
+    spec = create_model_spec(
+        "tight_binding_chain",
+        parameters={"n_sites": 4, "periodic": True},
+        representation="sparse",
+    )
+    result = spec.build_result()
+
+    assert isinstance(result, HamiltonianResult)
+    assert sp.issparse(result.matrix)
+    assert result.model == spec
+    assert result.basis == "single particle"
+    assert result.representation == "sparse"

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quantum-lattice-models"
-version = "0.1.4"
+version = "0.1.5"
 description = "Small dense quantum lattice Hamiltonians for exact diagonalization and quantum algorithm prototypes."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -51,6 +51,9 @@ notebooks = [
 ]
 pennylane = [
   "pennylane"
+]
+networkx = [
+  "networkx>=3"
 ]
 
 [project.urls]

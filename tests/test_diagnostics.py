@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from math import comb
+
 import numpy as np
 import pytest
 import scipy.sparse as sp
@@ -9,6 +11,7 @@ from quantum_lattice_models.diagnostics import (
     estimate_dense_memory,
     estimate_model_dimension,
     has_particle_hole_symmetric_spectrum,
+    inspect_model,
     is_hermitian,
     matrix_density,
     matrix_storage_bytes,
@@ -21,6 +24,9 @@ def test_model_dimension_and_dense_memory_estimates() -> None:
     assert estimate_model_dimension("heisenberg_ladder", n_rungs=3) == 64
     assert estimate_model_dimension("bose_hubbard_chain", n_sites=3, max_occupancy=2) == 27
     assert estimate_model_dimension("kagome_lattice_tight_binding", n_rows=2, n_cols=4) == 24
+    assert estimate_model_dimension("xxz_chain_sector_sparse", n_sites=10, magnetization=0) == comb(
+        10, 5
+    )
     assert estimate_dense_memory(4) == 4 * 4 * np.dtype(np.complex128).itemsize
 
 
@@ -64,3 +70,5 @@ def test_diagnostic_validation_failures() -> None:
     with pytest.raises(ValueError, match="nonempty two-dimensional"):
         matrix_density(np.array([]))
     assert not is_hermitian(np.ones((2, 3)))
+    with pytest.raises(ValueError, match="representation"):
+        inspect_model("ssh_model", representation="gpu")

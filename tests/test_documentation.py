@@ -41,3 +41,13 @@ def test_generated_model_pages_have_valid_local_links() -> None:
                 continue
             target = (page.parent / reference.split("#", 1)[0]).resolve()
             assert target.exists(), f"{page}: missing {reference}"
+
+
+def test_schema_and_import_guides_are_published() -> None:
+    schema = Path("SCHEMA.md").read_text()
+    importing = Path("IMPORTING.md").read_text()
+
+    assert "Compatibility policy" in schema
+    assert "Complex-number encoding" in schema
+    assert "CSV import" in importing
+    assert "NetworkX and GraphML" in importing

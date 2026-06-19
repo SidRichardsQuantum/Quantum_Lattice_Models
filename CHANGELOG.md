@@ -1,5 +1,85 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Fixed total Pauli-$Z$ magnetization bases with explicit computational-basis
+  state lists, state-to-index mappings, projection, and embedding helpers.
+- Reduced sparse XXZ and magnetization-conserving Heisenberg-chain builders.
+- Registered sector builders with binomial dimension estimates and portable
+  sector metadata in `HamiltonianResult` and NPZ persistence.
+- Full-space block and spectrum validation for open, periodic, positive, zero,
+  and negative magnetization sectors.
+- Site-resolved and total Pauli-$Z$ magnetization.
+- Full and connected $X$, $Y$, and $Z$ correlation matrices and static spin
+  structure factors.
+- Reduced density matrices and bipartite von Neumann entropy for full and
+  fixed-magnetization state vectors.
+- Product-state, Bell-state, and reduced-basis embedding validation for spin
+  observables and entanglement.
+
+### Changed
+
+- Reorganized the roadmap around three explicit scope layers: core model data
+  and interchange, lightweight reference analysis, and optional ecosystem
+  adapters.
+- Prioritized CSV, NetworkX, and GraphML import workflows plus reusable lattice
+  transformations ahead of broader solver and workflow infrastructure.
+- Added paired site/bond CSV import and export with metadata sidecars.
+- Added optional NetworkX and GraphML round-trip adapters.
+- Added immutable lattice transformations for relabeling, subgraphs,
+  vacancies, bonds, boundary conditions, and reproducible disorder.
+- Added standardized lattice units, conventions, references, and ordered
+  provenance, plus model convention metadata.
+- Added schema compatibility documentation and an end-to-end importing and
+  transformation guide.
+- Added model discovery filters for category, basis, sparse capability, and
+  validation status.
+- Added named presets for canonical phases and analytic reference limits.
+- Added construction-free dry-run reports with dimensions, dense-memory
+  estimates, representations, basis information, and warnings.
+- Added deterministic JSON output for discovery, presets, validation, spectra,
+  dry runs, and model comparisons.
+- Added model comparison summaries covering parameters, matrices, spectra, and
+  spectral gaps with configurable construction safeguards.
+
+## v0.1.5
+
+This release completes the first portable Hamiltonian workflow and introduces
+shared sparse infrastructure for the package's spin-$1/2$ models.
+
+### Added
+
+- Explicit model and lattice schema migration behavior, including support for
+  loading legacy unversioned specifications and clear rejection of unsupported
+  future versions.
+- Stricter specification validation for fields, types, coordinates, bonds,
+  boundary conditions, and portable metadata values.
+- `HamiltonianResult` for carrying dense or sparse matrix data with its model
+  specification, basis, representation, and construction metadata.
+- Self-contained NPZ persistence for dense and CSR sparse Hamiltonians.
+- Dense NPY persistence with deterministic JSON metadata sidecars.
+- Public `save_hamiltonian`, `load_hamiltonian`, and `metadata_path` helpers.
+- File-oriented `quantum-lattice spectrum MODEL.json` and
+  `quantum-lattice export MODEL.json` workflows.
+- `SpinInteraction`, `SpinField`, and graph-spin builders supporting arbitrary
+  two-site Pauli-axis interactions and site-resolved fields.
+- Sparse variants of the Ising, XY, XXZ, Heisenberg, J1-J2, and Heisenberg
+  ladder builders.
+- Dense/sparse equivalence, persistence round-trip, schema migration, strict
+  validation, and file-oriented CLI tests.
+
+### Changed
+
+- Updated the project version metadata to `0.1.5`.
+- Existing dense spin builders now use the same graph interaction
+  specification and sparse assembly backend as their sparse counterparts.
+- Registered sparse spin builders for model discovery, portable
+  reconstruction, and CLI use.
+- Updated the README and roadmap to describe the portable result, persistence,
+  CLI, and sparse spin workflows.
+
 ## v0.1.4
 
 This release adds a capability-based development roadmap and removes several

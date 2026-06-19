@@ -75,6 +75,17 @@ but it does not change exponential Hilbert-space growth in many-body models.
 Use `estimate_model_dimension`, `estimate_dense_memory`, and `diagnose_matrix`
 before constructing larger systems.
 
+For XXZ and Heisenberg chains with $J_x=J_y$, fixed-magnetization builders
+restrict the basis to a total Pauli-$Z$ eigenvalue
+
+$$
+M=\sum_i Z_i=N-2n_1.
+$$
+
+The reduced dimension is $\binom{N}{(N-M)/2}$. Reduced basis states are stored
+as their integer indices in the full computational basis, allowing explicit
+projection, embedding, and full-space block validation.
+
 ## Exact diagonalization
 
 Exact diagonalization solves
@@ -95,8 +106,22 @@ reference workflows, not large-scale many-body simulation.
 
 State vectors are expected to use the same basis ordering as their
 Hamiltonian. `expectation` computes $\langle\psi|O|\psi\rangle`;
-spin helpers provide $Z$ magnetization and correlations, and localization
-helpers provide inverse participation ratios or SSH edge weights.
+spin helpers provide site-resolved and total $Z$ magnetization, same-axis
+correlation matrices, connected correlations, and static structure factors.
+These routines accept either the full computational basis or a
+`FixedMagnetizationBasis`.
+
+Reduced density matrices group amplitudes by subsystem and environment bit
+patterns. Sector states are handled directly from their full-basis integer
+labels rather than first allocating a vector of length $2^N$. Bipartite
+entanglement uses the von Neumann entropy
+
+$$
+S_A=-\operatorname{Tr}(\rho_A\log \rho_A).
+$$
+
+The default logarithm base is two, so Bell-state entropy is one bit.
+Localization helpers provide inverse participation ratios or SSH edge weights.
 
 Probability plots normalize $|\psi_i|^2$ by default. Phase-resolved lattice
 plots use the complex argument of each amplitude.
@@ -108,8 +133,8 @@ currently test spectral pairing $E\leftrightarrow-E$ rather than constructing
 the full antiunitary symmetry operator. Numerical tolerances must be chosen for
 the problem scale.
 
-Further conserved-sector, commutator, degeneracy, and topological diagnostics
-are listed in [ROADMAP.md](ROADMAP.md).
+Further parity, translation-sector, commutator, degeneracy, and topological
+diagnostics are listed in [ROADMAP.md](ROADMAP.md).
 
 ## Portable model specifications
 
@@ -118,8 +143,8 @@ dense or sparse representation, and optional `LatticeSpec`. JSON encodes
 complex values explicitly. Loading a specification validates it against the
 registry before reconstruction.
 
-Specifications improve reproducibility but do not yet preserve every piece of
-runtime matrix metadata in a structured result container.
+`HamiltonianResult` preserves matrix construction metadata, including reduced
+spin-sector basis information where applicable.
 
 ## Quantum-algorithm testbeds
 
