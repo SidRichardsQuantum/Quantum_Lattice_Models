@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Haldane Honeycomb Lattice — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Haldane Honeycomb Lattice</span>
+      </nav>
+      <article class="model-article" data-model-page="haldane">
+<h1>Haldane Honeycomb Lattice</h1>
+<h2>Purpose and structure</h2>
+<p>The finite Haldane model has two honeycomb sublattices, real nearest-neighbor
+hopping $t_1$, oriented complex next-nearest-neighbor hopping
+$t_2e^{\pm i\phi}$, and staggered onsite potential $\pm M$.</p>
+<p><img src="../diagrams/haldane_honeycomb.svg" alt="Haldane honeycomb model" /></p>
+<h2>Basis and scaling</h2>
+<p>The single-particle dimension is $2N_rN_c$. Dense and CSR builders are
+available.</p>
+<pre><code class="language-python">from quantum_lattice_models import haldane_honeycomb_lattice
+
+H = haldane_honeycomb_lattice(
+    n_rows=4, n_cols=4, t1=1.0, t2=0.18, phi=1.5708
+)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>haldane_honeycomb_lattice</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice</code></td>
+<td><code>t1</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice</code></td>
+<td><code>t2</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.18</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice</code></td>
+<td><code>phi</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.5707963267948966</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice</code></td>
+<td><code>sublattice_potential</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice_sparse</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice_sparse</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice_sparse</code></td>
+<td><code>t1</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice_sparse</code></td>
+<td><code>t2</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.18</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice_sparse</code></td>
+<td><code>phi</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.5707963267948966</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice_sparse</code></td>
+<td><code>sublattice_potential</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice_sparse</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice_sparse</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>Validation and cautions</h2>
+<p>Complex next-nearest-neighbor phases and Hermitian conjugates are tested.
+Finite real-space spectra do not directly provide a Chern number; Bloch and
+topological-analysis support is planned.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

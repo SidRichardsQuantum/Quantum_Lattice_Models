@@ -18,16 +18,16 @@ from quantum_lattice_models.plotting import (
     plot_hamiltonian_matrix,
     plot_hofstadter_butterfly,
     plot_lattice_graph,
-    plot_lattice_spectrum,
     plot_lattice_state,
     plot_parameter_sweep,
     plot_site_probabilities,
+    plot_spectrum,
 )
 
 
 def test_new_plotting_helpers_return_axes() -> None:
     H = tight_binding_chain(n_sites=4)
-    ax = plot_lattice_spectrum(H, highlight_gap=True, zero_line=True)
+    ax = plot_spectrum(H, highlight_gap=True, zero_line=True)
     assert ax.get_xlabel() == "Eigenvalue index"
     assert len(ax.lines) >= 2
     plt.close(ax.figure)

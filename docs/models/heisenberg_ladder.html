@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Heisenberg Ladder — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Heisenberg Ladder</span>
+      </nav>
+      <article class="model-article" data-model-page="heisenberg_ladder">
+<h1>Heisenberg Ladder</h1>
+<h2>Purpose and structure</h2>
+<p>The two-leg ladder couples two Heisenberg chains through rungs:</p>
+<p>$$
+H=J_{\rm leg}\sum_{\ell,r}\mathbf P_{\ell,r}\cdot\mathbf P_{\ell,r+1}
++J_{\rm rung}\sum_r\mathbf P_{0,r}\cdot\mathbf P_{1,r}
++g\sum_{\ell,r}Z_{\ell,r}.
+$$</p>
+<p><img src="../diagrams/heisenberg_ladder.svg" alt="Two-leg Heisenberg ladder" /></p>
+<h2>Basis and scaling</h2>
+<p>$R$ rungs contain $2R$ spins, so the dense matrix dimension is $2^{2R}$.
+This grows particularly quickly.</p>
+<h2>Package use</h2>
+<pre><code class="language-python">from quantum_lattice_models import heisenberg_ladder
+
+H = heisenberg_ladder(n_rungs=3, leg_coupling=1.0, rung_coupling=0.7)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>heisenberg_ladder</code></td>
+<td><code>n_rungs</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>2</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>heisenberg_ladder</code></td>
+<td><code>leg_coupling</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>heisenberg_ladder</code></td>
+<td><code>rung_coupling</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.7</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>heisenberg_ladder</code></td>
+<td><code>field</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>heisenberg_ladder</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>User notes</h2>
+<p><code>periodic=True</code> closes each leg but does not change rung connectivity. Use
+memory diagnostics before increasing the rung count.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

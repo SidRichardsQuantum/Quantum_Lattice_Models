@@ -4,7 +4,9 @@ import subprocess
 import sys
 
 import numpy as np
+import pytest
 
+from quantum_lattice_models.cli import main
 from quantum_lattice_models.geometry import (
     honeycomb_lattice_positions,
     kagome_lattice_positions,
@@ -12,6 +14,7 @@ from quantum_lattice_models.geometry import (
     triangular_lattice_positions,
 )
 from quantum_lattice_models.registry import (
+    ParameterInfo,
     get_model_info,
     list_models,
     model_table,
@@ -38,6 +41,16 @@ def test_model_registry_helpers() -> None:
     assert get_model_info("ssh_model").basis == "single particle"
     assert get_model_info("ssh_model").builder is not None
     assert get_model_info("ssh_model").defaults["n_cells"] == 8
+    n_cells = next(
+        parameter
+        for parameter in get_model_info("ssh_model").parameters
+        if parameter.name == "n_cells"
+    )
+    assert isinstance(n_cells, ParameterInfo)
+    assert n_cells.type is int
+    assert n_cells.minimum == 1
+    assert n_cells.cli_name == "--n-cells"
+    assert all(get_model_info(name).name == name for name in names)
     assert any(row["name"] == "bose_hubbard_chain" for row in model_table())
 
 
@@ -80,68 +93,73 @@ def test_register_and_unregister_model() -> None:
     assert info.name not in list_models()
 
 
-def test_cli_models_and_spectrum() -> None:
-    models = subprocess.run(
+def test_cli_models_and_spectrum(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["models"]) == 0
+    assert "ssh_model" in capsys.readouterr().out
+
+    assert main(["spectrum", "--model", "tight_binding_chain", "--n-sites", "3"]) == 0
+    assert len(capsys.readouterr().out.strip().splitlines()) == 3
+
+    assert main(["spectrum", "--model", "xxz_chain", "--n-sites", "3"]) == 0
+    assert len(capsys.readouterr().out.strip().splitlines()) == 8
+
+    assert (
+        main(
+            [
+                "spectrum",
+                "--model",
+                "kitaev_chain_bdg",
+                "--n-sites",
+                "3",
+                "--pairing",
+                "0.25j",
+            ]
+        )
+        == 0
+    )
+    assert len(capsys.readouterr().out.strip().splitlines()) == 6
+
+
+def test_cli_custom_tight_binding_bonds(capsys: pytest.CaptureFixture[str]) -> None:
+    assert (
+        main(
+            [
+                "spectrum",
+                "--model",
+                "custom_tight_binding",
+                "--n-sites",
+                "3",
+                "--bond",
+                "0,1",
+                "--bond",
+                "1,2",
+            ]
+        )
+        == 0
+    )
+    assert len(capsys.readouterr().out.strip().splitlines()) == 3
+
+
+def test_cli_rejects_parameters_not_in_model_schema() -> None:
+    with pytest.raises(ValueError, match="does not accept: --flux"):
+        main(
+            [
+                "spectrum",
+                "--model",
+                "ssh_model",
+                "--n-cells",
+                "3",
+                "--flux",
+                "0.2",
+            ]
+        )
+
+
+def test_cli_module_entrypoint_smoke() -> None:
+    result = subprocess.run(
         [sys.executable, "-m", "quantum_lattice_models.cli", "models"],
         check=True,
         capture_output=True,
         text=True,
     )
-    assert "ssh_model" in models.stdout
-
-    spectrum = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "quantum_lattice_models.cli",
-            "spectrum",
-            "--model",
-            "tight_binding_chain",
-            "--n-sites",
-            "3",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert len(spectrum.stdout.strip().splitlines()) == 3
-
-    registered_only = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "quantum_lattice_models.cli",
-            "spectrum",
-            "--model",
-            "xxz_chain",
-            "--n-sites",
-            "3",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert len(registered_only.stdout.strip().splitlines()) == 8
-
-
-def test_cli_custom_tight_binding_bonds() -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "quantum_lattice_models.cli",
-            "spectrum",
-            "--model",
-            "custom_tight_binding",
-            "--n-sites",
-            "3",
-            "--bond",
-            "0,1",
-            "--bond",
-            "1,2",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert len(result.stdout.strip().splitlines()) == 3
+    assert "ssh_model" in result.stdout

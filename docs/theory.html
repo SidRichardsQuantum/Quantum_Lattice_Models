@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Theory and Shared Conventions — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="index.html">Home</a>
+        <span>/</span>
+        <a href="models/index.html">Model reference</a>
+        <span>/</span>
+        <span>Theory and Shared Conventions</span>
+      </nav>
+      <article class="model-article" data-model-page="theory">
+<h1>Theory and Shared Conventions</h1>
+<p>This document describes concepts shared across Quantum Lattice Models. Concise
+Hamiltonians, variables, structures, package examples, and validation notes for
+individual models live in the <a href="models/index.html">model reference</a>.</p>
+<h2>Represented systems</h2>
+<p>The package uses several distinct matrix representations:</p>
+<ul>
+<li>Spin-$\tfrac12$ models use the computational basis
+$|s_0s_1\ldots s_{N-1}\rangle$ and have dimension $2^N$.</li>
+<li>Single-particle tight-binding models use one basis state $|i\rangle$ per
+site or orbital; their dimension is the number of sites or orbitals.</li>
+<li>Bose-Hubbard models use truncated local occupations
+$|0\rangle,\ldots,|n_{\max}\rangle$ and dimension
+$(n_{\max}+1)^N$.</li>
+<li>Spinful Fermi-Hubbard models use binary occupation of $2N$ ordered
+spin-orbitals and dimension $2^{2N}$.</li>
+<li>Bogoliubov-de Gennes models use a doubled Nambu single-particle basis. They
+are not many-body occupation-basis Hamiltonians.</li>
+</ul>
+<p>These representations are not interchangeable. Model reference pages state
+the basis and dimension explicitly.</p>
+<h2>Operators and normalization</h2>
+<p>Spin builders use Pauli matrices $X$, $Y$, and $Z$ directly. Consequently,
+$X_iX_j+Y_iY_j+Z_iZ_j$ is four times the conventional
+$\mathbf S_i\cdot\mathbf S_j$ expression for spin operators
+$\mathbf S=\mathbf P/2$. Couplings in the package multiply Pauli products as
+written in each model page.</p>
+<p>Site index zero is the leftmost tensor factor in Kronecker-product spin
+operators. Fermi-Hubbard orbitals are ordered</p>
+<p>$$
+(0\uparrow,0\downarrow,1\uparrow,1\downarrow,\ldots).
+$$</p>
+<h2>Tight-binding sign convention</h2>
+<p>A generic Hermitian hopping term is represented as</p>
+<p>$$
+H_{ij}=v,\qquad H_{ji}=v^*.
+$$</p>
+<p>Named tight-binding builders conventionally use $v=-t$ for a real hopping
+parameter $t$. Custom three-item bond records use the supplied matrix element
+directly; two-item records use <code>-hopping</code>.</p>
+<p>Complex hoppings therefore encode phases without an additional implicit sign.
+The relevant gauge convention is documented on each topological-model page.</p>
+<h2>Boundary conditions</h2>
+<p>Open boundaries include only bonds that remain inside the finite geometry.
+Periodic boundaries reconnect opposite ends or edges. Chain models use
+<code>periodic</code>; two-dimensional finite lattices use independent <code>periodic_x</code> and
+<code>periodic_y</code> flags.</p>
+<p>Periodic finite real-space matrices are distinct from Bloch Hamiltonians
+$H(\mathbf k)$. Bloch and reciprocal-space support remains roadmap work.</p>
+<h2>Dense and sparse matrices</h2>
+<p>Dense matrices are NumPy arrays or metadata-bearing NumPy subclasses. Selected
+lattice and Hubbard models also provide SciPy CSR builders. Matching dense and
+sparse lattice builders share construction paths and are tested for numerical
+equivalence.</p>
+<p>Sparse storage reduces memory when the matrix contains few nonzero entries,
+but it does not change exponential Hilbert-space growth in many-body models.
+Use <code>estimate_model_dimension</code>, <code>estimate_dense_memory</code>, and <code>diagnose_matrix</code>
+before constructing larger systems.</p>
+<h2>Exact diagonalization</h2>
+<p>Exact diagonalization solves</p>
+<p>$$
+H|\psi_n\rangle=E_n|\psi_n\rangle.
+$$</p>
+<p>Hermitian matrices use Hermitian eigensolvers. Full dense diagonalization gives
+all eigenpairs; sparse routines can request only low-energy eigenvalues or the
+ground state. Iterative sparse results should not be interpreted as complete
+spectra.</p>
+<p>The package is intended for transparent small-system calculations and
+reference workflows, not large-scale many-body simulation.</p>
+<h2>Observables and states</h2>
+<p>State vectors are expected to use the same basis ordering as their
+Hamiltonian. <code>expectation</code> computes $\langle\psi|O|\psi\rangle`;
+spin helpers provide $Z$ magnetization and correlations, and localization
+helpers provide inverse participation ratios or SSH edge weights.</p>
+<p>Probability plots normalize $|\psi_i|^2$ by default. Phase-resolved lattice
+plots use the complex argument of each amplitude.</p>
+<h2>Symmetries and diagnostics</h2>
+<p>Hermiticity is checked through $H=H^\dagger$. BdG particle-hole diagnostics
+currently test spectral pairing $E\leftrightarrow-E$ rather than constructing
+the full antiunitary symmetry operator. Numerical tolerances must be chosen for
+the problem scale.</p>
+<p>Further conserved-sector, commutator, degeneracy, and topological diagnostics
+are listed in <a href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/ROADMAP.md">ROADMAP.md</a>.</p>
+<h2>Portable model specifications</h2>
+<p><code>ModelSpec</code> records a registered model family, parameters, basis, requested
+dense or sparse representation, and optional <code>LatticeSpec</code>. JSON encodes
+complex values explicitly. Loading a specification validates it against the
+registry before reconstruction.</p>
+<p>Specifications improve reproducibility but do not yet preserve every piece of
+runtime matrix metadata in a structured result container.</p>
+<h2>Quantum-algorithm testbeds</h2>
+<p>Small lattice Hamiltonians provide classically verifiable inputs for VQE, QPE,
+Hamiltonian simulation, QSVT, and quantum-walk prototypes. The package supplies
+reference matrices and conventions; it does not claim quantum advantage.</p>
+<h2>Model reference</h2>
+<p>Browse the <a href="models/index.html">model index</a> for per-model equations,
+variables, structures, examples, limitations, and validation status.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

@@ -194,6 +194,11 @@ from quantum_lattice_models.models import (
 H_sparse = tight_binding_chain_sparse(n_sites=128, hopping=1.0)
 ```
 
+Sparse lattice builders assemble SciPy sparse matrices directly instead of
+constructing an intermediate dense matrix. Dense and sparse variants share the
+same construction path and are tested for equivalent results, including
+periodic boundaries and complex hopping phases.
+
 Sparse spectral helpers are available from `quantum_lattice_models.spectra`:
 
 ```python
@@ -472,8 +477,64 @@ print(get_model_info("ssh_model"))
 rows = model_table()
 ```
 
-The registry records model category, basis, dimension scaling, return type, and
-short description.
+The registry records model category, basis, dimension scaling, return type,
+short description, and typed `ParameterInfo` entries. Parameter metadata
+includes defaults, CLI names, descriptions, repeatability, and basic
+constraints. The CLI options are generated from this metadata.
+
+## Computational Diagnostics
+
+```python
+from quantum_lattice_models import (
+    diagnose_matrix,
+    estimate_dense_memory,
+    estimate_model_dimension,
+    has_particle_hole_symmetric_spectrum,
+)
+from quantum_lattice_models.models import kitaev_chain_bdg
+
+dimension = estimate_model_dimension("heisenberg_ladder", n_rungs=4)
+print(dimension, estimate_dense_memory(dimension))
+
+H = kitaev_chain_bdg(n_sites=8)
+print(diagnose_matrix(H))
+print(has_particle_hole_symmetric_spectrum(H))
+```
+
+`estimate_dense_memory` returns bytes for a square dense matrix. Sparse storage
+reported by `diagnose_matrix` includes the CSR data, index, and pointer arrays.
+See [VALIDATION.md](VALIDATION.md) for the automated scientific checks.
+For equations, parameter definitions, basis conventions, and model-specific
+cautions, browse the [model reference](docs/models/index.md). Shared numerical
+conventions are documented in [THEORY.md](THEORY.md).
+
+## Portable Model Specifications
+
+```python
+from quantum_lattice_models import create_model_spec, load_model
+
+spec = create_model_spec(
+    "ssh_model",
+    parameters={"n_cells": 12, "t1": 0.4, "t2": 1.0},
+)
+spec.save("ssh.json")
+
+loaded = load_model("ssh.json")
+loaded.validate()
+H_dense = loaded.hamiltonian()
+```
+
+When a registered sparse counterpart exists, the same specification can build
+it without changing the saved model parameters:
+
+```python
+H_sparse = loaded.hamiltonian(sparse=True)
+```
+
+`LatticeSpec` stores custom site coordinates, complex bonds, labels, unit-cell
+membership, boundary conditions, and metadata. Complex numbers use an explicit
+JSON representation so they survive round trips without relying on
+implementation-specific encoding.
 
 ## Command-Line Interface
 
@@ -481,6 +542,9 @@ After installation, use the `quantum-lattice` entry point:
 
 ```bash
 quantum-lattice models
+quantum-lattice create ssh_model --n-cells 12 --t1 0.4 --output ssh.json
+quantum-lattice inspect ssh.json
+quantum-lattice validate ssh.json
 quantum-lattice spectrum --model ssh_model --n-cells 8
 quantum-lattice plot --model harper_hofstadter_square_lattice --n-rows 4 --n-cols 4 --flux 0.25 --output images/hofstadter_cli.png
 quantum-lattice spectrum --model custom_tight_binding --n-sites 3 --bond 0,1 --bond 1,2,0.25j
@@ -488,7 +552,9 @@ quantum-lattice spectrum --model custom_tight_binding --n-sites 3 --bond 0,1 --b
 
 Model choices and defaults come from the model registry. Custom bonds use
 `source,target` or `source,target,value`; the optional value accepts complex
-numbers.
+numbers. `create` writes a versioned JSON specification, `inspect` reports its
+model and resource summary, and `validate` checks the schema, registered
+parameters, geometry, and requested dense or sparse representation.
 
 ## Observables
 
@@ -511,7 +577,7 @@ print(correlation_zz(ground_state, n_sites=4, i=0, j=1))
 import matplotlib.pyplot as plt
 
 from quantum_lattice_models.models import transverse_field_ising
-from quantum_lattice_models.plotting import plot_lattice_spectrum, plot_spectrum
+from quantum_lattice_models.plotting import plot_spectrum
 
 H = transverse_field_ising(n_sites=5, j=1.0, h=0.7)
 ax = plot_spectrum(H)
@@ -521,7 +587,7 @@ plt.show()
 
 Additional plotting helpers include:
 
-- `plot_lattice_spectrum`
+- `plot_spectrum`
 - `plot_density`
 - `plot_site_probabilities`
 - `plot_hofstadter_butterfly`

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Ising Chains — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Ising Chains</span>
+      </nav>
+      <article class="model-article" data-model-page="ising">
+<h1>Ising Chains</h1>
+<h2>Purpose and structure</h2>
+<p>These spin-$\tfrac12$ chains combine Ising $ZZ$ interactions with transverse
+and optional longitudinal fields. The next-nearest-neighbor variant adds
+frustration. They are standard small-system benchmarks for phase-transition
+intuition, quantum simulation, and variational algorithms.</p>
+<p><img src="../diagrams/spin_chain_couplings.svg" alt="Ising and related spin-chain couplings" /></p>
+<h2>Hamiltonians</h2>
+<p>$$
+H_{\rm TFIM}=-J\sum_i Z_iZ_{i+1}-h\sum_iX_i,
+$$</p>
+<p>$$
+H_{\rm long}=-J\sum_iZ_iZ_{i+1}-h_x\sum_iX_i-h_z\sum_iZ_i,
+$$</p>
+<p>$$
+H_{\rm NNN}=-J_1\sum_iZ_iZ_{i+1}-J_2\sum_iZ_iZ_{i+2}-h\sum_iX_i.
+$$</p>
+<p>The operators are Pauli matrices, not spin operators divided by two.</p>
+<h2>Basis and scaling</h2>
+<p>The computational basis has dimension $2^N$. Builders currently return dense
+<code>DenseHamiltonian</code> arrays with Pauli-term metadata.</p>
+<h2>Package use</h2>
+<pre><code class="language-python">from quantum_lattice_models import transverse_field_ising
+
+H = transverse_field_ising(n_sites=6, j=1.0, h=0.7, periodic=False)
+</code></pre>
+<pre><code class="language-bash">quantum-lattice create transverse_field_ising --n-sites 6 --j 1 --h 0.7 --output ising.json
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>transverse_field_ising</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>transverse_field_ising</code></td>
+<td><code>j</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>transverse_field_ising</code></td>
+<td><code>h</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.5</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>transverse_field_ising</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>longitudinal_field_ising</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>longitudinal_field_ising</code></td>
+<td><code>j</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>longitudinal_field_ising</code></td>
+<td><code>h_x</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.5</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>longitudinal_field_ising</code></td>
+<td><code>h_z</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.1</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>longitudinal_field_ising</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>next_nearest_neighbor_ising</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>5</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>next_nearest_neighbor_ising</code></td>
+<td><code>j1</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>next_nearest_neighbor_ising</code></td>
+<td><code>j2</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.25</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>next_nearest_neighbor_ising</code></td>
+<td><code>h</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.5</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>next_nearest_neighbor_ising</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>Validation and cautions</h2>
+<p>The zero-field three-site spectrum is checked analytically. Dense memory grows
+as $4^N$; inspect the estimated dimension and memory before increasing $N$.</p>
+<p>Related: <a href="xy_chain.html">XY chain</a>, <a href="xxz_chain.html">XXZ chain</a>.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

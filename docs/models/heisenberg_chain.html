@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Heisenberg Chain — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Heisenberg Chain</span>
+      </nav>
+      <article class="model-article" data-model-page="heisenberg_chain">
+<h1>Heisenberg Chain</h1>
+<h2>Purpose and structure</h2>
+<p>The anisotropic nearest-neighbor Heisenberg chain supports independent $XX$,
+$YY$, and $ZZ$ couplings and a uniform longitudinal field. It is useful for
+spin correlations, symmetry studies, and exact-diagonalization benchmarks.</p>
+<p>$$
+H=\sum_i(J_xX_iX_{i+1}+J_yY_iY_{i+1}+J_zZ_iZ_{i+1})
++g\sum_iZ_i.
+$$</p>
+<p>The package uses Pauli products directly and a positive sign for <code>field</code>.</p>
+<h2>Basis and scaling</h2>
+<p>The computational basis has dimension $2^N$. The builder returns a dense
+matrix with Pauli-term metadata.</p>
+<h2>Package use</h2>
+<pre><code class="language-python">from quantum_lattice_models import heisenberg_chain
+
+H = heisenberg_chain(n_sites=5, jx=1.0, jy=0.8, jz=1.2, field=0.1)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>heisenberg_chain</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>heisenberg_chain</code></td>
+<td><code>jx</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>heisenberg_chain</code></td>
+<td><code>jy</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>heisenberg_chain</code></td>
+<td><code>jz</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>heisenberg_chain</code></td>
+<td><code>field</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>heisenberg_chain</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>Validation and cautions</h2>
+<p>Hermiticity and real spectra are tested. The isotropic limit is
+$J_x=J_y=J_z$. Sparse and fixed-magnetization construction remain roadmap
+work.</p>
+<p>Related: <a href="xxz_chain.html">XXZ chain</a>, <a href="heisenberg_ladder.html">Heisenberg ladder</a>.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

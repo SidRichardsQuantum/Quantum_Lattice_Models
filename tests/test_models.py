@@ -157,20 +157,48 @@ def test_custom_lattice_infers_site_count_and_sparse_matches_dense() -> None:
 def test_sparse_builders_match_dense_models() -> None:
     chain_dense = tight_binding_chain(n_sites=5, hopping=0.7, onsite=0.2, periodic=True)
     chain_sparse = tight_binding_chain_sparse(n_sites=5, hopping=0.7, onsite=0.2, periodic=True)
-    square_dense = square_lattice_tight_binding(n_rows=2, n_cols=3, periodic_x=True)
-    square_sparse = square_lattice_tight_binding_sparse(n_rows=2, n_cols=3, periodic_x=True)
+    square_dense = square_lattice_tight_binding(
+        n_rows=2,
+        n_cols=3,
+        onsite=np.arange(6) / 10,
+        periodic_x=True,
+        periodic_y=True,
+    )
+    square_sparse = square_lattice_tight_binding_sparse(
+        n_rows=2,
+        n_cols=3,
+        onsite=np.arange(6) / 10,
+        periodic_x=True,
+        periodic_y=True,
+    )
     bose_dense = bose_hubbard_chain(n_sites=2, hopping=0.4, max_occupancy=2)
     bose_sparse = bose_hubbard_chain_sparse(n_sites=2, hopping=0.4, max_occupancy=2)
     fermi_dense = fermi_hubbard_chain(n_sites=2, hopping=0.4)
     fermi_sparse = fermi_hubbard_chain_sparse(n_sites=2, hopping=0.4)
-    hofstadter_dense = harper_hofstadter_square_lattice(n_rows=2, n_cols=3, flux=0.2)
-    hofstadter_sparse = harper_hofstadter_square_lattice_sparse(n_rows=2, n_cols=3, flux=0.2)
-    haldane_dense = haldane_honeycomb_lattice(n_rows=2, n_cols=2)
-    haldane_sparse = haldane_honeycomb_lattice_sparse(n_rows=2, n_cols=2)
-    triangular_dense = triangular_lattice_tight_binding(n_rows=2, n_cols=3)
-    triangular_sparse = triangular_lattice_tight_binding_sparse(n_rows=2, n_cols=3)
-    kagome_dense = kagome_lattice_tight_binding(n_rows=1, n_cols=2)
-    kagome_sparse = kagome_lattice_tight_binding_sparse(n_rows=1, n_cols=2)
+    hofstadter_dense = harper_hofstadter_square_lattice(
+        n_rows=2, n_cols=3, flux=0.2, periodic_x=True, periodic_y=True
+    )
+    hofstadter_sparse = harper_hofstadter_square_lattice_sparse(
+        n_rows=2, n_cols=3, flux=0.2, periodic_x=True, periodic_y=True
+    )
+    haldane_dense = haldane_honeycomb_lattice(
+        n_rows=2, n_cols=2, phi=0.4, periodic_x=True, periodic_y=True
+    )
+    haldane_sparse = haldane_honeycomb_lattice_sparse(
+        n_rows=2, n_cols=2, phi=0.4, periodic_x=True, periodic_y=True
+    )
+    triangular_dense = triangular_lattice_tight_binding(
+        n_rows=2, n_cols=3, periodic_x=True, periodic_y=True
+    )
+    triangular_sparse = triangular_lattice_tight_binding_sparse(
+        n_rows=2, n_cols=3, periodic_x=True, periodic_y=True
+    )
+    kagome_dense = kagome_lattice_tight_binding(
+        n_rows=2, n_cols=2, periodic_x=True, periodic_y=True
+    )
+    kagome_sparse = kagome_lattice_tight_binding_sparse(
+        n_rows=2, n_cols=2, periodic_x=True, periodic_y=True
+    )
     assert sp.issparse(chain_sparse)
     assert sp.issparse(square_sparse)
     assert np.allclose(chain_sparse.toarray(), chain_dense)

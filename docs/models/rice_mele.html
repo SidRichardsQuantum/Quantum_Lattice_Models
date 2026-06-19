@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Rice-Mele Model — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Rice-Mele Model</span>
+      </nav>
+      <article class="model-article" data-model-page="rice_mele">
+<h1>Rice-Mele Model</h1>
+<h2>Purpose and structure</h2>
+<p>The Rice-Mele chain extends SSH with alternating hoppings and staggered onsite
+energies:</p>
+<p>$$
+t_{\rm intra}=t+\delta,\qquad t_{\rm inter}=t-\delta,
+$$</p>
+<p>with onsite values $+\Delta$ on $A$ and $-\Delta$ on $B$.</p>
+<p><img src="../diagrams/ssh_rice_mele_unit_cell.svg" alt="SSH and Rice-Mele unit cells" /></p>
+<h2>Basis and use</h2>
+<p>The single-particle dimension is $2N_c$.</p>
+<pre><code class="language-python">from quantum_lattice_models import rice_mele_model
+
+H = rice_mele_model(
+    n_cells=10, hopping=1.0, dimerization=0.25, staggering=0.5
+)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rice_mele_model</code></td>
+<td><code>n_cells</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>8</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>rice_mele_model</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>rice_mele_model</code></td>
+<td><code>dimerization</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.25</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>rice_mele_model</code></td>
+<td><code>staggering</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.5</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>rice_mele_model</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>User notes</h2>
+<p>Nonzero staggering breaks the SSH sublattice symmetry and generally shifts
+edge-state energies away from zero.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

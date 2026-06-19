@@ -125,25 +125,14 @@ def square_lattice_tight_binding(
 ) -> np.ndarray:
     """Return a single-particle tight-binding matrix on a rectangular square lattice."""
 
-    validate_positive_int(n_rows, "n_rows")
-    validate_positive_int(n_cols, "n_cols")
-    n_sites = n_rows * n_cols
-    matrix = np.zeros((n_sites, n_sites), dtype=complex)
-    np.fill_diagonal(matrix, onsite_values(onsite, n_sites))
-    for row in range(n_rows):
-        for col in range(n_cols):
-            site = square_lattice_index_raw(row, col, n_cols)
-            for n_row, n_col in ((row, col + 1), (row + 1, col)):
-                wrapped_row, wrapped_col = wrapped_cell(
-                    n_row, n_col, n_rows, n_cols, periodic_y, periodic_x
-                )
-                if wrapped_row is not None and wrapped_col is not None:
-                    add_symmetric_hopping(
-                        matrix,
-                        site,
-                        square_lattice_index_raw(wrapped_row, wrapped_col, n_cols),
-                        -hopping,
-                    )
+    matrix = square_lattice_tight_binding_sparse(
+        n_rows,
+        n_cols,
+        hopping=hopping,
+        onsite=onsite,
+        periodic_x=periodic_x,
+        periodic_y=periodic_y,
+    ).toarray()
     return LatticeHamiltonian(
         matrix,
         model_name="square_lattice_tight_binding",
@@ -163,10 +152,25 @@ def square_lattice_tight_binding_sparse(
 ) -> sp.csr_matrix:
     """Return a sparse rectangular square-lattice tight-binding matrix."""
 
-    dense = square_lattice_tight_binding(
-        n_rows, n_cols, hopping=hopping, onsite=onsite, periodic_x=periodic_x, periodic_y=periodic_y
-    )
-    return sp.csr_matrix(np.asarray(dense))
+    validate_positive_int(n_rows, "n_rows")
+    validate_positive_int(n_cols, "n_cols")
+    n_sites = n_rows * n_cols
+    matrix = sp.diags(onsite_values(onsite, n_sites), format="lil", dtype=complex)
+    for row in range(n_rows):
+        for col in range(n_cols):
+            site = square_lattice_index_raw(row, col, n_cols)
+            for n_row, n_col in ((row, col + 1), (row + 1, col)):
+                wrapped_row, wrapped_col = wrapped_cell(
+                    n_row, n_col, n_rows, n_cols, periodic_y, periodic_x
+                )
+                if wrapped_row is not None and wrapped_col is not None:
+                    add_symmetric_hopping(
+                        matrix,
+                        site,
+                        square_lattice_index_raw(wrapped_row, wrapped_col, n_cols),
+                        -hopping,
+                    )
+    return matrix.tocsr()
 
 
 def aubry_andre_harper_chain(
@@ -197,22 +201,14 @@ def triangular_lattice_tight_binding(
 ) -> np.ndarray:
     """Return a single-particle tight-binding matrix on a triangular lattice."""
 
-    validate_positive_int(n_rows, "n_rows")
-    validate_positive_int(n_cols, "n_cols")
-    n_sites = n_rows * n_cols
-    matrix = np.zeros((n_sites, n_sites), dtype=complex)
-    np.fill_diagonal(matrix, onsite_values(onsite, n_sites))
-    for row in range(n_rows):
-        for col in range(n_cols):
-            site = square_lattice_index_raw(row, col, n_cols)
-            for d_row, d_col in ((0, 1), (1, 0), (1, -1)):
-                n_row, n_col = wrapped_cell(
-                    row + d_row, col + d_col, n_rows, n_cols, periodic_y, periodic_x
-                )
-                if n_row is not None and n_col is not None:
-                    add_symmetric_hopping(
-                        matrix, site, square_lattice_index_raw(n_row, n_col, n_cols), -hopping
-                    )
+    matrix = triangular_lattice_tight_binding_sparse(
+        n_rows,
+        n_cols,
+        hopping=hopping,
+        onsite=onsite,
+        periodic_x=periodic_x,
+        periodic_y=periodic_y,
+    ).toarray()
     return LatticeHamiltonian(
         matrix,
         model_name="triangular_lattice_tight_binding",
@@ -232,15 +228,25 @@ def triangular_lattice_tight_binding_sparse(
 ) -> sp.csr_matrix:
     """Return a sparse triangular-lattice tight-binding matrix."""
 
-    dense = triangular_lattice_tight_binding(
-        n_rows,
-        n_cols,
-        hopping=hopping,
-        onsite=onsite,
-        periodic_x=periodic_x,
-        periodic_y=periodic_y,
-    )
-    return sp.csr_matrix(np.asarray(dense))
+    validate_positive_int(n_rows, "n_rows")
+    validate_positive_int(n_cols, "n_cols")
+    n_sites = n_rows * n_cols
+    matrix = sp.diags(onsite_values(onsite, n_sites), format="lil", dtype=complex)
+    for row in range(n_rows):
+        for col in range(n_cols):
+            site = square_lattice_index_raw(row, col, n_cols)
+            for d_row, d_col in ((0, 1), (1, 0), (1, -1)):
+                n_row, n_col = wrapped_cell(
+                    row + d_row, col + d_col, n_rows, n_cols, periodic_y, periodic_x
+                )
+                if n_row is not None and n_col is not None:
+                    add_symmetric_hopping(
+                        matrix,
+                        site,
+                        square_lattice_index_raw(n_row, n_col, n_cols),
+                        -hopping,
+                    )
+    return matrix.tocsr()
 
 
 def kagome_lattice_tight_binding(
@@ -253,29 +259,14 @@ def kagome_lattice_tight_binding(
 ) -> np.ndarray:
     """Return a finite kagome-lattice single-particle tight-binding matrix."""
 
-    validate_positive_int(n_rows, "n_rows")
-    validate_positive_int(n_cols, "n_cols")
-    n_sites = 3 * n_rows * n_cols
-    matrix = np.zeros((n_sites, n_sites), dtype=complex)
-    np.fill_diagonal(matrix, onsite_values(onsite, n_sites))
-    for row in range(n_rows):
-        for col in range(n_cols):
-            a = kagome_index_raw(row, col, 0, n_cols)
-            b = kagome_index_raw(row, col, 1, n_cols)
-            c = kagome_index_raw(row, col, 2, n_cols)
-            for i, k in ((a, b), (b, c), (c, a)):
-                add_symmetric_hopping(matrix, i, k, -hopping)
-            for sub_a, d_row, d_col, sub_b in ((1, 0, 1, 0), (2, 1, 0, 0), (2, 1, -1, 1)):
-                n_row, n_col = wrapped_cell(
-                    row + d_row, col + d_col, n_rows, n_cols, periodic_y, periodic_x
-                )
-                if n_row is not None and n_col is not None:
-                    add_symmetric_hopping(
-                        matrix,
-                        kagome_index_raw(row, col, sub_a, n_cols),
-                        kagome_index_raw(n_row, n_col, sub_b, n_cols),
-                        -hopping,
-                    )
+    matrix = kagome_lattice_tight_binding_sparse(
+        n_rows,
+        n_cols,
+        hopping=hopping,
+        onsite=onsite,
+        periodic_x=periodic_x,
+        periodic_y=periodic_y,
+    ).toarray()
     return LatticeHamiltonian(
         matrix,
         model_name="kagome_lattice_tight_binding",
@@ -295,15 +286,29 @@ def kagome_lattice_tight_binding_sparse(
 ) -> sp.csr_matrix:
     """Return a sparse kagome-lattice tight-binding matrix."""
 
-    dense = kagome_lattice_tight_binding(
-        n_rows,
-        n_cols,
-        hopping=hopping,
-        onsite=onsite,
-        periodic_x=periodic_x,
-        periodic_y=periodic_y,
-    )
-    return sp.csr_matrix(np.asarray(dense))
+    validate_positive_int(n_rows, "n_rows")
+    validate_positive_int(n_cols, "n_cols")
+    n_sites = 3 * n_rows * n_cols
+    matrix = sp.diags(onsite_values(onsite, n_sites), format="lil", dtype=complex)
+    for row in range(n_rows):
+        for col in range(n_cols):
+            a = kagome_index_raw(row, col, 0, n_cols)
+            b = kagome_index_raw(row, col, 1, n_cols)
+            c = kagome_index_raw(row, col, 2, n_cols)
+            for i, k in ((a, b), (b, c), (c, a)):
+                add_symmetric_hopping(matrix, i, k, -hopping)
+            for sub_a, d_row, d_col, sub_b in ((1, 0, 1, 0), (2, 1, 0, 0), (2, 1, -1, 1)):
+                n_row, n_col = wrapped_cell(
+                    row + d_row, col + d_col, n_rows, n_cols, periodic_y, periodic_x
+                )
+                if n_row is not None and n_col is not None:
+                    add_symmetric_hopping(
+                        matrix,
+                        kagome_index_raw(row, col, sub_a, n_cols),
+                        kagome_index_raw(n_row, n_col, sub_b, n_cols),
+                        -hopping,
+                    )
+    return matrix.tocsr()
 
 
 def ssh_edge_state_localization(

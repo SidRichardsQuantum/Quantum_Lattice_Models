@@ -1,5 +1,122 @@
 # Changelog
 
+## v0.1.4
+
+This release adds a capability-based development roadmap and removes several
+sources of redundant package maintenance and dense-memory use.
+
+### Added
+
+- `ROADMAP.md` describing planned work for:
+  - Portable lattice and model specifications
+  - Validation, serialization, and import/export
+  - Metadata-preserving dense and sparse Hamiltonians
+  - Registry-driven parameter schemas and file-oriented CLI workflows
+  - Periodic lattices, Bloch Hamiltonians, and band structures
+  - General observables, topological analysis, and dynamics
+  - Scientific verification and documented physical conventions
+  - Reproducible experiment and result records
+  - Parameter sweeps and finite-size studies
+  - Symmetry-reduced Hilbert spaces
+  - Solver interfaces and computational safeguards
+  - Optional ecosystem adapters and plugin discovery
+  - API stability, testing, typing, documentation, and benchmarking
+- Completion criteria, implementation priorities, engineering work, and
+  explicit non-goals for future development.
+- Expanded roadmap coverage for sparse and graph-based spin construction,
+  symmetry sectors, spin observables, entanglement, dynamics, and prioritized
+  spin-$1/2$ and spin-1 model families.
+- Added prioritized lattice candidates including plain honeycomb, Lieb,
+  sawtooth, Creutz-ladder, Anderson-disordered, long-range, Chern-insulator,
+  dice, pyrochlore, quasicrystal, and multi-orbital models.
+- Expanded roadmap coverage for thermal and response analysis, reproducible
+  disorder ensembles, defects and interfaces, model presets and comparison,
+  dry-run resource inspection, batch and machine-readable CLI workflows, and
+  task-oriented user recipes.
+- Typed `ParameterInfo` registry metadata with parameter defaults,
+  descriptions, CLI names, repeatability, and basic constraints.
+- Registry-generated CLI arguments, including previously unavailable options
+  such as `--pairing`, `--phi`, and `--sublattice-potential`.
+- Public computational diagnostics for registered-model dimensions, dense
+  memory estimates, matrix density and storage, Hermiticity, and particle-hole
+  spectral symmetry.
+- `VALIDATION.md`, documenting the initial scientific validation matrix and its
+  corresponding automated tests.
+- Analytic-limit tests for the zero-field Ising chain, uniform open
+  tight-binding chain, decoupled SSH dimers, and noninteracting single-site
+  Hubbard models.
+- Versioned `ModelSpec` and `LatticeSpec` dataclasses for portable registered
+  model parameters and finite-lattice geometry.
+- Canonical JSON save/load support with explicit complex-number encoding.
+- Dense or sparse Hamiltonian reconstruction from loaded model
+  specifications.
+- CLI `create`, `inspect`, and `validate` commands for reusable model JSON
+  files.
+- Round-trip, schema validation, custom-lattice, dense/sparse reconstruction,
+  and file-oriented CLI tests.
+- A concise Markdown reference page for every implemented model family,
+  including equations, structure, basis, scaling, package use, generated
+  registry parameter tables, validation notes, and computational cautions.
+- Generated model-reference HTML pages, a general theory webpage, MathJax
+  rendering, a website model index, and freshness tests for generated
+  documentation.
+
+### Changed
+
+- Updated the project version metadata to `0.1.4`.
+- Added the roadmap to the documented repository structure.
+- Reworked square, triangular, kagome, Harper-Hofstadter, Haldane, and custom
+  tight-binding sparse builders to assemble SciPy sparse matrices directly.
+  Their dense counterparts now reuse the same sparse construction path, keeping
+  dense and sparse model semantics synchronized without allocating a dense
+  matrix inside sparse APIs.
+- Changed the top-level `quantum_lattice_models` exports to import from focused
+  implementation modules directly. `quantum_lattice_models.models` remains the
+  backwards-compatible re-export module.
+- Derived built-in `ModelInfo.name` values from their registered builder names,
+  removing duplicated model-name declarations from the registry.
+- Consolidated internal dense conversion for NumPy and SciPy matrices into one
+  shared helper used by spectral and plotting utilities.
+- Migrated the CLI, examples, notebooks, rendered notebook pages, tests, and
+  usage documentation to use `plot_spectrum` consistently.
+- Standardized notebook Markdown cells on the equation and variable conventions
+  used by `THEORY.md`: dollar-delimited LaTeX, mathematical notation for
+  physical variables and formulas, and code formatting only for API names,
+  Python identifiers, and CLI options.
+- Improved saved notebook outputs with indexed eigenvalue tables, explicit
+  dense/sparse error comparisons, compact registry summaries, grouped model
+  listings, and labeled relative artifact paths.
+- Refocused `THEORY.md` on shared basis, operator, boundary, sparse-matrix,
+  exact-diagonalization, observable, symmetry, and reproducibility conventions;
+  model-specific material now lives under `docs/models/`.
+
+### Removed
+
+- Removed the redundant `plot_lattice_spectrum` alias. Use `plot_spectrum` for
+  spin, lattice, dense, and sparse Hamiltonians.
+
+### Fixed
+
+- Sparse lattice builders no longer construct a full dense matrix before
+  converting it to CSR format.
+- Added stronger dense/sparse equivalence coverage for onsite terms, periodic
+  boundaries, and complex hopping phases.
+- Added compact validation tests for public operator, observable, spectral,
+  lattice, diagnostics, registry, and CLI failure paths.
+- Reduced test-suite process startup overhead while retaining an end-to-end CLI
+  module smoke test.
+
+### Notes
+
+- The roadmap is organized by capability rather than assigning planned work to
+  specific package versions.
+- Roadmap items describe future direction and are not implemented by this
+  release unless documented elsewhere.
+- Removing `plot_lattice_spectrum` is an API cleanup; downstream imports should
+  be changed to `quantum_lattice_models.plotting.plot_spectrum`.
+
+---
+
 ## v0.1.3
 
 This release reorganizes the project documentation into a numbered learning

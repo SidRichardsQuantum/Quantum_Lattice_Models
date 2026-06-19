@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Tight-Binding Chain — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Tight-Binding Chain</span>
+      </nav>
+      <article class="model-article" data-model-page="tight_binding_chain">
+<h1>Tight-Binding Chain</h1>
+<h2>Purpose and Hamiltonian</h2>
+<p>The generic one-dimensional single-particle model is</p>
+<p>$$
+H=-t\sum_{\langle i,j\rangle}(|i\rangle\langle j|+\mathrm{h.c.})
++\sum_i\epsilon_i|i\rangle\langle i|.
+$$</p>
+<p><code>onsite</code> may be a scalar or one value per site. Dense and CSR builders are
+available.</p>
+<h2>Package use</h2>
+<pre><code class="language-python">from quantum_lattice_models import tight_binding_chain_sparse
+
+H = tight_binding_chain_sparse(
+    n_sites=128, hopping=1.0, onsite=0.2, periodic=False
+)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tight_binding_chain</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>8</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>tight_binding_chain</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>tight_binding_chain</code></td>
+<td><code>onsite</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>tight_binding_chain</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>tight_binding_chain_sparse</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>32</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>tight_binding_chain_sparse</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>tight_binding_chain_sparse</code></td>
+<td><code>onsite</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>tight_binding_chain_sparse</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>Validation and cautions</h2>
+<p>The open uniform-chain spectrum is checked against
+$E_m=-2t\cos[m\pi/(N+1)]$. For <code>n_sites=2</code>, periodic construction includes
+both directed wrap contributions, consistent with the package bond convention.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

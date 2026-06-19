@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from quantum_lattice_models.models import ssh_model
-from quantum_lattice_models.plotting import plot_lattice_spectrum, plot_lattice_state
+from quantum_lattice_models.plotting import plot_lattice_state, plot_spectrum
 from quantum_lattice_models.spectra import eigensystem
 
 
@@ -24,7 +24,7 @@ def main() -> None:
         [(site / 2.0, 0.35 if site % 2 else -0.35) for site in range(24)], dtype=float
     )
     figure, axes = plt.subplots(1, 2, figsize=(10.5, 3.4), gridspec_kw={"width_ratios": [1, 2]})
-    plot_lattice_spectrum(H, ax=axes[0], zero_line=True, color="#0072B2")
+    plot_spectrum(H, ax=axes[0], zero_line=True, color="#0072B2")
     axes[0].set_title("SSH spectrum")
     plot_lattice_state(
         H,

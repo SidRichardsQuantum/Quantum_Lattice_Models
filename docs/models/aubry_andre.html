@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Aubry-André-Harper Chain — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Aubry-André-Harper Chain</span>
+      </nav>
+      <article class="model-article" data-model-page="aubry_andre">
+<h1>Aubry-André-Harper Chain</h1>
+<h2>Purpose and structure</h2>
+<p>This quasiperiodic chain adds</p>
+<p>$$
+V_i=\lambda\cos(2\pi\beta i+\phi)
+$$</p>
+<p>to the onsite terms of a tight-binding chain. Irrational $\beta$ produces
+quasiperiodicity and supports localization studies.</p>
+<p><img src="../diagrams/aubry_andre_localization.svg" alt="Aubry-André localization" /></p>
+<h2>Package use</h2>
+<pre><code class="language-python">from quantum_lattice_models import aubry_andre_harper_chain
+
+H = aubry_andre_harper_chain(
+    n_sites=34, hopping=1.0, potential=2.0, phase=0.0
+)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aubry_andre_harper_chain</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>16</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>aubry_andre_harper_chain</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>aubry_andre_harper_chain</code></td>
+<td><code>potential</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.5</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>aubry_andre_harper_chain</code></td>
+<td><code>beta</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.6180339887498949</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>aubry_andre_harper_chain</code></td>
+<td><code>phase</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>aubry_andre_harper_chain</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>User notes</h2>
+<p>This builder currently returns a dense single-particle matrix. Use inverse
+participation ratios to compare extended and localized eigenstates. Finite
+rational approximants depend on system size and boundary conditions.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

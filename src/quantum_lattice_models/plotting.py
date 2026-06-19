@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import numpy as np
-import scipy.sparse as sp
 
-from quantum_lattice_models.models import ssh_edge_state_localization
+from quantum_lattice_models._model_utils import as_dense
 from quantum_lattice_models.spectra import density_of_states, eigenvalues
+from quantum_lattice_models.tight_binding import ssh_edge_state_localization
 
 COLORBLIND_PALETTE = {
     "blue": "#0072B2",
@@ -34,7 +34,7 @@ def plot_spectrum(
 
     if ax is None:
         _, ax = plt.subplots()
-    values = np.real_if_close(eigenvalues(_as_dense(H))).real
+    values = np.real_if_close(eigenvalues(as_dense(H))).real
     values = np.sort(values)
     kwargs = {"s": 24, "color": COLORBLIND_PALETTE["blue"]}
     kwargs.update(scatter_kwargs)
@@ -83,7 +83,7 @@ def plot_density_of_states(H: np.ndarray, bins: int = 50, ax=None, **bar_kwargs)
 
     if ax is None:
         _, ax = plt.subplots()
-    counts, edges = density_of_states(_as_dense(H), bins=bins)
+    counts, edges = density_of_states(as_dense(H), bins=bins)
     widths = np.diff(edges)
     kwargs = {
         "align": "edge",
@@ -130,12 +130,6 @@ def plot_ssh_edge_state(
     ax.set_title(f"SSH edge-state weight: {localization:.3f}")
     apply_plot_style(ax)
     return ax
-
-
-def plot_lattice_spectrum(H: np.ndarray, ax=None, **scatter_kwargs):
-    """Plot a lattice Hamiltonian spectrum and return the Matplotlib axes."""
-
-    return plot_spectrum(H, ax=ax, **scatter_kwargs)
 
 
 def plot_density(values: np.ndarray, ax=None, *, bins: int = 50, **bar_kwargs):
@@ -236,7 +230,7 @@ def plot_parameter_sweep(
     kwargs = {"s": 8, "color": COLORBLIND_PALETTE["blue"], "alpha": 0.65}
     kwargs.update(scatter_kwargs)
     for parameter in parameters:
-        eigs = np.real_if_close(eigenvalues(_as_dense(builder(float(parameter))))).real
+        eigs = np.real_if_close(eigenvalues(as_dense(builder(float(parameter))))).real
         ax.scatter(np.full(eigs.size, parameter), eigs, **kwargs)
     ax.set_xlabel(parameter_name)
     ax.set_ylabel("Energy")
@@ -283,7 +277,7 @@ def plot_lattice_graph(
 
     if ax is None:
         _, ax = plt.subplots()
-    matrix = _as_dense(H)
+    matrix = as_dense(H)
     coords = _positions_for_plot(H, positions, matrix.shape[0])
     explicit_color = "color" in line_kwargs
     kwargs = {"linewidth": 1.0, "alpha": 0.78}
@@ -388,7 +382,7 @@ def plot_lattice_state(
 
     if ax is None:
         _, ax = plt.subplots()
-    matrix = _as_dense(H)
+    matrix = as_dense(H)
     coords = _positions_for_plot(H, positions, matrix.shape[0])
     vector = np.asarray(state, dtype=complex).reshape(-1)
     if vector.size != matrix.shape[0]:
@@ -448,7 +442,7 @@ def plot_hamiltonian_matrix(
 
     if ax is None:
         _, ax = plt.subplots()
-    matrix = _as_dense(H)
+    matrix = as_dense(H)
     data, label, cmap = _matrix_image_data(matrix, mode)
     kwargs = {"origin": "lower", "interpolation": "nearest", "cmap": cmap}
     kwargs.update(imshow_kwargs)
@@ -474,12 +468,6 @@ def apply_plot_style(ax, *, grid: bool = True):
         ax.spines[spine].set_visible(False)
     ax.tick_params(direction="out", length=3, width=0.8)
     return ax
-
-
-def _as_dense(H: np.ndarray) -> np.ndarray:
-    if sp.issparse(H):
-        return H.toarray()
-    return np.asarray(H, dtype=complex)
 
 
 def _positions_for_plot(H: np.ndarray, positions: np.ndarray | None, n_sites: int) -> np.ndarray:

@@ -8,7 +8,7 @@ os.environ.setdefault("MPLCONFIGDIR", str(Path(".matplotlib-cache").resolve()))
 import matplotlib.pyplot as plt
 
 from quantum_lattice_models.models import bose_hubbard_chain
-from quantum_lattice_models.plotting import plot_lattice_spectrum
+from quantum_lattice_models.plotting import plot_spectrum
 
 
 def main() -> None:
@@ -22,7 +22,7 @@ def main() -> None:
         chemical_potential=0.2,
         max_occupancy=2,
     )
-    ax = plot_lattice_spectrum(H, highlight_gap=True, color="#009E73")
+    ax = plot_spectrum(H, highlight_gap=True, color="#009E73")
     ax.set_title("Truncated Bose-Hubbard spectrum")
     ax.figure.tight_layout()
     ax.figure.savefig(output_dir / "bose_hubbard_spectrum.png", dpi=160)

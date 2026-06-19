@@ -1,12 +1,12 @@
 PYTHON ?= .venv/bin/python
 
-.PHONY: format lint test check examples docs-assets notebook-summary
+.PHONY: format lint test check examples docs-assets docs-models docs-models-check notebook-summary
 
 format:
-	find src tests examples -name '*.py' -print0 | xargs -0 -n 1 $(PYTHON) -m black
+	find src tests examples scripts -name '*.py' -print0 | xargs -0 -n 1 $(PYTHON) -m black
 
 lint:
-	$(PYTHON) -m ruff check src tests examples
+	$(PYTHON) -m ruff check src tests examples scripts
 
 test:
 	$(PYTHON) -m pytest -q
@@ -28,6 +28,12 @@ examples:
 docs-assets: examples
 	mkdir -p docs/images
 	cp images/*.png docs/images/
+
+docs-models:
+	PYTHONPATH=src $(PYTHON) scripts/build_model_docs.py
+
+docs-models-check:
+	PYTHONPATH=src $(PYTHON) scripts/build_model_docs.py --check
 
 notebook-summary:
 	$(PYTHON) scripts/summarize_notebooks.py

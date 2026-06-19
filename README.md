@@ -38,7 +38,10 @@ Website: [https://sidrichardsquantum.github.io/Quantum_Lattice_Models/](https://
 
 This repository is organized as an installable package first.
 The real logic lives in `src/quantum_lattice_models/`; notebooks, scripts, and examples should stay thin and import the public package API.
-`quantum_lattice_models.models` remains the compatibility import surface, while implementations are split across focused modules such as `spin`, `tight_binding`, `hubbard`, and `topological`.
+The top-level `quantum_lattice_models` API imports directly from focused modules
+such as `spin`, `tight_binding`, `hubbard`, and `topological`.
+`quantum_lattice_models.models` remains available as a backwards-compatible
+re-export surface.
 
 ## Implemented Models
 
@@ -67,6 +70,12 @@ The real logic lives in `src/quantum_lattice_models/`; notebooks, scripts, and e
 Spin-chain Hamiltonians are dense qubit-space matrices
 Tight-binding Hamiltonians are single-particle matrices.
 This distinction is intentional and explicit.
+Sparse lattice builders assemble CSR matrices directly; matching dense builders
+reuse the same construction path to keep both representations consistent.
+
+Versioned `ModelSpec` and `LatticeSpec` objects provide portable model
+parameters and finite-lattice geometry. Specifications can be saved as JSON,
+validated in a new process, and rebuilt as dense or sparse Hamiltonians.
 
 ## Why Lattice Models Matter
 
@@ -181,10 +190,20 @@ examples/                    Command-line examples that save plots
 notebooks/                   Thin-client exploratory notebooks
 README.md                    Project overview
 CHANGELOG.md                 Release notes
+ROADMAP.md                   Planned capabilities and engineering priorities
+VALIDATION.md                Scientific reference checks and diagnostics
 USAGE.md                     API examples
-THEORY.md                    Model and method notes
+THEORY.md                    Shared theory, basis, and numerical conventions
+docs/models/                 Per-model Markdown references and generated HTML
 RESULTS.md                   Generated results
 ```
+
+Future capabilities and their recommended implementation order are documented
+in [ROADMAP.md](ROADMAP.md).
+Implemented analytic checks and the model-validation matrix are documented in
+[VALIDATION.md](VALIDATION.md).
+Concise equations, variables, examples, and cautions for each model family are
+available in the [model reference](docs/models/index.md).
 
 Key package modules:
 
@@ -196,6 +215,7 @@ topological.py               Haldane, Hofstadter, and Kitaev builders
 geometry.py                  Coordinate helpers for plotting
 lattice.py                   User-defined lattice containers and custom builders
 registry.py                  Structured model metadata
+specs.py                     Versioned portable model and lattice specifications
 cli.py                       quantum-lattice command-line entry point
 models.py                    Backwards-compatible re-export layer
 ```

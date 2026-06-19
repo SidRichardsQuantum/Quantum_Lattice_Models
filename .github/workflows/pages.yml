@@ -28,6 +28,16 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build model reference
+        run: |
+          python -m pip install -e ".[dev]"
+          make docs-models PYTHON=python
+
       - name: Stage site assets
         run: |
           cp -R docs _site

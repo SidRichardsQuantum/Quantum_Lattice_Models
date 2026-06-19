@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 import numpy as np
+import scipy.sparse as sp
 
 
 def nearest_neighbor_bonds(n_sites: int, periodic: bool) -> list[tuple[int, int]]:
@@ -23,9 +24,22 @@ def next_nearest_neighbor_bonds(n_sites: int, periodic: bool) -> list[tuple[int,
     return bonds
 
 
-def add_symmetric_hopping(matrix: np.ndarray, i: int, j: int, value: complex) -> None:
+def add_symmetric_hopping(
+    matrix: np.ndarray | sp.spmatrix,
+    i: int,
+    j: int,
+    value: complex,
+) -> None:
     matrix[i, j] += value
     matrix[j, i] += np.conjugate(value)
+
+
+def as_dense(matrix: np.ndarray | sp.spmatrix) -> np.ndarray:
+    """Return a dense complex array for dense or sparse matrix input."""
+
+    if sp.issparse(matrix):
+        return matrix.toarray()
+    return np.asarray(matrix, dtype=complex)
 
 
 def validate_positive_int(value: int, name: str) -> None:

@@ -6,11 +6,13 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
+from quantum_lattice_models._model_utils import as_dense
+
 
 def eigenvalues(H: np.ndarray) -> np.ndarray:
     """Return sorted eigenvalues, using Hermitian routines when applicable."""
 
-    matrix = _as_dense(H)
+    matrix = as_dense(H)
     if _is_hermitian(matrix):
         return np.linalg.eigvalsh(matrix)
     return np.linalg.eigvals(matrix)
@@ -19,7 +21,7 @@ def eigenvalues(H: np.ndarray) -> np.ndarray:
 def eigensystem(H: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Return eigenvalues and eigenvectors as columns."""
 
-    matrix = _as_dense(H)
+    matrix = as_dense(H)
     if _is_hermitian(matrix):
         return np.linalg.eigh(matrix)
     return np.linalg.eig(matrix)
@@ -93,9 +95,3 @@ def _is_hermitian(matrix: np.ndarray) -> bool:
         and matrix.shape[0] == matrix.shape[1]
         and np.allclose(matrix, matrix.conj().T)
     )
-
-
-def _as_dense(H: np.ndarray) -> np.ndarray:
-    if sp.issparse(H):
-        return H.toarray()
-    return np.asarray(H, dtype=complex)

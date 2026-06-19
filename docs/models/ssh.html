@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>SSH Model — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>SSH Model</span>
+      </nav>
+      <article class="model-article" data-model-page="ssh">
+<h1>SSH Model</h1>
+<h2>Purpose and structure</h2>
+<p>The Su-Schrieffer-Heeger chain has $A$ and $B$ sites in each unit cell, with
+intracell hopping $t_1$ and intercell hopping $t_2$:</p>
+<p>$$
+H=-\sum_m(t_1|m,A\rangle\langle m,B|
++t_2|m+1,A\rangle\langle m,B|+\mathrm{h.c.}).
+$$</p>
+<p><img src="../diagrams/ssh_rice_mele_unit_cell.svg" alt="SSH unit cell" /></p>
+<p>For open boundaries and $|t_1|&lt;|t_2|$, finite chains support near-zero
+edge-localized states.</p>
+<h2>Basis and use</h2>
+<p>The single-particle dimension is $2N_c$.</p>
+<pre><code class="language-python">from quantum_lattice_models import ssh_model
+
+H = ssh_model(n_cells=12, t1=0.4, t2=1.0)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ssh_model</code></td>
+<td><code>n_cells</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>8</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>ssh_model</code></td>
+<td><code>t1</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.5</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ssh_model</code></td>
+<td><code>t2</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ssh_model</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>Validation and cautions</h2>
+<p>The decoupled-dimer spectrum and topological edge localization are tested.
+This is a finite real-space model; winding numbers require future Bloch
+support.</p>
+<p>Related: <a href="rice_mele.html">Rice-Mele model</a>, <a href="kitaev_bdg.html">Kitaev BdG chain</a>.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

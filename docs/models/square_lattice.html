@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Square-Lattice Tight Binding — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Square-Lattice Tight Binding</span>
+      </nav>
+      <article class="model-article" data-model-page="square_lattice">
+<h1>Square-Lattice Tight Binding</h1>
+<h2>Purpose and structure</h2>
+<p>This model places one orbital at each site of an $N_r\times N_c$ rectangular
+grid with row-major indexing and nearest-neighbor hopping.</p>
+<p><img src="../diagrams/lattice_geometry_comparison.svg" alt="Finite lattice geometries" /></p>
+<h2>Basis and scaling</h2>
+<p>The single-particle dimension is $N_rN_c$. Dense and CSR builders are
+available. Opposite edges can be reconnected independently along $x$ and $y$.</p>
+<pre><code class="language-python">from quantum_lattice_models import square_lattice_tight_binding_sparse
+
+H = square_lattice_tight_binding_sparse(
+    n_rows=20, n_cols=20, periodic_x=True
+)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>square_lattice_tight_binding</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding</code></td>
+<td><code>onsite</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding_sparse</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>8</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding_sparse</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>8</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding_sparse</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding_sparse</code></td>
+<td><code>onsite</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding_sparse</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding_sparse</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>User notes</h2>
+<p>Use <code>square_lattice_positions</code> for plotting. This model has real hopping and
+no magnetic flux; use <a href="harper_hofstadter.html">Harper-Hofstadter</a> for Peierls
+phases.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

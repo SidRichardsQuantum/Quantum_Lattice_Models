@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>J1-J2 Heisenberg Chain — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>J1-J2 Heisenberg Chain</span>
+      </nav>
+      <article class="model-article" data-model-page="j1_j2_heisenberg">
+<h1>J1-J2 Heisenberg Chain</h1>
+<h2>Purpose and structure</h2>
+<p>This frustrated spin chain combines nearest- and next-nearest-neighbor
+Heisenberg exchange:</p>
+<p>$$
+H=J_1\sum_i\mathbf P_i\cdot\mathbf P_{i+1}
++J_2\sum_i\mathbf P_i\cdot\mathbf P_{i+2}+g\sum_iZ_i,
+$$</p>
+<p>with $\mathbf P=(X,Y,Z)$. Competition between $J_1$ and $J_2$ creates a
+compact frustration benchmark.</p>
+<p><img src="../diagrams/spin_chain_couplings.svg" alt="Spin-chain coupling comparison" /></p>
+<h2>Basis and use</h2>
+<pre><code class="language-python">from quantum_lattice_models import j1_j2_heisenberg_chain
+
+H = j1_j2_heisenberg_chain(n_sites=6, j1=1.0, j2=0.4)
+</code></pre>
+<p>The dense computational-basis dimension is $2^N$.</p>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>j1_j2_heisenberg_chain</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>5</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>j1_j2_heisenberg_chain</code></td>
+<td><code>j1</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>j1_j2_heisenberg_chain</code></td>
+<td><code>j2</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.4</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>j1_j2_heisenberg_chain</code></td>
+<td><code>field</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>j1_j2_heisenberg_chain</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>User notes</h2>
+<p>Periodic next-nearest-neighbor bonds are defined only when enough distinct
+sites exist. The package uses Pauli products directly.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

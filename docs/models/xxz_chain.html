@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>XXZ Chain — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>XXZ Chain</span>
+      </nav>
+      <article class="model-article" data-model-page="xxz_chain">
+<h1>XXZ Chain</h1>
+<h2>Purpose and Hamiltonian</h2>
+<p>The XXZ chain is the $J_x=J_y$ specialization of the anisotropic Heisenberg
+chain:</p>
+<p>$$
+H=J\sum_i(X_iX_{i+1}+Y_iY_{i+1}+\Delta Z_iZ_{i+1})
++g\sum_iZ_i.
+$$</p>
+<p>It is useful for anisotropy, magnetization, gap, and conserved-$S^z$
+benchmarks.</p>
+<h2>Basis and use</h2>
+<p>The dense computational-basis matrix has dimension $2^N$.</p>
+<pre><code class="language-python">from quantum_lattice_models import xxz_chain
+
+H = xxz_chain(n_sites=6, coupling=1.0, anisotropy=0.7)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>xxz_chain</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>xxz_chain</code></td>
+<td><code>coupling</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain</code></td>
+<td><code>anisotropy</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.7</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain</code></td>
+<td><code>field</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xxz_chain</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>User notes</h2>
+<p><code>xxz_chain</code> delegates to <code>heisenberg_chain</code>; its field term therefore has a
+positive sign. Fixed-magnetization sectors are planned but not yet available.</p>
+<p>Related: <a href="heisenberg_chain.html">Heisenberg chain</a>, <a href="xy_chain.html">XY chain</a>.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

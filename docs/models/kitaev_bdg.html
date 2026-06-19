@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Kitaev BdG Chain — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Kitaev BdG Chain</span>
+      </nav>
+      <article class="model-article" data-model-page="kitaev_bdg">
+<h1>Kitaev BdG Chain</h1>
+<h2>Purpose and structure</h2>
+<p>The spinless p-wave superconducting chain combines hopping, chemical
+potential, and nearest-neighbor pairing. The package returns</p>
+<p>$$
+\mathcal H_{\rm BdG}=
+\begin{pmatrix}A&amp;D\-D^<em>&amp;-A^</em>\end{pmatrix}
+$$</p>
+<p>in the Nambu basis
+$(c_0,\ldots,c_{N-1},c_0^\dagger,\ldots,c_{N-1}^\dagger)^T$.</p>
+<p><img src="../diagrams/kitaev_nambu_chain.svg" alt="Kitaev Nambu chain" /></p>
+<h2>Basis and use</h2>
+<p>The BdG dimension is $2N$, not $2^N$.</p>
+<pre><code class="language-python">from quantum_lattice_models import kitaev_chain_bdg
+
+H = kitaev_chain_bdg(n_sites=10, hopping=1.0, pairing=0.5)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kitaev_chain_bdg</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>8</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>kitaev_chain_bdg</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>kitaev_chain_bdg</code></td>
+<td><code>chemical_potential</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>kitaev_chain_bdg</code></td>
+<td><code>pairing</code></td>
+<td style="text-align:right"><code>complex</code></td>
+<td style="text-align:right"><code>0.5</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>kitaev_chain_bdg</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>Validation and cautions</h2>
+<p>Hermiticity and spectral particle-hole pairing $E\leftrightarrow-E$ are
+tested. The returned matrix is a single-particle BdG representation, not the
+many-body Hamiltonian.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

@@ -121,13 +121,12 @@ def custom_tight_binding(
     """
 
     lattice = _coerce_lattice(n_sites, bonds, lattice, positions)
-    matrix = np.zeros((lattice.n_sites, lattice.n_sites), dtype=complex)
-    np.fill_diagonal(matrix, onsite_values(onsite, lattice.n_sites))
-    for bond in lattice.bonds:
-        value = _bond_value(bond, hopping)
-        matrix[bond.source, bond.target] += value
-        if hermitian and bond.source != bond.target:
-            matrix[bond.target, bond.source] += np.conjugate(value)
+    matrix = custom_tight_binding_sparse(
+        lattice=lattice,
+        hopping=hopping,
+        onsite=onsite,
+        hermitian=hermitian,
+    ).toarray()
 
     metadata = dict(lattice.metadata or {})
     metadata.update({"hermitian": hermitian, "hopping": hopping})
@@ -155,16 +154,18 @@ def custom_tight_binding_sparse(
 ) -> sp.csr_matrix:
     """Return a sparse single-particle Hamiltonian on a user-defined graph."""
 
-    dense = custom_tight_binding(
-        n_sites=n_sites,
-        bonds=bonds,
-        lattice=lattice,
-        positions=positions,
-        hopping=hopping,
-        onsite=onsite,
-        hermitian=hermitian,
+    lattice = _coerce_lattice(n_sites, bonds, lattice, positions)
+    matrix = sp.diags(
+        onsite_values(onsite, lattice.n_sites),
+        format="lil",
+        dtype=complex,
     )
-    return sp.csr_matrix(np.asarray(dense))
+    for bond in lattice.bonds:
+        value = _bond_value(bond, hopping)
+        matrix[bond.source, bond.target] += value
+        if hermitian and bond.source != bond.target:
+            matrix[bond.target, bond.source] += np.conjugate(value)
+    return matrix.tocsr()
 
 
 def _coerce_lattice(

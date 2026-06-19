@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quantum-lattice-models"
-version = "0.1.3"
+version = "0.1.4"
 description = "Small dense quantum lattice Hamiltonians for exact diagonalization and quantum algorithm prototypes."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -39,12 +39,14 @@ dependencies = [
 dev = [
   "black[jupyter]",
   "build",
+  "markdown-it-py",
   "pytest",
   "ruff",
   "twine"
 ]
 notebooks = [
   "ipykernel",
+  "markdown-it-py",
   "notebook"
 ]
 pennylane = [
@@ -60,7 +62,7 @@ quantum-lattice = "quantum_lattice_models.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 
 [tool.black]
 target-version = ["py310"]
