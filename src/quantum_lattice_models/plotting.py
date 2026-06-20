@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from quantum_lattice_models._model_utils import as_dense
+from quantum_lattice_models.specs import ModelSpec
 from quantum_lattice_models.spectra import density_of_states, eigenvalues
 from quantum_lattice_models.tight_binding import ssh_edge_state_localization
 
@@ -17,6 +18,13 @@ COLORBLIND_PALETTE = {
     "sky": "#56B4E9",
     "yellow": "#F0E442",
     "black": "#000000",
+}
+_INTERACTION_COLORS = {
+    "XX": COLORBLIND_PALETTE["blue"],
+    "YY": COLORBLIND_PALETTE["orange"],
+    "ZZ": COLORBLIND_PALETTE["green"],
+    "hopping": COLORBLIND_PALETTE["purple"],
+    "mixed": "0.45",
 }
 
 
@@ -364,6 +372,127 @@ def plot_lattice_graph(
     return ax
 
 
+def plot_interaction_graph(
+    model: ModelSpec,
+    positions: np.ndarray | None = None,
+    ax=None,
+    *,
+    labels: bool = True,
+    show_coefficients: bool = True,
+    show_onsite: bool = True,
+    node_size: float = 180,
+):
+    """Plot portable physical degrees of freedom and onsite/two-body terms."""
+
+    import matplotlib.pyplot as plt
+
+    model.validate()
+    if not model.local_degrees:
+        raise ValueError("Model specification does not contain local degrees of freedom.")
+    if ax is None:
+        _, ax = plt.subplots()
+    coords = _physical_positions(model, positions)
+    degree_coords = _local_degree_positions(model, coords)
+    pairs: dict[tuple[int, int], list[object]] = {}
+    onsite: dict[int, list[object]] = {}
+    for interaction in model.interactions:
+        if len(interaction.degrees) == 1:
+            onsite.setdefault(interaction.degrees[0], []).append(interaction)
+        else:
+            key = tuple(sorted(interaction.degrees))
+            pairs.setdefault(key, []).append(interaction)
+
+    for (left, right), terms in pairs.items():
+        source_coord = degree_coords[left]
+        target_coord = degree_coords[right]
+        signatures = {_interaction_signature(term) for term in terms}
+        signature = next(iter(signatures)) if len(signatures) == 1 else "mixed"
+        color = _INTERACTION_COLORS.get(signature, _INTERACTION_COLORS["mixed"])
+        ax.plot(
+            [source_coord[0], target_coord[0]],
+            [source_coord[1], target_coord[1]],
+            color=color,
+            linewidth=1.4,
+            alpha=0.82,
+            zorder=1,
+        )
+        if show_coefficients:
+            midpoint = 0.5 * (source_coord + target_coord)
+            text = "\n".join(
+                f"{''.join(term.operators)}={_format_coefficient(term.coefficient)}"
+                for term in terms
+            )
+            ax.annotate(
+                text,
+                midpoint,
+                xytext=(0, 5),
+                textcoords="offset points",
+                ha="center",
+                va="bottom",
+                fontsize=7,
+                color="0.25",
+            )
+
+    kinds = [degree.kind for degree in model.local_degrees]
+    kind_colors = {
+        kind: color
+        for kind, color in zip(
+            dict.fromkeys(kinds),
+            (
+                COLORBLIND_PALETTE["blue"],
+                COLORBLIND_PALETTE["orange"],
+                COLORBLIND_PALETTE["green"],
+                COLORBLIND_PALETTE["purple"],
+                COLORBLIND_PALETTE["sky"],
+            ),
+            strict=False,
+        )
+    }
+    node_colors = [kind_colors[degree.kind] for degree in model.local_degrees]
+    site_coords = np.asarray([degree_coords[degree.index] for degree in model.local_degrees])
+    ax.scatter(
+        site_coords[:, 0],
+        site_coords[:, 1],
+        s=node_size,
+        color=node_colors,
+        edgecolor="black",
+        linewidth=0.45,
+        zorder=3,
+    )
+    for degree, (x_coord, y_coord) in zip(model.local_degrees, site_coords, strict=True):
+        if labels:
+            ax.text(
+                x_coord,
+                y_coord,
+                degree.label or str(degree.index),
+                ha="center",
+                va="center",
+                fontsize=8,
+                zorder=4,
+            )
+        if show_onsite and degree.index in onsite:
+            text = ", ".join(
+                f"{term.operators[0]}={_format_coefficient(term.coefficient)}"
+                for term in onsite[degree.index]
+            )
+            ax.annotate(
+                text,
+                (x_coord, y_coord),
+                xytext=(0, -12),
+                textcoords="offset points",
+                ha="center",
+                va="top",
+                fontsize=7,
+                color="0.3",
+            )
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title("Physical interaction graph")
+    ax.autoscale_view()
+    return ax
+
+
 def plot_lattice_state(
     H: np.ndarray,
     state: np.ndarray,
@@ -479,6 +608,45 @@ def _positions_for_plot(H: np.ndarray, positions: np.ndarray | None, n_sites: in
     if coords.ndim != 2 or coords.shape[0] != n_sites or coords.shape[1] not in (2, 3):
         raise ValueError("positions must have shape (n_sites, 2) or (n_sites, 3).")
     return coords[:, :2]
+
+
+def _physical_positions(model: ModelSpec, positions: np.ndarray | None) -> np.ndarray:
+    n_sites = max(degree.site for degree in model.local_degrees) + 1
+    if positions is None and model.lattice is not None and model.lattice.positions:
+        positions = np.asarray(model.lattice.positions)
+    if positions is None:
+        angles = np.linspace(0.0, 2.0 * np.pi, n_sites, endpoint=False)
+        positions = np.column_stack((np.cos(angles), np.sin(angles)))
+    coords = np.asarray(positions, dtype=float)
+    if coords.ndim != 2 or coords.shape[0] < n_sites or coords.shape[1] not in (2, 3):
+        raise ValueError("positions must cover every physical site in two or three dimensions.")
+    return coords[:, :2]
+
+
+def _local_degree_positions(model: ModelSpec, site_coords: np.ndarray) -> dict[int, np.ndarray]:
+    grouped: dict[int, list[object]] = {}
+    for degree in model.local_degrees:
+        grouped.setdefault(degree.site, []).append(degree)
+    resolved: dict[int, np.ndarray] = {}
+    for site, degrees in grouped.items():
+        count = len(degrees)
+        offsets = np.linspace(-0.11 * (count - 1), 0.11 * (count - 1), count)
+        for degree, offset in zip(degrees, offsets, strict=True):
+            resolved[degree.index] = site_coords[site] + np.array([0.0, offset])
+    return resolved
+
+
+def _interaction_signature(interaction) -> str:
+    if interaction.kind.endswith("hopping") or interaction.kind == "hopping":
+        return "hopping"
+    return "".join(interaction.operators)
+
+
+def _format_coefficient(value: complex) -> str:
+    scalar = complex(value)
+    if abs(scalar.imag) <= 1e-12:
+        return f"{scalar.real:.3g}"
+    return f"{scalar:.3g}"
 
 
 def _scaled_linewidths(values: np.ndarray, base: float, scale_edges: bool) -> np.ndarray:

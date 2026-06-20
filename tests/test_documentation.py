@@ -51,3 +51,36 @@ def test_schema_and_import_guides_are_published() -> None:
     assert "Complex-number encoding" in schema
     assert "CSV import" in importing
     assert "NetworkX and GraphML" in importing
+
+
+def test_notebook_curriculum_is_contiguous_and_rendered() -> None:
+    notebooks = sorted(Path("notebooks").glob("*.ipynb"))
+    assert len(notebooks) == 21
+    assert [path.name[:2] for path in notebooks] == [f"{index:02d}" for index in range(1, 22)]
+    for notebook in notebooks:
+        assert (Path("docs/notebooks") / f"{notebook.stem}.html").exists()
+
+
+def test_notebooks_share_standard_introductory_content_blocks() -> None:
+    import json
+
+    required = ("**Model.**", "**Typical uses.**", "**Parameters.**", "**Useful plots.**")
+    for path in sorted(Path("notebooks").glob("*.ipynb")):
+        notebook = json.loads(path.read_text())
+        introduction = "".join(notebook["cells"][0]["source"])
+        for block in required:
+            assert block in introduction, f"{path}: missing {block}"
+
+
+def test_example_set_focuses_on_distinct_workflows() -> None:
+    examples = {path.name for path in Path("examples").glob("*.py")}
+    assert examples == {
+        "external_matrix_import.py",
+        "haldane_matrix_structure.py",
+        "heisenberg_density_of_states.py",
+        "hofstadter_butterfly.py",
+        "kagome_graph.py",
+        "physical_interaction_graph.py",
+        "portable_model_bundle.py",
+        "ssh_edge_state.py",
+    }

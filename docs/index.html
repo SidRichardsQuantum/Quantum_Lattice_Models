@@ -315,21 +315,21 @@ print(spectral_gap(H))</code></pre>
         <section id="results" class="section">
           <div class="section-heading">
             <p class="eyebrow">Generated examples</p>
-            <h2>Reference plots from command-line examples</h2>
+            <h2>Reference outputs from command-line examples</h2>
             <p>
-              Each script under <code>examples/</code> imports the package and saves
-              a PNG under <code>images/</code>, keeping notebooks and scripts as
-              thin clients of the public API.
+              Each script under <code>examples/</code> imports the package and
+              produces a focused figure or portable artifact, keeping notebooks
+              and scripts as thin clients of the public API.
             </p>
           </div>
 
           <div class="result-grid">
             <figure>
-              <img src="images/ising_spectrum.png" alt="Transverse-field Ising spectrum plot">
-              <figcaption>TFIM spectrum: n=5, J=1.0, h=0.7</figcaption>
+              <img src="images/physical_interaction_graph.png" alt="Spin, fermionic-mode, and graph-spin interaction diagrams">
+              <figcaption>Physical-system interaction graphs</figcaption>
             </figure>
             <figure>
-              <img src="images/heisenberg_density.png" alt="Heisenberg chain density plot">
+              <img src="images/heisenberg_density_of_states.png" alt="Heisenberg chain density plot">
               <figcaption>Heisenberg density: n=5, J=1.0, field=0.2</figcaption>
             </figure>
             <figure>
@@ -337,31 +337,19 @@ print(spectral_gap(H))</code></pre>
               <figcaption>SSH edge state: 12 cells, t₁=0.4, t₂=1.0</figcaption>
             </figure>
             <figure>
-              <img src="images/tight_binding_spectrum.png" alt="Tight-binding spectrum plot">
-              <figcaption>Open chain: 16 sites, hopping=1.0</figcaption>
-            </figure>
-            <figure>
-              <img src="images/rice_mele_spectrum.png" alt="Rice-Mele finite-chain spectrum plot">
-              <figcaption>Rice-Mele: 12 cells, δ=0.35, Δ=0.4</figcaption>
+              <img src="images/external_matrix_import.png" alt="Imported external matrix magnitude and phase">
+              <figcaption>External matrix import and inspection</figcaption>
             </figure>
             <figure>
               <img src="images/hofstadter_butterfly.png" alt="Harper-Hofstadter flux spectrum plot">
               <figcaption>Finite Hofstadter spectrum: 8×8, 121 flux values</figcaption>
             </figure>
             <figure>
-              <img src="images/bose_hubbard_spectrum.png" alt="Truncated Bose-Hubbard spectrum plot">
-              <figcaption>Bose-Hubbard: 3 sites, U=1.5, t=0.6</figcaption>
-            </figure>
-            <figure>
-              <img src="images/haldane_spectrum.png" alt="Finite Haldane honeycomb spectrum plot">
-              <figcaption>Haldane: 3×3 cells, t₂=0.18, φ=π/2</figcaption>
-            </figure>
-            <figure>
               <img src="images/kagome_graph.png" alt="Kagome lattice graph connectivity plot">
               <figcaption>Kagome: 2×3 cells with sublattice colors</figcaption>
             </figure>
             <figure>
-              <img src="images/hamiltonian_matrix.png" alt="Haldane Hamiltonian magnitude and phase matrices">
+              <img src="images/haldane_matrix_structure.png" alt="Haldane Hamiltonian magnitude and phase matrices">
               <figcaption>Haldane matrix magnitude and hopping phase</figcaption>
             </figure>
           </div>
@@ -541,19 +529,51 @@ print(spectral_gap(H))</code></pre>
             </article>
             <article class="package-row">
               <div>
-                <h3>16. Model registry and CLI</h3>
-                <p>Structured model discovery and registry metadata.</p>
+                <h3>16. Registry, portable files, and CLI workflows</h3>
+                <p>Model discovery, portable specifications, spectra, plots, and artifact bundles.</p>
               </div>
               <code>notebooks/16_model_registry_and_cli.ipynb</code>
               <a href="notebooks/16_model_registry_and_cli.html">HTML</a>
             </article>
             <article class="package-row">
               <div>
-                <h3>17. CLI plot walkthrough</h3>
-                <p>Command-line spectra and reproducible PNG output.</p>
+                <h3>17. Portable physical-system records</h3>
+                <p>Local degrees, basis mappings, interactions, and diagrams.</p>
               </div>
-              <code>notebooks/17_cli_plot_walkthrough.ipynb</code>
-              <a href="notebooks/17_cli_plot_walkthrough.html">HTML</a>
+              <code>notebooks/17_portable_physical_system_records.ipynb</code>
+              <a href="notebooks/17_portable_physical_system_records.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>18. Model import, export, and bundles</h3>
+                <p>JSON lifecycle, external matrices, and deterministic artifacts.</p>
+              </div>
+              <code>notebooks/18_model_import_export_and_bundles.ipynb</code>
+              <a href="notebooks/18_model_import_export_and_bundles.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>19. Graph-spin model workflow</h3>
+                <p>Mixed-axis interactions, fields, sparse reconstruction, and observables.</p>
+              </div>
+              <code>notebooks/19_graph_spin_model_workflow.ipynb</code>
+              <a href="notebooks/19_graph_spin_model_workflow.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>20. Fixed-magnetization spin sectors</h3>
+                <p>Reduced dimensions, block validation, observables, and entanglement.</p>
+              </div>
+              <code>notebooks/20_fixed_magnetization_spin_sectors.ipynb</code>
+              <a href="notebooks/20_fixed_magnetization_spin_sectors.html">HTML</a>
+            </article>
+            <article class="package-row">
+              <div>
+                <h3>21. Lattice import and transformations</h3>
+                <p>CSV interchange, defects, boundaries, disorder, and provenance.</p>
+              </div>
+              <code>notebooks/21_lattice_import_and_transformations.ipynb</code>
+              <a href="notebooks/21_lattice_import_and_transformations.html">HTML</a>
             </article>
           </div>
 
@@ -574,6 +594,14 @@ print(spectral_gap(H))</code></pre>
               <img src="notebook_outputs/13_hamiltonian_structure_gallery_1.png" alt="Notebook-generated Hamiltonian structure gallery">
               <figcaption>Hamiltonian structure gallery</figcaption>
             </figure>
+            <figure>
+              <img src="notebook_outputs/17_portable_physical_system_records_1.png" alt="Notebook-generated physical-system interaction diagrams">
+              <figcaption>Portable physical-system records</figcaption>
+            </figure>
+            <figure>
+              <img src="notebook_outputs/20_fixed_magnetization_spin_sectors_1.png" alt="Notebook-generated sector dimension scaling">
+              <figcaption>Fixed-magnetization sectors</figcaption>
+            </figure>
           </div>
         </section>
 
@@ -585,8 +613,9 @@ print(spectral_gap(H))</code></pre>
               The repository documents practical usage, model conventions, and the
               package's truth contract for small-system exact diagonalization.
               The notebook tree provides thin-client workflows for spin chains,
-              SSH/Rice-Mele, Hofstadter sweeps, Hubbard models, and finite
-              topological lattices.
+              SSH/Rice-Mele, Hofstadter sweeps, Hubbard models, portable
+              physical data, graph-spin systems, reduced sectors, interchange,
+              and finite topological lattices.
             </p>
           </div>
           <div class="contact-actions">

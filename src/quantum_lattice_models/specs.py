@@ -11,14 +11,25 @@ import numpy as np
 import scipy.sparse as sp
 
 from quantum_lattice_models.lattice import Bond, Lattice
+from quantum_lattice_models.physical import (
+    BasisIndexMapping,
+    InteractionTerm,
+    LocalDegreeOfFreedom,
+    validate_physical_system,
+)
 
 SPEC_SCHEMA_VERSION = "1.0"
+EXTERNAL_MATRIX_FAMILY = "external_matrix"
+GRAPH_SPIN_FAMILY = "graph_spin"
 _MODEL_FIELDS = {
     "schema_version",
     "family",
     "parameters",
     "lattice",
     "basis",
+    "local_degrees",
+    "basis_mappings",
+    "interactions",
     "representation",
     "units",
     "conventions",
@@ -225,6 +236,9 @@ class ModelSpec:
     parameters: dict[str, object] = field(default_factory=dict)
     lattice: LatticeSpec | None = None
     basis: str | None = None
+    local_degrees: tuple[LocalDegreeOfFreedom, ...] = ()
+    basis_mappings: tuple[BasisIndexMapping, ...] = ()
+    interactions: tuple[InteractionTerm, ...] = ()
     representation: str = "dense"
     units: dict[str, str] = field(default_factory=dict)
     conventions: dict[str, str] = field(default_factory=dict)
@@ -251,6 +265,49 @@ class ModelSpec:
             isinstance(name, str) for name in self.parameters
         ):
             raise ValueError("model.parameters must be an object with string keys.")
+        validate_physical_system(
+            self.local_degrees,
+            self.basis_mappings,
+            self.interactions,
+            n_sites=None if self.lattice is None else self.lattice.n_sites,
+        )
+        if self.family == EXTERNAL_MATRIX_FAMILY:
+            if self.parameters:
+                raise ValueError("External matrix specifications do not accept parameters.")
+            if not isinstance(self.basis, str) or not self.basis.strip():
+                raise ValueError("External matrix specifications require a nonempty basis.")
+            if self.lattice is not None:
+                self.lattice.validate()
+            _validate_string_mapping(self.units, "model.units")
+            _validate_string_mapping(self.conventions, "model.conventions")
+            if not all(isinstance(reference, str) for reference in self.references):
+                raise ValueError("model.references must contain strings.")
+            _validate_json_value(self.provenance, "model.provenance")
+            _validate_json_value(self.metadata, "model.metadata")
+            return
+        if self.family == GRAPH_SPIN_FAMILY:
+            if set(self.parameters) != {"n_sites"}:
+                raise ValueError("Graph-spin specifications require only the n_sites parameter.")
+            n_sites = self.parameters["n_sites"]
+            if not isinstance(n_sites, int) or isinstance(n_sites, bool) or n_sites < 1:
+                raise ValueError("Graph-spin n_sites must be a positive integer.")
+            if self.basis not in (None, "qubit"):
+                raise ValueError("Graph-spin specifications require the 'qubit' basis.")
+            if self.lattice is not None:
+                self.lattice.validate()
+                if self.lattice.n_sites != n_sites:
+                    raise ValueError("Graph-spin lattice.n_sites must equal parameters.n_sites.")
+            if len(self.local_degrees) != n_sites:
+                raise ValueError("Graph-spin specifications require one local spin per site.")
+            if any(degree.kind != "spin" for degree in self.local_degrees):
+                raise ValueError("Graph-spin local degrees must have kind 'spin'.")
+            _validate_string_mapping(self.units, "model.units")
+            _validate_string_mapping(self.conventions, "model.conventions")
+            if not all(isinstance(reference, str) for reference in self.references):
+                raise ValueError("model.references must contain strings.")
+            _validate_json_value(self.provenance, "model.provenance")
+            _validate_json_value(self.metadata, "model.metadata")
+            return
         try:
             info = get_model_info(self.family)
         except KeyError as exc:
@@ -335,6 +392,46 @@ class ModelSpec:
         from quantum_lattice_models.registry import get_model_info
 
         self.validate()
+        if self.family == EXTERNAL_MATRIX_FAMILY:
+            raise ValueError(
+                "External matrix specifications cannot reconstruct a matrix; "
+                "load the persisted Hamiltonian file instead."
+            )
+        if self.family == GRAPH_SPIN_FAMILY:
+            from quantum_lattice_models.spin import (
+                SpinField,
+                SpinInteraction,
+                graph_spin_hamiltonian,
+                graph_spin_hamiltonian_sparse,
+            )
+
+            graph_interactions = []
+            graph_fields = []
+            for term in self.interactions:
+                if len(term.degrees) == 1:
+                    graph_fields.append(
+                        SpinField(term.degrees[0], term.operators[0], term.coefficient)
+                    )
+                else:
+                    graph_interactions.append(
+                        SpinInteraction(
+                            term.degrees[0],
+                            term.degrees[1],
+                            term.operators[0],
+                            term.operators[1],
+                            term.coefficient,
+                        )
+                    )
+            builder = (
+                graph_spin_hamiltonian_sparse
+                if representation == "sparse"
+                else graph_spin_hamiltonian
+            )
+            return builder(
+                int(self.parameters["n_sites"]),
+                graph_interactions,
+                graph_fields,
+            )
         builder_name = _resolve_builder_name(self.family, representation)
         info = get_model_info(builder_name)
         if info.builder is None:
@@ -357,6 +454,9 @@ class ModelSpec:
             "parameters": _encode_value(self.parameters),
             "lattice": None if self.lattice is None else self.lattice.to_dict(),
             "basis": self.basis,
+            "local_degrees": [degree.to_dict() for degree in self.local_degrees],
+            "basis_mappings": [mapping.to_dict() for mapping in self.basis_mappings],
+            "interactions": [interaction.to_dict() for interaction in self.interactions],
             "representation": self.representation,
             "units": dict(self.units),
             "conventions": dict(self.conventions),
@@ -385,6 +485,18 @@ class ModelSpec:
                 None if lattice_data is None else LatticeSpec.from_dict(_mapping(lattice_data))
             ),
             basis=None if data.get("basis") is None else str(data["basis"]),
+            local_degrees=tuple(
+                LocalDegreeOfFreedom.from_dict(record)
+                for record in _record_list(data.get("local_degrees", []), "model.local_degrees")
+            ),
+            basis_mappings=tuple(
+                BasisIndexMapping.from_dict(record)
+                for record in _record_list(data.get("basis_mappings", []), "model.basis_mappings")
+            ),
+            interactions=tuple(
+                InteractionTerm.from_dict(record)
+                for record in _record_list(data.get("interactions", []), "model.interactions")
+            ),
             representation=str(data.get("representation", "dense")),
             units={str(key): str(value) for key, value in _mapping(data.get("units", {})).items()},
             conventions={
@@ -420,6 +532,9 @@ class ModelSpec:
             "representation": self.representation,
             "parameters": dict(sorted(self.parameters.items())),
             "has_lattice": self.lattice is not None,
+            "local_degree_count": len(self.local_degrees),
+            "interaction_count": len(self.interactions),
+            "basis_mapping_count": len(self.basis_mappings),
             "units": dict(sorted(self.units.items())),
             "conventions": dict(sorted(self.conventions.items())),
             "references": list(self.references),
@@ -441,10 +556,17 @@ class ModelSpec:
         dimension_parameters = dict(self.parameters)
         if self.lattice is not None:
             dimension_parameters.setdefault("n_sites", self.lattice.n_sites)
-        try:
-            dimension = estimate_model_dimension(self.family, **dimension_parameters)
-        except ValueError:
-            dimension = None
+        if self.family == EXTERNAL_MATRIX_FAMILY:
+            dimension = self.metadata.get("matrix_dimension")
+            if not isinstance(dimension, int) or dimension < 1:
+                dimension = None
+        elif self.family == GRAPH_SPIN_FAMILY:
+            dimension = 2 ** int(self.parameters["n_sites"])
+        else:
+            try:
+                dimension = estimate_model_dimension(self.family, **dimension_parameters)
+            except ValueError:
+                dimension = None
         if dimension is not None:
             summary["dimension"] = dimension
             summary["dense_memory_bytes"] = estimate_dense_memory(dimension)
@@ -456,6 +578,9 @@ def create_model_spec(
     *,
     parameters: dict[str, object] | None = None,
     lattice: LatticeSpec | None = None,
+    local_degrees: tuple[LocalDegreeOfFreedom, ...] | None = None,
+    basis_mappings: tuple[BasisIndexMapping, ...] | None = None,
+    interactions: tuple[InteractionTerm, ...] | None = None,
     representation: str | None = None,
     units: dict[str, str] | None = None,
     conventions: dict[str, str] | None = None,
@@ -479,12 +604,126 @@ def create_model_spec(
     inferred_representation = representation or (
         "sparse" if family.endswith("_sparse") else "dense"
     )
+    inferred_lattice, inferred_degrees, inferred_mappings, inferred_interactions = (
+        _infer_physical_system(family, resolved, lattice)
+    )
     spec = ModelSpec(
         family=family,
         parameters=resolved,
-        lattice=lattice,
+        lattice=inferred_lattice,
         basis=info.basis,
+        local_degrees=(inferred_degrees if local_degrees is None else tuple(local_degrees)),
+        basis_mappings=(inferred_mappings if basis_mappings is None else tuple(basis_mappings)),
+        interactions=(inferred_interactions if interactions is None else tuple(interactions)),
         representation=inferred_representation,
+        units=dict(units or {}),
+        conventions=dict(conventions or {}),
+        references=tuple(references),
+        provenance=dict(provenance or {}),
+        metadata=dict(metadata or {}),
+    )
+    spec.validate()
+    return spec
+
+
+def create_graph_spin_spec(
+    n_sites: int,
+    *,
+    interactions: tuple[object, ...] = (),
+    fields: tuple[object, ...] = (),
+    lattice: LatticeSpec | None = None,
+    positions: tuple[tuple[float, ...], ...] | None = None,
+    site_labels: tuple[str, ...] | None = None,
+    representation: str = "dense",
+    units: dict[str, str] | None = None,
+    conventions: dict[str, str] | None = None,
+    references: tuple[str, ...] = (),
+    provenance: dict[str, object] | None = None,
+    metadata: dict[str, object] | None = None,
+) -> ModelSpec:
+    """Create a portable arbitrary spin-1/2 interaction-graph specification."""
+
+    from quantum_lattice_models.spin import SpinField, SpinInteraction
+
+    if not isinstance(n_sites, int) or isinstance(n_sites, bool) or n_sites < 1:
+        raise ValueError("n_sites must be a positive integer.")
+    if representation not in {"dense", "sparse"}:
+        raise ValueError("representation must be 'dense' or 'sparse'.")
+    if lattice is not None and (positions is not None or site_labels is not None):
+        raise ValueError("Use either lattice or positions/site_labels, not both.")
+    portable_terms: list[InteractionTerm] = []
+    bonds: list[Bond] = []
+    for interaction in interactions:
+        if not isinstance(interaction, SpinInteraction):
+            raise TypeError("interactions must contain SpinInteraction records.")
+        portable_terms.append(
+            InteractionTerm(
+                (interaction.source, interaction.target),
+                (interaction.source_axis, interaction.target_axis),
+                interaction.coefficient,
+                "spin_exchange",
+                label=(
+                    f"{interaction.source_axis}{interaction.target_axis} "
+                    f"{interaction.source}-{interaction.target}"
+                ),
+            )
+        )
+        bond = Bond(interaction.source, interaction.target)
+        if bond not in bonds:
+            bonds.append(bond)
+    for spin_field in fields:
+        if not isinstance(spin_field, SpinField):
+            raise TypeError("fields must contain SpinField records.")
+        portable_terms.append(
+            InteractionTerm(
+                (spin_field.site,),
+                (spin_field.axis,),
+                spin_field.coefficient,
+                "field",
+                label=f"{spin_field.axis} field {spin_field.site}",
+            )
+        )
+    if lattice is None:
+        resolved_positions = (
+            tuple(positions)
+            if positions is not None
+            else tuple((float(site), 0.0) for site in range(n_sites))
+        )
+        resolved_labels = (
+            tuple(site_labels)
+            if site_labels is not None
+            else tuple(f"spin {site}" for site in range(n_sites))
+        )
+        lattice = LatticeSpec(
+            n_sites=n_sites,
+            positions=resolved_positions,
+            bonds=tuple(bonds),
+            site_labels=resolved_labels,
+            conventions={"edge_interpretation": "spin interaction graph"},
+        )
+    degrees = tuple(
+        LocalDegreeOfFreedom(
+            site,
+            site,
+            "spin",
+            2,
+            lattice.site_labels[site] if lattice.site_labels else f"spin {site}",
+            component="spin-1/2",
+        )
+        for site in range(n_sites)
+    )
+    spec = ModelSpec(
+        family=GRAPH_SPIN_FAMILY,
+        parameters={"n_sites": n_sites},
+        lattice=lattice,
+        basis="qubit",
+        local_degrees=degrees,
+        basis_mappings=tuple(
+            BasisIndexMapping(site, site, "tensor_factor", f"qubit {site}")
+            for site in range(n_sites)
+        ),
+        interactions=tuple(portable_terms),
+        representation=representation,
         units=dict(units or {}),
         conventions=dict(conventions or {}),
         references=tuple(references),
@@ -515,6 +754,542 @@ def create_model_from_preset(
         provenance={"preset": preset.name},
         metadata={"preset_description": preset.description},
     )
+
+
+def _infer_physical_system(
+    family: str,
+    parameters: dict[str, object],
+    lattice: LatticeSpec | None,
+) -> tuple[
+    LatticeSpec | None,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    base = _base_family(family)
+    if base in {
+        "transverse_field_ising",
+        "longitudinal_field_ising",
+        "next_nearest_neighbor_ising",
+        "heisenberg_chain",
+        "heisenberg_chain_sector",
+        "xxz_chain",
+        "xxz_chain_sector",
+    }:
+        return _spin_chain_physical_system(base, parameters, lattice)
+    if base == "ssh_model":
+        return _ssh_physical_system(parameters, lattice)
+    if base == "bose_hubbard_chain":
+        return _bose_hubbard_physical_system(parameters, lattice)
+    if base == "fermi_hubbard_chain":
+        return _fermi_hubbard_physical_system(parameters, lattice)
+    if base == "kitaev_chain_bdg":
+        return _kitaev_bdg_physical_system(parameters, lattice)
+    if base == "custom_tight_binding" and lattice is not None:
+        return _custom_tight_binding_physical_system(parameters, lattice)
+    return lattice, (), (), ()
+
+
+def _spin_chain_physical_system(
+    family: str,
+    parameters: dict[str, object],
+    lattice: LatticeSpec | None,
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    n_sites = int(parameters["n_sites"])
+    periodic = bool(parameters.get("periodic", False))
+    nearest = _chain_bonds(n_sites, periodic)
+    if lattice is None:
+        lattice = LatticeSpec(
+            n_sites=n_sites,
+            positions=tuple((float(site), 0.0) for site in range(n_sites)),
+            bonds=tuple(Bond(source, target) for source, target in nearest),
+            site_labels=tuple(f"spin {site}" for site in range(n_sites)),
+            boundary_conditions={"x": "periodic" if periodic else "open"},
+            conventions={"site_ordering": "left-to-right chain order"},
+        )
+    degrees = tuple(
+        LocalDegreeOfFreedom(
+            index=site,
+            site=site,
+            kind="spin",
+            local_dimension=2,
+            label=f"spin {site}",
+            component="spin-1/2",
+        )
+        for site in range(n_sites)
+    )
+    mappings = tuple(
+        BasisIndexMapping(site, site, "tensor_factor", f"qubit {site}") for site in range(n_sites)
+    )
+    interactions: list[InteractionTerm] = []
+
+    def pair_terms(
+        bonds: tuple[tuple[int, int], ...],
+        couplings: tuple[tuple[str, complex], ...],
+        kind: str,
+    ) -> None:
+        for source, target in bonds:
+            for axis, coefficient in couplings:
+                interactions.append(
+                    InteractionTerm(
+                        (source, target),
+                        (axis, axis),
+                        coefficient,
+                        kind,
+                        label=f"{axis}{axis} {source}-{target}",
+                    )
+                )
+
+    def fields(axis: str, coefficient: complex) -> None:
+        for site in range(n_sites):
+            interactions.append(
+                InteractionTerm(
+                    (site,),
+                    (axis,),
+                    coefficient,
+                    "field",
+                    label=f"{axis} field {site}",
+                )
+            )
+
+    if family == "transverse_field_ising":
+        pair_terms(nearest, (("Z", -complex(parameters["j"])),), "ising_exchange")
+        fields("X", -complex(parameters["h"]))
+    elif family == "longitudinal_field_ising":
+        pair_terms(nearest, (("Z", -complex(parameters["j"])),), "ising_exchange")
+        fields("X", -complex(parameters["h_x"]))
+        fields("Z", -complex(parameters["h_z"]))
+    elif family == "next_nearest_neighbor_ising":
+        pair_terms(nearest, (("Z", -complex(parameters["j1"])),), "nearest_exchange")
+        pair_terms(
+            _next_nearest_chain_bonds(n_sites, periodic),
+            (("Z", -complex(parameters["j2"])),),
+            "next_nearest_exchange",
+        )
+        fields("X", -complex(parameters["h"]))
+    elif family in {"heisenberg_chain", "heisenberg_chain_sector"}:
+        pair_terms(
+            nearest,
+            (
+                ("X", complex(parameters["jx"])),
+                ("Y", complex(parameters["jy"])),
+                ("Z", complex(parameters["jz"])),
+            ),
+            "heisenberg_exchange",
+        )
+        fields("Z", complex(parameters.get("field", 0.0)))
+    else:
+        coupling = complex(parameters["coupling"])
+        pair_terms(
+            nearest,
+            (
+                ("X", coupling),
+                ("Y", coupling),
+                ("Z", coupling * complex(parameters["anisotropy"])),
+            ),
+            "xxz_exchange",
+        )
+        fields("Z", complex(parameters.get("field", 0.0)))
+    return lattice, degrees, mappings, tuple(interactions)
+
+
+def _ssh_physical_system(
+    parameters: dict[str, object],
+    lattice: LatticeSpec | None,
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    n_cells = int(parameters["n_cells"])
+    periodic = bool(parameters.get("periodic", False))
+    t1 = complex(parameters["t1"])
+    t2 = complex(parameters["t2"])
+    bonds: list[Bond] = []
+    interactions: list[InteractionTerm] = []
+    for cell in range(n_cells):
+        a = 2 * cell
+        b = a + 1
+        bonds.append(Bond(a, b, -t1))
+        interactions.append(
+            _hopping_interaction(a, b, -t1, "intracell_hopping", f"cell {cell} A-B")
+        )
+        if cell < n_cells - 1:
+            target = 2 * (cell + 1)
+            bonds.append(Bond(b, target, -t2))
+            interactions.append(
+                _hopping_interaction(b, target, -t2, "intercell_hopping", f"cell {cell} B-A")
+            )
+        elif periodic and n_cells > 1:
+            bonds.append(Bond(b, 0, -t2))
+            interactions.append(
+                _hopping_interaction(b, 0, -t2, "intercell_hopping", "periodic B-A")
+            )
+    if lattice is None:
+        lattice = LatticeSpec(
+            n_sites=2 * n_cells,
+            positions=tuple(
+                (float(cell) + (0.0 if sublattice == 0 else 0.45), 0.0)
+                for cell in range(n_cells)
+                for sublattice in range(2)
+            ),
+            bonds=tuple(bonds),
+            site_labels=tuple(
+                f"{'A' if sublattice == 0 else 'B'}{cell}"
+                for cell in range(n_cells)
+                for sublattice in range(2)
+            ),
+            orbital_labels=tuple("orbital" for _ in range(2 * n_cells)),
+            sublattice_labels=tuple("A" if index % 2 == 0 else "B" for index in range(2 * n_cells)),
+            unit_cells=tuple(cell for cell in range(n_cells) for _ in range(2)),
+            boundary_conditions={"x": "periodic" if periodic else "open"},
+            conventions={"basis_ordering": "A, B within each unit cell"},
+        )
+    degrees = _orbital_degrees(lattice)
+    mappings = _single_particle_mappings(degrees)
+    return lattice, degrees, mappings, tuple(interactions)
+
+
+def _custom_tight_binding_physical_system(
+    parameters: dict[str, object],
+    lattice: LatticeSpec,
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    degrees = _orbital_degrees(lattice)
+    interactions: list[InteractionTerm] = []
+    hopping = complex(parameters.get("hopping", 1.0))
+    hermitian = bool(parameters.get("hermitian", True))
+    for bond in lattice.bonds:
+        coefficient = -hopping if bond.value is None else complex(bond.value)
+        interactions.append(
+            InteractionTerm(
+                (bond.source, bond.target),
+                ("create", "annihilate"),
+                coefficient,
+                "hopping",
+                label=f"{bond.source}-{bond.target}",
+                metadata={"hermitian_conjugate": hermitian},
+            )
+        )
+    onsite = parameters.get("onsite", 0.0)
+    onsite_values = (
+        tuple(complex(value) for value in onsite)
+        if isinstance(onsite, (tuple, list))
+        else tuple(complex(onsite) for _ in range(lattice.n_sites))
+    )
+    for site, coefficient in enumerate(onsite_values):
+        if coefficient != 0:
+            interactions.append(
+                InteractionTerm(
+                    (site,),
+                    ("number",),
+                    coefficient,
+                    "onsite",
+                    label=f"onsite {site}",
+                )
+            )
+    return lattice, degrees, _single_particle_mappings(degrees), tuple(interactions)
+
+
+def _bose_hubbard_physical_system(
+    parameters: dict[str, object],
+    lattice: LatticeSpec | None,
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    n_sites = int(parameters["n_sites"])
+    periodic = bool(parameters.get("periodic", False))
+    lattice = lattice or _chain_lattice(n_sites, periodic, "boson")
+    max_occupancy = int(parameters["max_occupancy"])
+    degrees = tuple(
+        LocalDegreeOfFreedom(
+            site,
+            site,
+            "boson",
+            max_occupancy + 1,
+            f"boson {site}",
+            component="truncated occupation",
+            metadata={"max_occupancy": max_occupancy},
+        )
+        for site in range(n_sites)
+    )
+    mappings = tuple(
+        BasisIndexMapping(site, site, "tensor_factor", f"occupation digit {site}")
+        for site in range(n_sites)
+    )
+    interactions: list[InteractionTerm] = []
+    for source, target in _chain_bonds(n_sites, periodic):
+        interactions.append(
+            InteractionTerm(
+                (source, target),
+                ("create", "annihilate"),
+                -complex(parameters["hopping"]),
+                "boson_hopping",
+                label=f"{source}-{target}",
+                metadata={"hermitian_conjugate": True},
+            )
+        )
+    for site in range(n_sites):
+        interactions.extend(
+            (
+                InteractionTerm(
+                    (site,),
+                    ("number_pair",),
+                    0.5 * complex(parameters["interaction"]),
+                    "onsite_interaction",
+                    label=f"U {site}",
+                ),
+                InteractionTerm(
+                    (site,),
+                    ("number",),
+                    -complex(parameters.get("chemical_potential", 0.0)),
+                    "chemical_potential",
+                    label=f"mu {site}",
+                ),
+            )
+        )
+    return lattice, degrees, mappings, tuple(interactions)
+
+
+def _fermi_hubbard_physical_system(
+    parameters: dict[str, object],
+    lattice: LatticeSpec | None,
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    n_sites = int(parameters["n_sites"])
+    periodic = bool(parameters.get("periodic", False))
+    lattice = lattice or _chain_lattice(n_sites, periodic, "fermion")
+    degrees = tuple(
+        LocalDegreeOfFreedom(
+            2 * site + spin_index,
+            site,
+            "fermion",
+            2,
+            f"{site} {spin}",
+            component=spin,
+            orbital=spin,
+        )
+        for site in range(n_sites)
+        for spin_index, spin in enumerate(("up", "down"))
+    )
+    mappings = tuple(
+        BasisIndexMapping(degree.index, degree.index, "mode", degree.label) for degree in degrees
+    )
+    interactions: list[InteractionTerm] = []
+    for source, target in _chain_bonds(n_sites, periodic):
+        for spin_index, spin in enumerate(("up", "down")):
+            source_mode = 2 * source + spin_index
+            target_mode = 2 * target + spin_index
+            interactions.append(
+                InteractionTerm(
+                    (source_mode, target_mode),
+                    ("create", "annihilate"),
+                    -complex(parameters["hopping"]),
+                    "fermion_hopping",
+                    label=f"{spin} {source}-{target}",
+                    metadata={"hermitian_conjugate": True},
+                )
+            )
+    for site in range(n_sites):
+        up = 2 * site
+        down = up + 1
+        interactions.append(
+            InteractionTerm(
+                (up, down),
+                ("number", "number"),
+                complex(parameters["interaction"]),
+                "onsite_interaction",
+                label=f"U {site}",
+            )
+        )
+        for mode in (up, down):
+            interactions.append(
+                InteractionTerm(
+                    (mode,),
+                    ("number",),
+                    -complex(parameters.get("chemical_potential", 0.0)),
+                    "chemical_potential",
+                    label=f"mu {degrees[mode].label}",
+                )
+            )
+    return lattice, degrees, mappings, tuple(interactions)
+
+
+def _kitaev_bdg_physical_system(
+    parameters: dict[str, object],
+    lattice: LatticeSpec | None,
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    n_sites = int(parameters["n_sites"])
+    periodic = bool(parameters.get("periodic", False))
+    lattice = lattice or _chain_lattice(n_sites, periodic, "nambu")
+    degrees = tuple(
+        LocalDegreeOfFreedom(
+            index=(0 if component == "particle" else n_sites) + site,
+            site=site,
+            kind="nambu",
+            local_dimension=2,
+            label=f"{component} {site}",
+            component=component,
+        )
+        for component in ("particle", "hole")
+        for site in range(n_sites)
+    )
+    mappings = tuple(
+        BasisIndexMapping(degree.index, degree.index, "single_particle_state", degree.label)
+        for degree in degrees
+    )
+    interactions: list[InteractionTerm] = []
+    chemical_potential = complex(parameters.get("chemical_potential", 0.0))
+    for site in range(n_sites):
+        interactions.extend(
+            (
+                InteractionTerm(
+                    (site,),
+                    ("particle",),
+                    -chemical_potential,
+                    "bdg_onsite",
+                    label=f"particle {site}",
+                ),
+                InteractionTerm(
+                    (n_sites + site,),
+                    ("hole",),
+                    chemical_potential.conjugate(),
+                    "bdg_onsite",
+                    label=f"hole {site}",
+                ),
+            )
+        )
+    hopping = complex(parameters["hopping"])
+    pairing = complex(parameters["pairing"])
+    for source, target in _chain_bonds(n_sites, periodic):
+        interactions.extend(
+            (
+                InteractionTerm(
+                    (source, target),
+                    ("particle", "particle"),
+                    -hopping,
+                    "bdg_hopping",
+                    label=f"particle {source}-{target}",
+                    metadata={"hermitian_conjugate": True},
+                ),
+                InteractionTerm(
+                    (n_sites + source, n_sites + target),
+                    ("hole", "hole"),
+                    hopping.conjugate(),
+                    "bdg_hopping",
+                    label=f"hole {source}-{target}",
+                    metadata={"hermitian_conjugate": True},
+                ),
+                InteractionTerm(
+                    (source, n_sites + target),
+                    ("particle", "hole"),
+                    pairing,
+                    "bdg_pairing",
+                    label=f"pair {source}-{target}",
+                    metadata={"antisymmetric_partner": [target, n_sites + source]},
+                ),
+                InteractionTerm(
+                    (target, n_sites + source),
+                    ("particle", "hole"),
+                    -pairing,
+                    "bdg_pairing",
+                    label=f"pair {target}-{source}",
+                    metadata={"antisymmetric_partner": [source, n_sites + target]},
+                ),
+            )
+        )
+    return lattice, degrees, mappings, tuple(interactions)
+
+
+def _chain_lattice(n_sites: int, periodic: bool, label: str) -> LatticeSpec:
+    return LatticeSpec(
+        n_sites=n_sites,
+        positions=tuple((float(site), 0.0) for site in range(n_sites)),
+        bonds=tuple(Bond(source, target) for source, target in _chain_bonds(n_sites, periodic)),
+        site_labels=tuple(f"{label} site {site}" for site in range(n_sites)),
+        boundary_conditions={"x": "periodic" if periodic else "open"},
+        conventions={"site_ordering": "left-to-right chain order"},
+    )
+
+
+def _orbital_degrees(lattice: LatticeSpec) -> tuple[LocalDegreeOfFreedom, ...]:
+    return tuple(
+        LocalDegreeOfFreedom(
+            index=site,
+            site=site,
+            kind="orbital",
+            local_dimension=2,
+            label=lattice.site_labels[site] if lattice.site_labels else f"site {site}",
+            orbital=lattice.orbital_labels[site] if lattice.orbital_labels else None,
+            component=(lattice.sublattice_labels[site] if lattice.sublattice_labels else None),
+        )
+        for site in range(lattice.n_sites)
+    )
+
+
+def _single_particle_mappings(
+    degrees: tuple[LocalDegreeOfFreedom, ...],
+) -> tuple[BasisIndexMapping, ...]:
+    return tuple(
+        BasisIndexMapping(degree.index, degree.index, "single_particle_state", degree.label)
+        for degree in degrees
+    )
+
+
+def _hopping_interaction(
+    source: int,
+    target: int,
+    coefficient: complex,
+    kind: str,
+    label: str,
+) -> InteractionTerm:
+    return InteractionTerm(
+        (source, target),
+        ("create", "annihilate"),
+        coefficient,
+        kind,
+        label=label,
+        metadata={"hermitian_conjugate": True},
+    )
+
+
+def _chain_bonds(n_sites: int, periodic: bool) -> tuple[tuple[int, int], ...]:
+    bonds = [(site, site + 1) for site in range(n_sites - 1)]
+    if periodic and n_sites > 2:
+        bonds.append((n_sites - 1, 0))
+    return tuple(bonds)
+
+
+def _next_nearest_chain_bonds(
+    n_sites: int,
+    periodic: bool,
+) -> tuple[tuple[int, int], ...]:
+    bonds = {(site, site + 2) for site in range(n_sites - 2)}
+    if periodic and n_sites > 3:
+        bonds.update(tuple(sorted((site, (site + 2) % n_sites))) for site in range(n_sites))
+    return tuple(sorted(bonds))
 
 
 def load_model(path: str | Path) -> ModelSpec:

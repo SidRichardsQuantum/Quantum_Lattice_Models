@@ -1,9 +1,29 @@
 # Changelog
 
-## Unreleased
+## v0.1.6
+
+This release expands portable interchange, adds fixed-magnetization spin
+sectors and reduced-basis observables, and introduces registry-driven discovery,
+presets, resource inspection, and model comparison workflows.
 
 ### Added
 
+- Paired site/bond CSV lattice import and export with metadata sidecars.
+- Optional NetworkX and GraphML round-trip adapters preserving directed bonds,
+  duplicate edges, complex matrix elements, labels, and portable metadata.
+- Immutable lattice transformations for relabeling, subgraphs, vacancies,
+  bond addition and removal, boundary conditions, and reproducible onsite or
+  bond disorder.
+- Standardized lattice units, conventions, references, and ordered provenance,
+  plus model convention metadata.
+- External dense NPY and dense or CSR NPZ Hamiltonian import with explicit
+  basis, optional geometry, units, conventions, references, and provenance
+  metadata.
+- Strict imported-matrix validation for shape, numeric finite values,
+  Hermiticity, and optional basis dimension.
+- Portable `external_matrix` results that support persistence, inspection,
+  spectra, validation, and re-export without claiming builder reconstruction.
+- The `quantum-lattice import-matrix` command.
 - Fixed total Pauli-$Z$ magnetization bases with explicit computational-basis
   state lists, state-to-index mappings, projection, and embedding helpers.
 - Reduced sparse XXZ and magnetization-conserving Heisenberg-chain builders.
@@ -18,31 +38,68 @@
   fixed-magnetization state vectors.
 - Product-state, Bell-state, and reduced-basis embedding validation for spin
   observables and entanglement.
+- Model discovery filters for category, basis, sparse capability, and
+  validation status.
+- Named presets for canonical phases and analytic reference limits.
+- Construction-free dry-run reports with dimensions, dense-memory estimates,
+  representations, basis information, and warnings.
+- Deterministic JSON output for discovery, presets, validation, spectra, dry
+  runs, and model comparisons.
+- Model comparison summaries covering parameters, matrices, spectra, and
+  spectral gaps with configurable construction safeguards.
+- Selective model, lattice, matrix, metadata, and deterministic directory-bundle
+  export through the public API and `quantum-lattice export --artifact`.
+- Portable `LocalDegreeOfFreedom`, `BasisIndexMapping`, and `InteractionTerm`
+  records for explicit physical sites, local state spaces, basis ordering, and
+  onsite or two-body operators.
+- Automatically populated physical-system data for Ising, Heisenberg, XXZ,
+  SSH, and custom tight-binding model specifications.
+- Interaction-graph plotting directly from portable model specifications,
+  including spin axes, hopping links, coupling strengths, site labels, and
+  onsite terms.
+- Physical-system records for Bose-Hubbard, spinful Fermi-Hubbard, and
+  Kitaev-chain BdG specifications, including truncated boson factors,
+  spin-resolved fermionic modes, particle/hole ordering, interactions, chemical
+  potentials, hopping, and pairing.
+- Portable `graph_spin` specifications created with
+  `create_graph_spin_spec`, preserving arbitrary two-site Pauli interactions,
+  local fields, positions, labels, and dense or sparse reconstruction.
+- Multi-mode interaction diagrams that offset spin, fermionic, or Nambu
+  components sharing one physical site.
 
 ### Changed
 
+- Updated the project version metadata to `0.1.6`.
+- Merged the redundant CLI plot walkthrough into the registry notebook,
+  preserving contiguous curriculum numbering while combining discovery,
+  portable files, spectra, plotting, and artifact bundles.
+- Replaced five one-call spectrum examples with workflow examples for portable
+  physical interaction graphs, deterministic model bundles, and external
+  matrix import; retained the distinct density, state, sweep, geometry, and
+  matrix-inspection examples.
+- Expanded the executed notebook curriculum from 16 to 21 workflows with
+  dedicated notebooks for physical-system records, model and matrix
+  interchange, graph-spin models, fixed-magnetization sectors, and lattice
+  import and transformations.
+- Fixed notebook 16 to avoid Python 3.12-only nested f-string syntax, retaining
+  compatibility with the package's Python 3.10 minimum.
 - Reorganized the roadmap around three explicit scope layers: core model data
   and interchange, lightweight reference analysis, and optional ecosystem
   adapters.
-- Prioritized CSV, NetworkX, and GraphML import workflows plus reusable lattice
-  transformations ahead of broader solver and workflow infrastructure.
-- Added paired site/bond CSV import and export with metadata sidecars.
-- Added optional NetworkX and GraphML round-trip adapters.
-- Added immutable lattice transformations for relabeling, subgraphs,
-  vacancies, bonds, boundary conditions, and reproducible disorder.
-- Added standardized lattice units, conventions, references, and ordered
-  provenance, plus model convention metadata.
+- Refocused the near-term roadmap on periodic unit-cell geometry, Bloch
+  Hamiltonians, topological analysis, dynamics, additional symmetry sectors,
+  sweeps, and thermal reference tools.
+- Expanded `inspect`, `validate`, `spectrum`, and `export` file workflows to
+  accept portable Hamiltonian files where applicable.
 - Added schema compatibility documentation and an end-to-end importing and
   transformation guide.
-- Added model discovery filters for category, basis, sparse capability, and
-  validation status.
-- Added named presets for canonical phases and analytic reference limits.
-- Added construction-free dry-run reports with dimensions, dense-memory
-  estimates, representations, basis information, and warnings.
-- Added deterministic JSON output for discovery, presets, validation, spectra,
-  dry runs, and model comparisons.
-- Added model comparison summaries covering parameters, matrices, spectra, and
-  spectral gaps with configurable construction safeguards.
+
+### Fixed
+
+- Portable Hamiltonian loading now rejects matrix shape, representation, basis,
+  and external-dimension metadata mismatches.
+- Hamiltonian metadata JSON now normalizes NumPy arrays, NumPy scalars, tuples,
+  and complex values before persistence.
 
 ## v0.1.5
 

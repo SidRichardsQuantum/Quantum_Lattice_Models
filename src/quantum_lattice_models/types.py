@@ -56,8 +56,22 @@ class HamiltonianResult:
             "representation": self.representation,
             "matrix_shape": list(self.matrix.shape),
             "matrix_dtype": str(self.matrix.dtype),
-            "metadata": dict(self.metadata),
+            "metadata": _json_value(self.metadata),
         }
+
+
+def _json_value(value: object) -> object:
+    if isinstance(value, np.ndarray):
+        return [_json_value(item) for item in value.tolist()]
+    if isinstance(value, np.generic):
+        return _json_value(value.item())
+    if isinstance(value, complex):
+        return {"__complex__": [value.real, value.imag]}
+    if isinstance(value, dict):
+        return {str(key): _json_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_value(item) for item in value]
+    return value
 
 
 class DenseHamiltonian(np.ndarray):

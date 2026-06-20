@@ -7,15 +7,20 @@ import pytest
 import scipy.sparse as sp
 
 from quantum_lattice_models import (
+    BasisIndexMapping,
     HamiltonianResult,
+    InteractionTerm,
     LatticeSpec,
+    LocalDegreeOfFreedom,
     ModelSpec,
+    create_graph_spin_spec,
     create_model_spec,
     load_model,
     migrate_spec_data,
 )
 from quantum_lattice_models.cli import main
 from quantum_lattice_models.lattice import Bond
+from quantum_lattice_models.spin import SpinField, SpinInteraction
 
 
 def test_lattice_spec_round_trip_preserves_complex_bonds() -> None:
@@ -188,3 +193,223 @@ def test_model_spec_build_result_preserves_model_and_representation() -> None:
     assert result.model == spec
     assert result.basis == "single particle"
     assert result.representation == "sparse"
+
+
+@pytest.mark.parametrize(
+    ("family", "parameters", "degree_kind", "mapping_role"),
+    [
+        ("transverse_field_ising", {"n_sites": 3}, "spin", "tensor_factor"),
+        ("heisenberg_chain", {"n_sites": 3}, "spin", "tensor_factor"),
+        ("xxz_chain", {"n_sites": 3}, "spin", "tensor_factor"),
+        ("ssh_model", {"n_cells": 2}, "orbital", "single_particle_state"),
+    ],
+)
+def test_supported_models_include_portable_physical_system(
+    family, parameters, degree_kind, mapping_role
+) -> None:
+    spec = create_model_spec(family, parameters=parameters)
+    restored = ModelSpec.from_dict(spec.to_dict())
+
+    assert restored == spec
+    assert spec.lattice is not None
+    assert all(degree.kind == degree_kind for degree in spec.local_degrees)
+    assert all(mapping.role == mapping_role for mapping in spec.basis_mappings)
+    assert spec.interactions
+    assert spec.summary()["local_degree_count"] == len(spec.local_degrees)
+
+
+def test_spin_physical_terms_preserve_axes_coefficients_and_geometry() -> None:
+    spec = create_model_spec(
+        "xxz_chain",
+        parameters={
+            "n_sites": 3,
+            "coupling": 2.0,
+            "anisotropy": 0.25,
+            "field": 0.3,
+        },
+    )
+
+    pair_terms = [term for term in spec.interactions if len(term.degrees) == 2]
+    onsite_terms = [term for term in spec.interactions if len(term.degrees) == 1]
+
+    assert spec.lattice.positions == ((0.0, 0.0), (1.0, 0.0), (2.0, 0.0))
+    assert {term.operators for term in pair_terms} == {("X", "X"), ("Y", "Y"), ("Z", "Z")}
+    assert {term.coefficient for term in pair_terms} == {2.0, 0.5}
+    assert all(term.operators == ("Z",) and term.coefficient == 0.3 for term in onsite_terms)
+
+
+def test_ssh_and_custom_tight_binding_physical_terms() -> None:
+    ssh = create_model_spec(
+        "ssh_model",
+        parameters={"n_cells": 2, "t1": 0.4, "t2": 1.2},
+    )
+    assert ssh.lattice.sublattice_labels == ("A", "B", "A", "B")
+    assert [term.coefficient for term in ssh.interactions] == [-0.4, -1.2, -0.4]
+    assert all(term.metadata["hermitian_conjugate"] is True for term in ssh.interactions)
+
+    lattice = LatticeSpec(
+        n_sites=2,
+        positions=((0.0, 0.0), (1.0, 0.0)),
+        bonds=(Bond(0, 1, 0.25j),),
+        site_labels=("left", "right"),
+        orbital_labels=("s", "p"),
+    )
+    custom = create_model_spec(
+        "custom_tight_binding",
+        lattice=lattice,
+        parameters={"onsite": (0.2, -0.1), "hermitian": True},
+    )
+    assert [degree.orbital for degree in custom.local_degrees] == ["s", "p"]
+    assert custom.interactions[0].coefficient == 0.25j
+    assert {term.kind for term in custom.interactions[1:]} == {"onsite"}
+
+
+def test_physical_system_validation_rejects_invalid_indices_and_operators() -> None:
+    degrees = (
+        LocalDegreeOfFreedom(0, 0, "spin", 2, "s0"),
+        LocalDegreeOfFreedom(1, 1, "spin", 2, "s1"),
+    )
+    with pytest.raises(ValueError, match="incompatible"):
+        ModelSpec(
+            family="transverse_field_ising",
+            parameters={"n_sites": 2},
+            basis="qubit",
+            local_degrees=degrees,
+            basis_mappings=(
+                BasisIndexMapping(0, 0, "tensor_factor"),
+                BasisIndexMapping(1, 1, "tensor_factor"),
+            ),
+            interactions=(InteractionTerm((0,), ("number",), 1.0, "invalid"),),
+        ).validate()
+
+
+@pytest.mark.parametrize(
+    ("family", "parameters", "kinds", "mapping_role"),
+    [
+        (
+            "bose_hubbard_chain",
+            {"n_sites": 2, "max_occupancy": 3},
+            {"boson"},
+            "tensor_factor",
+        ),
+        (
+            "fermi_hubbard_chain",
+            {"n_sites": 2},
+            {"fermion"},
+            "mode",
+        ),
+        (
+            "kitaev_chain_bdg",
+            {"n_sites": 2, "pairing": 0.4},
+            {"nambu"},
+            "single_particle_state",
+        ),
+    ],
+)
+def test_hubbard_and_bdg_specs_include_physical_records(
+    family, parameters, kinds, mapping_role
+) -> None:
+    spec = create_model_spec(family, parameters=parameters)
+    restored = ModelSpec.from_dict(spec.to_dict())
+
+    assert restored == spec
+    assert {degree.kind for degree in spec.local_degrees} == kinds
+    assert all(mapping.role == mapping_role for mapping in spec.basis_mappings)
+    assert spec.lattice is not None
+    assert spec.interactions
+
+
+def test_hubbard_physical_terms_match_basis_conventions() -> None:
+    bose = create_model_spec(
+        "bose_hubbard_chain",
+        parameters={
+            "n_sites": 2,
+            "hopping": 0.7,
+            "interaction": 2.0,
+            "chemical_potential": 0.25,
+            "max_occupancy": 3,
+        },
+    )
+    assert [degree.local_dimension for degree in bose.local_degrees] == [4, 4]
+    assert {term.operators for term in bose.interactions} >= {
+        ("create", "annihilate"),
+        ("number_pair",),
+        ("number",),
+    }
+    assert any(
+        term.kind == "onsite_interaction" and term.coefficient == 1.0 for term in bose.interactions
+    )
+
+    fermi = create_model_spec(
+        "fermi_hubbard_chain",
+        parameters={
+            "n_sites": 2,
+            "hopping": 0.6,
+            "interaction": 3.0,
+            "chemical_potential": 0.2,
+        },
+    )
+    assert [degree.component for degree in fermi.local_degrees] == [
+        "up",
+        "down",
+        "up",
+        "down",
+    ]
+    onsite = [term for term in fermi.interactions if term.kind == "onsite_interaction"]
+    assert [term.degrees for term in onsite] == [(0, 1), (2, 3)]
+    assert all(term.operators == ("number", "number") for term in onsite)
+
+
+def test_kitaev_bdg_records_particle_hole_order_and_pairing() -> None:
+    spec = create_model_spec(
+        "kitaev_chain_bdg",
+        parameters={
+            "n_sites": 3,
+            "hopping": 0.8,
+            "chemical_potential": 0.2,
+            "pairing": 0.5j,
+        },
+    )
+
+    assert [degree.component for degree in spec.local_degrees] == [
+        "particle",
+        "particle",
+        "particle",
+        "hole",
+        "hole",
+        "hole",
+    ]
+    assert [mapping.basis_index for mapping in spec.basis_mappings] == list(range(6))
+    pairing = [term for term in spec.interactions if term.kind == "bdg_pairing"]
+    assert {term.coefficient for term in pairing} == {0.5j, -0.5j}
+    assert all(term.operators == ("particle", "hole") for term in pairing)
+
+
+def test_portable_graph_spin_spec_round_trip_and_construction() -> None:
+    interactions = (
+        SpinInteraction(0, 1, "X", "Y", 0.25),
+        SpinInteraction(1, 2, "Z", "Z", -0.7),
+    )
+    fields = (SpinField(2, "X", 0.4),)
+    spec = create_graph_spin_spec(
+        3,
+        interactions=interactions,
+        fields=fields,
+        positions=((0.0, 0.0), (1.0, 0.0), (0.5, 0.8)),
+        site_labels=("left", "right", "top"),
+    )
+    restored = ModelSpec.from_dict(spec.to_dict())
+
+    assert restored == spec
+    assert restored.family == "graph_spin"
+    assert restored.summary()["dimension"] == 8
+    assert np.allclose(restored.hamiltonian(), spec.hamiltonian())
+    assert np.allclose(restored.hamiltonian(sparse=True).toarray(), spec.hamiltonian())
+    assert [degree.label for degree in spec.local_degrees] == ["left", "right", "top"]
+    with pytest.raises(ValueError, match="contiguous"):
+        ModelSpec(
+            family="transverse_field_ising",
+            parameters={"n_sites": 2},
+            basis="qubit",
+            local_degrees=(LocalDegreeOfFreedom(1, 0, "spin", 2),),
+        ).validate()

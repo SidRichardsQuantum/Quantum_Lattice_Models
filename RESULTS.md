@@ -1,30 +1,30 @@
 # Results
 
-Generated figures are saved under `images/` by command-line examples.
+Examples save figures under `images/` and portable interchange artifacts under
+`results/examples/`.
 
-## Spin Chains
-
-```text
-Command: python examples/ising_spectrum.py
-Model: Transverse-field Ising
-Parameters: n_sites=5, j=1.0, h=0.7, periodic=False
-Output: images/ising_spectrum.png
-Observation: The dense qubit-space spectrum gives an exact small-system reference.
-```
-
-![TFIM spectrum with ground state and spectral gap highlighted](images/ising_spectrum.png)
+## Spin and Physical-System Workflows
 
 ```text
-Command: python examples/heisenberg_density.py
+Command: python examples/heisenberg_density_of_states.py
 Model: Heisenberg chain
 Parameters: n_sites=5, jx=1.0, jy=1.0, jz=1.0, field=0.2
-Output: images/heisenberg_density.png
+Output: images/heisenberg_density_of_states.png
 Observation: The density-of-states histogram summarizes the finite spin-chain spectrum.
 ```
 
-![Heisenberg-chain density of states](images/heisenberg_density.png)
+![Heisenberg-chain density of states](images/heisenberg_density_of_states.png)
 
-## One-Dimensional Single-Particle Lattices
+```text
+Command: python examples/physical_interaction_graph.py
+Models: XXZ chain, Fermi-Hubbard chain, and user-defined graph-spin model
+Output: images/physical_interaction_graph.png
+Observation: Portable physical-system records drive spin, fermionic-mode, and arbitrary interaction diagrams without inferring semantics from matrix entries.
+```
+
+![Portable physical interaction graphs](images/physical_interaction_graph.png)
+
+## Single-Particle and Geometry Workflows
 
 ```text
 Command: python examples/ssh_edge_state.py
@@ -37,38 +37,6 @@ Observation: The lowest-energy single-particle eigenstate has large probability 
 ![SSH spectrum and near-zero edge-state localization](images/ssh_edge_state.png)
 
 ```text
-Command: python examples/tight_binding_spectrum.py
-Model: Tight-binding chain
-Parameters: n_sites=16, hopping=1.0, onsite=0.0, periodic=False
-Output: images/tight_binding_spectrum.png
-Observation: The finite open-chain spectrum is symmetric around zero for zero onsite potential.
-```
-
-![Open tight-binding-chain spectrum](images/tight_binding_spectrum.png)
-
-```text
-Command: python examples/rice_mele_spectrum.py
-Model: Rice-Mele
-Parameters: n_cells=12, hopping=1.0, dimerization=0.35, staggering=0.4
-Output: images/rice_mele_spectrum.png
-Observation: Dimerization and staggering open gaps in the finite-chain spectrum.
-```
-
-![Rice-Mele finite-chain spectrum](images/rice_mele_spectrum.png)
-
-## Interacting and Topological Lattices
-
-```text
-Command: python examples/bose_hubbard_spectrum.py
-Model: Truncated Bose-Hubbard chain
-Parameters: n_sites=3, hopping=0.6, interaction=1.5, chemical_potential=0.2, max_occupancy=2
-Output: images/bose_hubbard_spectrum.png
-Observation: The spectrum is computed in a truncated occupation basis and remains suitable only for small systems.
-```
-
-![Truncated Bose-Hubbard spectrum](images/bose_hubbard_spectrum.png)
-
-```text
 Command: python examples/hofstadter_butterfly.py
 Model: Harper-Hofstadter square lattice
 Parameters: n_rows=8, n_cols=8, 121 flux values in [0, 1]
@@ -77,16 +45,6 @@ Observation: The denser sweep resolves the finite-lattice Hofstadter structure w
 ```
 
 ![Finite-lattice Hofstadter spectrum](images/hofstadter_butterfly.png)
-
-```text
-Command: python examples/haldane_spectrum.py
-Model: Haldane honeycomb lattice
-Parameters: n_rows=3, n_cols=3, t1=1.0, t2=0.18, phi=pi/2, sublattice_potential=0.1
-Output: images/haldane_spectrum.png
-Observation: Complex next-nearest-neighbor hoppings modify the finite honeycomb spectrum.
-```
-
-![Finite Haldane honeycomb spectrum](images/haldane_spectrum.png)
 
 ```text
 Command: python examples/kagome_graph.py
@@ -99,14 +57,32 @@ Observation: The graph plot visualizes the finite kagome connectivity used by th
 ![Kagome connectivity with sublattice colors and unit-cell outlines](images/kagome_graph.png)
 
 ```text
-Command: python examples/hamiltonian_matrix.py
+Command: python examples/haldane_matrix_structure.py
 Model: Haldane honeycomb lattice
 Parameters: n_rows=2, n_cols=3, t1=1.0, t2=0.18, phi=pi/2, sublattice_potential=0.1
-Output: images/hamiltonian_matrix.png
+Output: images/haldane_matrix_structure.png
 Observation: Magnitude exposes matrix sparsity and coupling strength; phase exposes the complex hopping convention.
 ```
 
-![Haldane Hamiltonian magnitude and phase](images/hamiltonian_matrix.png)
+![Haldane Hamiltonian magnitude and phase](images/haldane_matrix_structure.png)
+
+## Portable Interchange Workflows
+
+```text
+Command: python examples/portable_model_bundle.py
+Model: SSH
+Output: results/examples/ssh_model.json and results/examples/ssh_model.bundle/
+Observation: A portable model, self-contained matrix, metadata, lattice record, and manifest round-trip without losing physical-system data.
+```
+
+```text
+Command: python examples/external_matrix_import.py
+Input: external dense NPY plus explicit JSON basis and geometry metadata
+Outputs: results/examples/external_matrix/portable.npz and images/external_matrix_import.png
+Observation: An external matrix becomes an inspectable portable Hamiltonian while retaining basis, local-degree, unit, convention, and provenance data.
+```
+
+![Imported external matrix magnitude and phase](images/external_matrix_import.png)
 
 ## Executed Notebook Results
 
@@ -261,14 +237,63 @@ exported to `docs/notebooks/`. Generated figures are stored in
 
 ![Package and PennyLane matrix comparison](docs/notebook_outputs/15_pennylane_export_1.png)
 
-### 16. Model Registry and CLI
+### 16. Registry, Portable Files, and CLI Workflows
 
 - Notebook: `notebooks/16_model_registry_and_cli.ipynb`
 - [Rendered HTML](docs/notebooks/16_model_registry_and_cli.html)
-- Result: prints registered model categories, dimensions, return types, and defaults.
+- Result: combines registry discovery with portable SSH model creation, CLI
+  inspection and spectra, reproducible PNG generation, and deterministic
+  artifact-bundle export.
 
-### 17. CLI Plot Walkthrough
+### 17. Portable Physical-System Records
 
-- Notebook: `notebooks/17_cli_plot_walkthrough.ipynb`
-- [Rendered HTML](docs/notebooks/17_cli_plot_walkthrough.html)
-- Result: demonstrates model listing, an SSH spectrum command, and reproducible Hofstadter PNG output.
+- Notebook: `notebooks/17_portable_physical_system_records.ipynb`
+- [Rendered HTML](docs/notebooks/17_portable_physical_system_records.html)
+- Result: compares local degrees, basis mappings, and interactions for XXZ,
+  Fermi-Hubbard, and Kitaev BdG specifications and verifies a BdG JSON round
+  trip.
+
+![Portable physical-system interaction diagrams](docs/notebook_outputs/17_portable_physical_system_records_1.png)
+
+### 18. Model Import, Export, and Artifact Bundles
+
+- Notebook: `notebooks/18_model_import_export_and_bundles.ipynb`
+- [Rendered HTML](docs/notebooks/18_model_import_export_and_bundles.html)
+- Result: verifies registered-model and matrix round trips, creates a
+  deterministic five-file bundle, and imports an external complex matrix with
+  explicit basis and geometry metadata.
+
+![Imported matrix magnitude and phase](docs/notebook_outputs/18_model_import_export_and_bundles_1.png)
+
+### 19. Graph-Spin Model Workflow
+
+- Notebook: `notebooks/19_graph_spin_model_workflow.ipynb`
+- [Rendered HTML](docs/notebooks/19_graph_spin_model_workflow.html)
+- Result: a portable four-site mixed-axis spin graph reconstructs equivalent
+  dense and sparse matrices and yields a ground energy of `-1.799122`.
+
+![Mixed-axis graph-spin model](docs/notebook_outputs/19_graph_spin_model_workflow_1.png)
+
+![Graph-spin connected correlations](docs/notebook_outputs/19_graph_spin_model_workflow_2.png)
+
+### 20. Fixed-Magnetization Spin Sectors
+
+- Notebook: `notebooks/20_fixed_magnetization_spin_sectors.ipynb`
+- [Rendered HTML](docs/notebooks/20_fixed_magnetization_spin_sectors.html)
+- Result: compares full and zero-magnetization dimensions, validates a
+  70-dimensional sector against the matching full-space block, and computes
+  reduced-basis correlations and entanglement.
+
+![Fixed-magnetization dimension reduction](docs/notebook_outputs/20_fixed_magnetization_spin_sectors_1.png)
+
+![Reduced-sector observables](docs/notebook_outputs/20_fixed_magnetization_spin_sectors_2.png)
+
+### 21. Lattice Import and Transformations
+
+- Notebook: `notebooks/21_lattice_import_and_transformations.ipynb`
+- [Rendered HTML](docs/notebooks/21_lattice_import_and_transformations.html)
+- Result: preserves a six-site complex lattice through CSV interchange, then
+  demonstrates subgraphs, vacancies, boundary metadata, reproducible disorder,
+  provenance, and transformed-model construction.
+
+![Imported and transformed lattice models](docs/notebook_outputs/21_lattice_import_and_transformations_1.png)

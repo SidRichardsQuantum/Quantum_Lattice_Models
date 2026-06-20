@@ -3,7 +3,7 @@
 <html lang="en">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>16_model_registry_and_cli</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>18_model_import_export_and_bundles</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7796,20 +7796,20 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=13619ffb">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=interchange-introduction">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Registry,-Portable-Files,-and-CLI-Workflows">Registry, Portable Files, and CLI Workflows<a class="anchor-link" href="#Registry,-Portable-Files,-and-CLI-Workflows">¶</a></h1><p><strong>Model.</strong> This notebook uses the registry and portable model layer rather than focusing on one Hamiltonian. It summarizes available builders, creates an inspectable model file, exercises command-line spectra and plotting, and exports a deterministic artifact bundle.</p>
-<p><strong>Typical uses.</strong> Programmatic model discovery, portable model creation, command-line smoke tests, reproducible figures, and model or matrix interchange without writing a separate script.</p>
-<p><strong>Parameters.</strong> Registry rows expose model categories, basis conventions, dimensions, return types, defaults, sparse support, and validation status. The CLI accepts model parameters and file-oriented commands such as <code>create</code>, <code>inspect</code>, <code>spectrum</code>, <code>plot</code>, and <code>export</code>.</p>
-<p><strong>Useful plots.</strong> Use <code>plot_interaction_graph</code> for portable physical-system data and CLI <code>plot</code> for quick spectrum PNG output.</p>
+<h1 id="Model-Import,-Export,-and-Artifact-Bundles">Model Import, Export, and Artifact Bundles<a class="anchor-link" href="#Model-Import,-Export,-and-Artifact-Bundles">¶</a></h1><p><strong>Model.</strong> This notebook follows a portable SSH specification through JSON persistence, Hamiltonian construction, selective artifact export, external matrix import, and numerical round-trip checks.</p>
+<p><strong>Typical uses.</strong> Moving models between processes, attaching basis and provenance metadata to external matrices, creating reproducible result directories, and validating exported matrices before downstream analysis.</p>
+<p><strong>Parameters.</strong> Model JSON stores registered parameters and physical-system records. External import metadata supplies basis, optional geometry, local degrees, mappings, units, conventions, and provenance. Bundles contain matrix, model, metadata, optional lattice, and manifest artifacts.</p>
+<p><strong>Useful plots.</strong> Matrix magnitude and phase views provide a compact check that complex external data was imported with the expected structure.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c8217a0a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=interchange-imports">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7817,22 +7817,31 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">quantum_lattice_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_model_spec</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">quantum_lattice_models.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model_info</span><span class="p">,</span> <span class="n">list_models</span><span class="p">,</span> <span class="n">model_table</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantum_lattice_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">create_model_spec</span><span class="p">,</span>
+    <span class="n">export_hamiltonian_artifact</span><span class="p">,</span>
+    <span class="n">import_hamiltonian</span><span class="p">,</span>
+    <span class="n">load_hamiltonian</span><span class="p">,</span>
+    <span class="n">load_model</span><span class="p">,</span>
+    <span class="n">save_hamiltonian</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantum_lattice_models.plotting</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_hamiltonian_matrix</span>
 
 <span class="n">repository_root</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="k">if</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"notebooks"</span> <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
-<span class="n">output_dir</span> <span class="o">=</span> <span class="n">repository_root</span> <span class="o">/</span> <span class="s2">"results/notebooks"</span>
+<span class="n">output_dir</span> <span class="o">=</span> <span class="n">repository_root</span> <span class="o">/</span> <span class="s2">"results/notebooks/interchange"</span>
 <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8b0ad7f7">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=interchange-model-bundle">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7840,26 +7849,26 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">category_counts</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">list_models</span><span class="p">():</span>
-    <span class="n">category</span> <span class="o">=</span> <span class="n">get_model_info</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">category</span>
-    <span class="n">category_counts</span><span class="p">[</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="n">category_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">create_model_spec</span><span class="p">(</span>
+    <span class="s2">"ssh_model"</span><span class="p">,</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">"n_cells"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">"t1"</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s2">"t2"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"periodic"</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+    <span class="n">units</span><span class="o">=</span><span class="p">{</span><span class="s2">"t1"</span><span class="p">:</span> <span class="s2">"eV"</span><span class="p">,</span> <span class="s2">"t2"</span><span class="p">:</span> <span class="s2">"eV"</span><span class="p">},</span>
+    <span class="n">provenance</span><span class="o">=</span><span class="p">{</span><span class="s2">"notebook"</span><span class="p">:</span> <span class="s2">"18_model_import_export_and_bundles"</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">model_path</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">"ssh.json"</span><span class="p">)</span>
+<span class="n">restored_model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+<span class="n">bundle_paths</span> <span class="o">=</span> <span class="n">export_hamiltonian_artifact</span><span class="p">(</span>
+    <span class="n">restored_model</span><span class="o">.</span><span class="n">build_result</span><span class="p">(),</span>
+    <span class="n">output_dir</span> <span class="o">/</span> <span class="s2">"ssh.bundle"</span><span class="p">,</span>
+    <span class="n">artifact</span><span class="o">=</span><span class="s2">"bundle"</span><span class="p">,</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">"npz"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">restored_result</span> <span class="o">=</span> <span class="n">load_hamiltonian</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">"ssh.bundle/matrix.npz"</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Registered model summary"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"category      | models"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"------------- | ------"</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">category</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">category_counts</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">category</span><span class="si">:</span><span class="s2">&lt;13s</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">count</span><span class="si">:</span><span class="s2">&gt;6d</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'total'</span><span class="si">:</span><span class="s2">&lt;13s</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="n">category_counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="si">:</span><span class="s2">&gt;6d</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-<span class="n">info</span> <span class="o">=</span> <span class="n">get_model_info</span><span class="p">(</span><span class="s2">"ssh_model"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">SSH model metadata"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  basis:       </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">basis</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  dimension:   </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">dimension</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  return type: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">return_type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"  defaults:"</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    </span><span class="si">{</span><span class="n">parameter</span><span class="si">:</span><span class="s2">&lt;8s</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Portable SSH bundle"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  model round trip: </span><span class="si">{</span><span class="n">restored_model</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">model</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  matrix round trip: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">restored_result</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  files: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">bundle_paths</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7872,30 +7881,16 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Registered model summary
-category      | models
-------------- | ------
-hubbard       |      4
-spin          |     18
-tight_binding |     11
-topological   |      5
-user          |      2
-total         |     40
-
-SSH model metadata
-  basis:       single particle
-  dimension:   2*n_cells
-  return type: LatticeHamiltonian
-  defaults:
-    n_cells  = 8
-    t1       = 0.5
-    t2       = 1.0
+<pre>Portable SSH bundle
+  model round trip: True
+  matrix round trip: True
+  files: matrix.npz, model.json, metadata.json, lattice.json, manifest.json
 </pre>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b1804e05">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=interchange-external-import">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7903,18 +7898,41 @@ SSH model metadata
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">rows</span> <span class="o">=</span> <span class="n">model_table</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">row</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">}):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">category</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'_'</span><span class="p">,</span><span class="w"> </span><span class="s1">' '</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2"> models"</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"model                                      | dimension                 | return type"</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span>
-        <span class="s2">"------------------------------------------ | "</span>
-        <span class="s2">"------------------------- | -----------------------"</span>
-    <span class="p">)</span>
-    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span> <span class="o">==</span> <span class="n">category</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;42s</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'dimension'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;25s</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'return_type'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">external_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[[</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.35</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.35</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">]],</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">external_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s2">"external.npy"</span>
+<span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">external_path</span><span class="p">,</span> <span class="n">external_matrix</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">external_metadata</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"basis"</span><span class="p">:</span> <span class="s2">"single-particle site basis"</span><span class="p">,</span>
+    <span class="s2">"basis_dimension"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">"lattice"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"n_sites"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">"positions"</span><span class="p">:</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]],</span>
+        <span class="s2">"bonds"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"site_labels"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"left"</span><span class="p">,</span> <span class="s2">"right"</span><span class="p">,</span> <span class="s2">"top"</span><span class="p">],</span>
+    <span class="p">},</span>
+    <span class="s2">"local_degrees"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">"index"</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"site"</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"orbital"</span><span class="p">,</span> <span class="s2">"local_dimension"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s2">"left"</span><span class="p">,</span> <span class="s2">"right"</span><span class="p">,</span> <span class="s2">"top"</span><span class="p">))</span>
+    <span class="p">],</span>
+    <span class="s2">"basis_mappings"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">"local_degree"</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"basis_index"</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"role"</span><span class="p">:</span> <span class="s2">"single_particle_state"</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="p">],</span>
+    <span class="s2">"units"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"energy"</span><span class="p">:</span> <span class="s2">"eV"</span><span class="p">},</span>
+    <span class="s2">"provenance"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"notebook-generated external matrix"</span><span class="p">},</span>
+<span class="p">}</span>
+<span class="n">metadata_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s2">"external-metadata.json"</span>
+<span class="n">metadata_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">external_metadata</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">imported</span> <span class="o">=</span> <span class="n">import_hamiltonian</span><span class="p">(</span><span class="n">external_path</span><span class="p">,</span> <span class="n">metadata_path</span><span class="o">=</span><span class="n">metadata_path</span><span class="p">)</span>
+<span class="n">portable_path</span> <span class="o">=</span> <span class="n">save_hamiltonian</span><span class="p">(</span><span class="n">imported</span><span class="p">,</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s2">"external-portable.npz"</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"External matrix import"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  portable file: </span><span class="si">{</span><span class="n">portable_path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repository_root</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  basis: </span><span class="si">{</span><span class="n">imported</span><span class="o">.</span><span class="n">basis</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  local degrees: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">imported</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">local_degrees</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  matrix preserved: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">imported</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span><span class="w"> </span><span class="n">external_matrix</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7927,72 +7945,17 @@ SSH model metadata
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Hubbard models
-model                                      | dimension                 | return type
------------------------------------------- | ------------------------- | -----------------------
-bose_hubbard_chain                         | (max_occupancy+1)**n_sites | LatticeHamiltonian
-bose_hubbard_chain_sparse                  | (max_occupancy+1)**n_sites | scipy.sparse.csr_matrix
-fermi_hubbard_chain                        | 2**(2*n_sites)            | LatticeHamiltonian
-fermi_hubbard_chain_sparse                 | 2**(2*n_sites)            | scipy.sparse.csr_matrix
-
-Spin models
-model                                      | dimension                 | return type
------------------------------------------- | ------------------------- | -----------------------
-heisenberg_chain                           | 2**n_sites                | DenseHamiltonian
-heisenberg_chain_sector_sparse             | comb(n_sites,(n_sites-magnetization)//2) | SpinSectorHamiltonian
-heisenberg_chain_sparse                    | 2**n_sites                | scipy.sparse.csr_matrix
-heisenberg_ladder                          | 2**(2*n_rungs)            | DenseHamiltonian
-heisenberg_ladder_sparse                   | 2**(2*n_rungs)            | scipy.sparse.csr_matrix
-j1_j2_heisenberg_chain                     | 2**n_sites                | DenseHamiltonian
-j1_j2_heisenberg_chain_sparse              | 2**n_sites                | scipy.sparse.csr_matrix
-longitudinal_field_ising                   | 2**n_sites                | DenseHamiltonian
-longitudinal_field_ising_sparse            | 2**n_sites                | scipy.sparse.csr_matrix
-next_nearest_neighbor_ising                | 2**n_sites                | DenseHamiltonian
-next_nearest_neighbor_ising_sparse         | 2**n_sites                | scipy.sparse.csr_matrix
-transverse_field_ising                     | 2**n_sites                | DenseHamiltonian
-transverse_field_ising_sparse              | 2**n_sites                | scipy.sparse.csr_matrix
-xxz_chain                                  | 2**n_sites                | DenseHamiltonian
-xxz_chain_sector_sparse                    | comb(n_sites,(n_sites-magnetization)//2) | SpinSectorHamiltonian
-xxz_chain_sparse                           | 2**n_sites                | scipy.sparse.csr_matrix
-xy_chain                                   | 2**n_sites                | DenseHamiltonian
-xy_chain_sparse                            | 2**n_sites                | scipy.sparse.csr_matrix
-
-Tight Binding models
-model                                      | dimension                 | return type
------------------------------------------- | ------------------------- | -----------------------
-aubry_andre_harper_chain                   | n_sites                   | LatticeHamiltonian
-kagome_lattice_tight_binding               | 3*n_rows*n_cols           | LatticeHamiltonian
-kagome_lattice_tight_binding_sparse        | 3*n_rows*n_cols           | scipy.sparse.csr_matrix
-rice_mele_model                            | 2*n_cells                 | LatticeHamiltonian
-square_lattice_tight_binding               | n_rows*n_cols             | LatticeHamiltonian
-square_lattice_tight_binding_sparse        | n_rows*n_cols             | scipy.sparse.csr_matrix
-ssh_model                                  | 2*n_cells                 | LatticeHamiltonian
-tight_binding_chain                        | n_sites                   | LatticeHamiltonian
-tight_binding_chain_sparse                 | n_sites                   | scipy.sparse.csr_matrix
-triangular_lattice_tight_binding           | n_rows*n_cols             | LatticeHamiltonian
-triangular_lattice_tight_binding_sparse    | n_rows*n_cols             | scipy.sparse.csr_matrix
-
-Topological models
-model                                      | dimension                 | return type
------------------------------------------- | ------------------------- | -----------------------
-haldane_honeycomb_lattice                  | 2*n_rows*n_cols           | LatticeHamiltonian
-haldane_honeycomb_lattice_sparse           | 2*n_rows*n_cols           | scipy.sparse.csr_matrix
-harper_hofstadter_square_lattice           | n_rows*n_cols             | LatticeHamiltonian
-harper_hofstadter_square_lattice_sparse    | n_rows*n_cols             | scipy.sparse.csr_matrix
-kitaev_chain_bdg                           | 2*n_sites                 | LatticeHamiltonian
-
-User models
-model                                      | dimension                 | return type
------------------------------------------- | ------------------------- | -----------------------
-custom_tight_binding                       | n_sites                   | LatticeHamiltonian
-custom_tight_binding_sparse                | n_sites                   | scipy.sparse.csr_matrix
-
+<pre>External matrix import
+  portable file: results/notebooks/interchange/external-portable.npz
+  basis: single-particle site basis
+  local degrees: 3
+  matrix preserved: True
 </pre>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8b43a696">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=interchange-matrix-plot">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8000,15 +7963,12 @@ custom_tight_binding_sparse                | n_sites                   | scipy.s
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">models</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-    <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"quantum_lattice_models.cli"</span><span class="p">,</span> <span class="s2">"models"</span><span class="p">,</span> <span class="s2">"--json"</span><span class="p">],</span>
-    <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"CLI model discovery"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"  JSON characters:"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">stdout</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"  starts with:"</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">figure</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">8.5</span><span class="p">,</span> <span class="mf">3.7</span><span class="p">))</span>
+<span class="n">plot_hamiltonian_matrix</span><span class="p">(</span><span class="n">imported</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"magnitude"</span><span class="p">)</span>
+<span class="n">plot_hamiltonian_matrix</span><span class="p">(</span><span class="n">imported</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"phase"</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Imported magnitude"</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Imported phase"</span><span class="p">)</span>
+<span class="n">figure</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -8020,187 +7980,20 @@ custom_tight_binding_sparse                | n_sites                   | scipy.s
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>CLI model discovery
-  JSON characters: 20671
-  starts with: [
-</pre>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="data:image/png;base64,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L0ZeXh7Cw8MBAMOHD0e9evUQExMDAPj888/RuXNnNG3aFHfv3sW8efNw5coVjBo1ypy3QUS2jD1IFos5iIgsntxhcxxiV/kNHDgQN27cwLRp05CZmYl27dohPj5e+9Bseno6lI91G965cwejR49GZmYmXF1d4e/vj8OHD6Nly5bmugUisnEKIaAQ0iofqe3INJiDiMji2SmLNqk0FjPYzKAsqkACgIiICERERJT6XmJios7rRYsWYdGiRSaIiohIIvYgWTTmICKyaOxBksTiCiQiIksm59kiPoNERESGpFAqoJBR9Mhpa01YIBERmRJ7kIiIyFzkTrygYYFERERGxh4kIiIyG4WiaJPT3gaxQCIiMiX2IBERkbnwGSRJWCAREZkQe5CIiMhslDKH2KlZIBERkbGxB4mIiMyFPUiSsEAiIjIx9gwREZFZKB9tctrbIBZIRESmJETRJrUtERGRocidxU5OWyvCAomIyIT4DBIREZkL10GShgUSEZEp8RkkIiIyFyVkPoNktEgqNRZIREQmpNAUbVLbEhERGQyH2EnCAomIyJTYg0REROaigLxeIdusj1ggERGZEp9BIiIic+EzSNKwQCIiMiXOYkdERObCdZAkYYFERGRC7EEiIiJzUdgVbXLa2yIWSEREpsRnkIiIyFwUkPdckW12ILFAIiIyJfYgERGR2XCInSQskIiITInPIBERkZkolEWbnPa2iAUSEZEJsQeJiIjMhbPYScMCiYjIlPgMEhERmYsS8tZBYg8SEREZG3uQiIjIXBQKmT1ICvYgERGRsWlE0Sa1LRERkYFwmm9pWCAREREREdkAPoMkDQskIiJT4jNIRERkJpzFThobvW0iIvNQ4H/PIT110/May5Ytg4+PDxwcHBAQEIDff/+9zLarVq1C165d4erqCldXVwQHB5fbnoiILFdxgSRns0U2ettERGZSvA6S1E2mTZs2ITIyEtHR0Th+/Djatm2LkJAQXL9+vdT2iYmJGDRoEPbt24ekpCR4e3vjxRdfxLVr1yp6p0REVMkUD7GTs9kiFkhERCYkufdIxmx3j1u4cCFGjx6N8PBwtGzZErGxsahevTrWrl1bavv169fjvffeQ7t27eDr64vVq1dDo9EgISGhgndKRESVDXuQpLHR2yYiMhMhc5OhoKAAycnJCA4O1u5TKpUIDg5GUlKSpHPcv38fDx8+hJubm7yLExFRpccCSRpO0kBEZEIKIaCQOHSuuF1OTo7OfpVKBZVKVaL9zZs3oVar4eHhobPfw8MD58+fl3TNTz75BHXr1tUpsoiIyDooFApZaxvZ6jpINloXEhGZiUbmBsDb2xsuLi7aLSYmxiihffnll9i4cSO2bdsGBwcHo1yDiIjMSCGz98g26yP2IBERmZI+PUhXr16Fs7Ozdn9pvUcAULt2bdjZ2SErK0tnf1ZWFjw9Pcu91vz58/Hll19iz549aNOmjaT4iIjIsiiVRZuc9rbIRm+biMhM9HgGydnZWWcrq0Cyt7eHv7+/zgQLxRMuBAYGlhnS3LlzMXPmTMTHx6Njx44Vv0ciIqqUOIudNBZXIMlZ3wMAfvzxR/j6+sLBwQF+fn7YtWuXiSIlIiqFkaf5joyMxKpVq/DNN9/g3LlzGDt2LPLy8hAeHg4AGD58OKKiorTt58yZg6lTp2Lt2rXw8fFBZmYmMjMzkZuba7BbtibMQURkyYp7kORstsiiblvu+h6HDx/GoEGDMHLkSJw4cQL9+/dH//79cebMGRNHTkRUxNjTfA8cOBDz58/HtGnT0K5dO6SkpCA+Pl47cUN6ejoyMjK07VesWIGCggK8+eab8PLy0m7z58831C1bDeYgIrJ0LJCkUQihx1eUZhIQEIBnn30WS5cuBVA0dMTb2xvvv/8+Jk+eXKL9wIEDkZeXhx07dmj3de7cGe3atUNsbKyka+bk5MDFxQXPdY9GlSp8aNkYEr5fY+4QrFpI3XbmDsEqFYqHSMRPyM7O1nk+qCzFv0u6B06R/LuksPAB9ifNknwNMi5z5qDWbv6wU9oZ5kZIxz8P/mjuEKxabe/a5g7BauXk5MDLy0tSjij+XTLhq11QVash+Rr5f+dhyfsv2Vwespi6UJ/1PZKSkkpMVRsSEiJ5PRAiIkNTaORtVDkwBxGRNVAqFbI3W2Qxs9jps75HZmZmqe0zMzPLvE5+fj7y8/O1r59cf4SIqELkPFtkOR38Vo85iIisAWexk8ZGb7tsMTExOuuNeHt7mzskIrImesxiR7aDOYiIjInPIEljMbetz/oenp6estcDiYqKQnZ2tna7evVqxYMnInqkeB0kqRtVDsxBRGQNlAqZQ+wUtjnEzmIKJH3W9wgMDNRpDwC7d+8udz0QlUpVYs0RIiKDMfI032QczEFEZA0UCkApY7PR+shynkECitb3CA0NRceOHdGpUycsXry4xPoe9erVQ0xMDABgwoQJ6N69OxYsWIC+ffti48aNOHbsGFauXGnO2yAiWyYASJ18gfVRpcIcRESWjs8gSWNRBdLAgQNx48YNTJs2DZmZmWjXrl2J9T2Uj/1NBgUFYcOGDZgyZQo+/fRTNGvWDNu3b0fr1q3NdQtEZOPkDJ3jELvKhTmIiCydUiFv2JytDrGzqAIJACIiIhAREVHqe4mJiSX2DRgwAAMGDDByVEREEgnImMXOqJGQHpiDiMiSsQdJGosrkIiILBqn+SYiIjNhgSQNCyQiIlPSAJA6YoELxRIRkQHJXfyVC8USEZHR8RkkIiIyFztl0SanvS1igUREZEocYkdERGbCSRqkYYFERGRKLJCIiMhMlDJ7kPgMEhERGR8LJCIiMhM7pQJ2Mp4rktPWmrBAIiIyJU7SQEREZqJUyJzFzjbrIxZIRESmxEkaiIjIXOwUCtjJeK5ITltrwgKJiIiIiMgGcBY7aVggERGZEp9BIiIiMykqkOQ8g2TEYCoxFkhERKakEYBCYuGjYYFERESGw0kapGGBRERkSuxBIiIiM7LNkkceFkhERCYlo0ACCyQiIjIc9iBJwwKJiMiU2INERERmwgJJGhZIRESmpBGQ3DPEZ5CIiMiAOM23NCyQiIhMSWiKNqltiYiIDITTfEvDAomIyJQ4xI6IiMyEPUjSsEAiIjIlDrEjIiIz4TNI0rBAIiIyJfYgERGRmSghrwdJaaOTgrNAIiIyJQEZBZJRIyEiIhvDHiRpWCAREZkSe5CIiMhM7BRK2Cmkz7wgp601YYFERGRKGg0AibPTaTiLHRERGQ57kKRhgUREZErsQSIiIjPhLHbSsEAiIjIlFkhERGQmSkXRJqe9LWKBRERkSpzmm4iIzEShUEIp47kiBZ9BIiIiYxNCAyGkPVsktR0REZEUHGInDQskIiJTEkJ6zxCH2BERkQEpFQoo5ayDxAKJiIiMTsgYYscCiYiIDIiz2EnDAomIyJQ0GkAhcegch9gREZEBFU3SIKcHyYjBVGIskIiITIk9SEREZCZKKKCEjAJJRltrwgKJiMiEhEYDIbEHiZM0EBGRIfEZJGlYIBERmRJ7kIiIyExYIEnDAomIyJQ0AlCwQCIiItNTyBxip7DRIXYWs/rT7du3MWTIEDg7O6NmzZoYOXIkcnNzyz2mR48eUCgUOtuYMWNMFDERUSmEKJp8QdLGAqmyYA4iImvw5O8kKZstspgCaciQITh79ix2796NHTt24MCBA3jnnXeeetzo0aORkZGh3ebOnWuCaImISic0Qtamj2XLlsHHxwcODg4ICAjA77//Xm77H3/8Eb6+vnBwcICfnx927dql13WtGXMQEVmD4kka5Gy2yCIKpHPnziE+Ph6rV69GQEAAnnvuOXz11VfYuHEj/vvf/5Z7bPXq1eHp6andnJ2dTRQ1EVEpJPceafSa5nvTpk2IjIxEdHQ0jh8/jrZt2yIkJATXr18vtf3hw4cxaNAgjBw5EidOnED//v3Rv39/nDlzpqJ3ajWYg4jIWij02GyRRRRISUlJqFmzJjp27KjdFxwcDKVSiaNHj5Z77Pr161G7dm20bt0aUVFRuH//vrHDJSIym4ULF2L06NEIDw9Hy5YtERsbi+rVq2Pt2rWltl+yZAl69+6Njz/+GC1atMDMmTPRoUMHLF261MSRV17MQURkLRR6/M9YWrRoUeawPnPnIIuYpCEzMxPu7u46+6pUqQI3NzdkZmaWedzgwYPRsGFD1K1bF6dOncInn3yC1NRUbN26tcxj8vPzkZ+fr32dnZ0NACgszC/rEKqgnHucytiYCsVDc4dglQpR9LkKmc8JCY2AkDhJg9xzFxQUIDk5GVFRUdp9SqUSwcHBSEpKKvWYpKQkREZG6uwLCQnB9u3bZV3bmlWGHKQWaoC/Ko3iXu49c4dg1exz7M0dgtW6d6/oZ1dOrpDbK2TMHqQtW7agVatWSEhIQMuWLZGfn4/GjRtj06ZN6NevnxGv/HRmLZAmT56MOXPmlNvm3Llzep//8fHhfn5+8PLyQq9evZCWloYmTZqUekxMTAxmzJhRYv+RQ1/qHQeVz/UZc0dg7S6aOwCrduvWLbi4uEhuXyjyJQ+dKy7CcnJydParVCqoVKoS7W/evAm1Wg0PDw+d/R4eHjh//nyp18jMzCy1fXn/8LcWlpSDzt1J0TsOKl/rjq3NHQJRhcjJQ3m5ubKKnrxHk9FIzUNyZGVloUqVKujSpQtUKhWSk5Oh0WjQtWvXCp+7osxaIH344YcICwsrt03jxo3h6elZYvx8YWEhbt++DU9PT8nXCwgIAABcuHChzOQUFRWl823q3bt30bBhQ6Snp8v6R5C55OTkwNvbG1evXrWIse6M13gsKVbA8uLNzs5GgwYN4ObmJqm9vb09PD09cTBT3gQIjo6O8Pb21tkXHR2N6dOnyzoPlcQcZHiW9t8x4zUuxmtccvJQcQ4K6B4g+zpy8pDUL558fX1x+vRpPPPMM9pi6OTJk3B3dy/xpZ05mLVAqlOnDurUqfPUdoGBgbh79y6Sk5Ph7+8PANi7dy80Go024UiRkpICAPDy8iqzTVkVsYuLi0X8x1LM2dmZ8RqRJcVrSbEClhevUintUU4HBwdcunQJBQUFss4vhCgxzWpZ36zVrl0bdnZ2yMrK0tmflZVV5j/kPT09ZbW3JsxBxmNp/x0zXuNivMYlJQ/pm4MAeXlI6hdPAHDq1Cn4+flp9588eVLntTlZxDNILVq0QO/evTF69GjExsbi4cOHiIiIwNtvv426desCAK5du4ZevXrh22+/RadOnZCWloYNGzbgpZdeQq1atXDq1Cl88MEH6NatG9q0aWPmOyIiW+Tg4AAHBwejnd/e3h7+/v5ISEhA//79AQAajQYJCQmIiIgo9ZjAwEAkJCRg4sSJ2n27d+9GYGCg0eK0NMxBRGQNjJ2DAOlfPAFFBVJxrgKKCqQOHToYKTJ5LGIWO6BoJiBfX1/06tULL730Ep577jmsXLlS+/7Dhw+RmpqqnSHI3t4ee/bswYsvvghfX198+OGHeOONN/Dzzz+b6xaIiIwuMjISq1atwjfffINz585h7NixyMvLQ3h4OABg+PDhOpM4TJgwAfHx8ViwYAHOnz+P6dOn49ixY2UWVLaKOYiIyHA0Gg3Onj2r84VRWloafHx8zBfUYyyiBwkA3NzcsGHDhjLf9/Hx0ZnFw9vbG/v376/wdVUqFaKjo83+sJhUjNe4LCleS4oVYLyGMnDgQNy4cQPTpk1DZmYm2rVrh/j4eO2Y7vT0dJ3hGEFBQdiwYQOmTJmCTz/9FM2aNcP27dvRujUfXH8cc5A0jNe4GK9xMV7TSUtLw/3793UKJD8/P0RHR8Pf3x9dunQxY3SAQsidR5aIiIiIiMhKWcwQOyIiIiIiImNjgURERERERPQICyQiIiIiIqJHWCARERERERE9wgLpCbdv38aQIUPg7OyMmjVrYuTIkcjNzS33mB49ekChUOhsY8aMMVqMy5Ytg4+PDxwcHBAQEIDff/+93PY//vgjfH194eDgAD8/P+zatctosZVGTrxxcXElPktjz9lf7MCBA+jXrx/q1q0LhUKB7du3P/WYxMREdOjQASqVCk2bNkVcXJzR4ywmN97ExMQSn61CoUBmZqbRY42JicGzzz4LJycnuLu7o3///khNTX3qceb62dUnXnP+7JJ1qex5iDnIeCwpD1lSDgKYh0geFkhPGDJkCM6ePYvdu3djx44dOHDgAN55552nHjd69GhkZGRot7lz5xolvk2bNiEyMhLR0dE4fvw42rZti5CQEFy/fr3U9ocPH8agQYMwcuRInDhxAv3790f//v1x5swZo8RX0XiBohWsH/8sr1y5YpJY8/Ly0LZtWyxbtkxS+0uXLqFv377o2bMnUlJSMHHiRIwaNQq//vqrkSMtIjfeYqmpqTqfr7u7u5Ei/J/9+/dj3LhxOHLkCHbv3o2HDx/ixRdfRF5eXpnHmPNnV594AfP97JJ1qcx5iDnIuCwpD1lSDgKYh0gmQVp//vmnACD++OMP7b5ffvlFKBQKce3atTKP6969u5gwYYIJIhSiU6dOYty4cdrXarVa1K1bV8TExJTa/q233hJ9+/bV2RcQECDeffddo8ZZTG6869atEy4uLiaJrTwAxLZt28ptM2nSJNGqVSudfQMHDhQhISFGjKx0UuLdt2+fACDu3LljkpjKc/36dQFA7N+/v8w25v7ZfZyUeCvLzy5Ztsqeh5iDTMeS8pCl5SAhmIeofOxBekxSUhJq1qyJjh07avcFBwdDqVTi6NGj5R67fv161K5dG61bt0ZUVJR2NXVDKigoQHJyMoKDg7X7lEolgoODkZSUVOoxSUlJOu0BICQkpMz2hqRPvACQm5uLhg0bwtvbG6+++irOnj1r9Fj1Yc7PtiLatWsHLy8vvPDCCzh06JBZYsjOzgZQtPhmWSrT5yslXsByfnap8qrMeYg5qPKpTL8npaoMOQhgHqLysUB6TGZmZomu3ipVqsDNza3cMbKDBw/G999/j3379iEqKgrfffcdhg4davD4bt68CbVaDQ8PD539Hh4eZcaXmZkpq70h6RNv8+bNsXbtWvz000/4/vvvodFoEBQUhP/85z9Gj1eusj7bnJwc/P3332aKqmxeXl6IjY3Fli1bsGXLFnh7e6NHjx44fvy4SePQaDSYOHEiunTpgtatW5fZzpw/u4+TGq8l/exS5VWZ8xBzUOVjSXmosuQggHmInq6KuQMwhcmTJ2POnDnltjl37pze5398bLifnx+8vLzQq1cvpKWloUmTJnqf1xYFBgYiMDBQ+zooKAgtWrTA119/jZkzZ5oxMsvXvHlzNG/eXPs6KCgIaWlpWLRoEb777juTxTFu3DicOXMGBw8eNNk1K0JqvPzZpfIwD1kG/ndsPJUlBwHMQ/R0NlEgffjhhwgLCyu3TePGjeHp6Vniwc3CwkLcvn0bnp6ekq8XEBAAALhw4YJBE1Pt2rVhZ2eHrKwsnf1ZWVllxufp6SmrvSHpE++Tqlativbt2+PChQvGCLFCyvpsnZ2dUa1aNTNFJU+nTp1MmiAiIiK0D53Xr1+/3Lbm/NktJifeJ1Xmn10yPWvIQ8xBlY+l5yFT5yCAeYiksYkhdnXq1IGvr2+5m729PQIDA3H37l0kJydrj927dy80Go022UiRkpICoKg72ZDs7e3h7++PhIQE7T6NRoOEhASdbwweFxgYqNMeAHbv3l1me0PSJ94nqdVqnD592uCfpSGY87M1lJSUFJN8tkIIREREYNu2bdi7dy8aNWr01GPM+fnqE++TKvPPLpmeNeQh5qDKx9LzkKlyEMA8RDKZd46Iyqd3796iffv24ujRo+LgwYOiWbNmYtCgQdr3//Of/4jmzZuLo0ePCiGEuHDhgvj888/FsWPHxKVLl8RPP/0kGjduLLp162aU+DZu3ChUKpWIi4sTf/75p3jnnXdEzZo1RWZmphBCiGHDhonJkydr2x86dEhUqVJFzJ8/X5w7d05ER0eLqlWritOnTxslvorGO2PGDPHrr7+KtLQ0kZycLN5++23h4OAgzp49a/RY7927J06cOCFOnDghAIiFCxeKEydOiCtXrgghhJg8ebIYNmyYtv3FixdF9erVxccffyzOnTsnli1bJuzs7ER8fLzRY9Un3kWLFont27eLf//73+L06dNiwoQJQqlUij179hg91rFjxwoXFxeRmJgoMjIytNv9+/e1bSrTz64+8ZrzZ5esS2XOQ8xBxmVJeciScpAQzEMkDwukJ9y6dUsMGjRIODo6CmdnZxEeHi7u3bunff/SpUsCgNi3b58QQoj09HTRrVs34ebmJlQqlWjatKn4+OOPRXZ2ttFi/Oqrr0SDBg2Evb296NSpkzhy5Ij2ve7du4vQ0FCd9j/88IN45plnhL29vWjVqpXYuXOn0WKraLwTJ07UtvXw8BAvvfSSOH78uEniLJ6C9MmtOL7Q0FDRvXv3Ese0a9dO2Nvbi8aNG4t169aZJFZ94p0zZ45o0qSJcHBwEG5ubqJHjx5i7969Jom1tDgB6HxelelnV594zfmzS9alsuch5iDjsaQ8ZEk5SAjmIZJHIYQQhu6VIiIiIiIiskQ28QwSERERERGRFCyQiIiIiIiIHmGBRERERERE9AgLJCIiIiIiokdYIBERERERET3CAomIiIiIiOgRFkhERERERESPsEAiKsPly5ehUCiQkpJSofNMnz4d7dq1M0hMRERkO5iHiMyDBRJZnLCwMPTv319n3+bNm+Hg4IAFCxZIOodCocD27dvLbePt7Y2MjAy0bt1az0iJiMgaMQ8RWbcq5g6AqKJWr16NcePGITY2FuHh4QY7r52dHTw9PQ12PiIisk7MQ0TWhT1IZNHmzp2L999/Hxs3btRJSj/99BM6dOgABwcHNG7cGDNmzEBhYSEAwMfHBwDw2muvQaFQaF8/6cmhDYmJiVAoFEhISEDHjh1RvXp1BAUFITU1Vee4L7/8Eh4eHnBycsLIkSPx4MGDEudevXo1WrRoAQcHB/j6+mL58uXa90aMGIE2bdogPz8fAFBQUID27dtj+PDh+n5MRERkJMxDRFZIEFmY0NBQ8eqrr4pJkyYJR0dHsWfPHp33Dxw4IJydnUVcXJxIS0sT//rXv4SPj4+YPn26EEKI69evCwBi3bp1IiMjQ1y/fr3U61y6dEkAECdOnBBCCLFv3z4BQAQEBIjExERx9uxZ0bVrVxEUFKQ9ZtOmTUKlUonVq1eL8+fPi88++0w4OTmJtm3batt8//33wsvLS2zZskVcvHhRbNmyRbi5uYm4uDghhBD37t0TjRs3FhMnThRCCPHRRx8JHx8fkZ2dbaiPkIiIKoB5iMi6sUAiixMaGirs7e0FAJGQkFDi/V69eonZs2fr7Pvuu++El5eX9jUAsW3btnKvU1ZiejwR7ty5UwAQf//9txBCiMDAQPHee+/pnCcgIEAnMTVp0kRs2LBBp83MmTNFYGCg9vXhw4dF1apVxdSpU0WVKlXEb7/9Vm6sRERkOsxDRNaNQ+zIIrVp0wY+Pj6Ijo5Gbm6uznsnT57E559/DkdHR+02evRoZGRk4P79+wa5djEvLy8AwPXr1wEA586dQ0BAgE77wMBA7Z/z8vKQlpaGkSNH6sQ3a9YspKWl6Rzz0UcfYebMmfjwww/x3HPPVThuIiIyHOYhIuvFSRrIItWrVw+bN29Gz5490bt3b/zyyy9wcnICAOTm5mLGjBl4/fXXSxzn4OBQ4WtXrVpV+2eFQgEA0Gg0ko4tTqKrVq0qkcDs7Oy0f9ZoNDh06BDs7Oxw4cKFioZMREQGxjxEZL3Yg0QWq2HDhti/fz8yMzPRu3dv3Lt3DwDQoUMHpKamomnTpiU2pbLoR75q1apQq9UGj6lFixY4evSozr4jR45o/+zh4YG6devi4sWLJWJr1KiRtt28efNw/vx57N+/H/Hx8Vi3bp3BYyUioophHiKyTuxBIovm7e2NxMRE9OzZEyEhIYiPj8e0adPw8ssvo0GDBnjzzTehVCpx8uRJnDlzBrNmzQJQNINQQkICunTpApVKBVdXV4PEM2HCBISFhaFjx47o0qUL1q9fj7Nnz6Jx48baNjNmzMD48ePh4uKC3r17Iz8/H8eOHcOdO3cQGRmJEydOYNq0adi8eTO6dOmChQsXYsKECejevbvOeYiIyPyYh4isD3uQyOLVr18fiYmJuHnzJkJCQhAYGIgdO3bgX//6F5599ll07twZixYtQsOGDbXHLFiwALt374a3tzfat29vsFgGDhyIqVOnYtKkSfD398eVK1cwduxYnTajRo3C6tWrsW7dOvj5+aF79+6Ii4tDo0aN8ODBAwwdOhRhYWHo168fAOCdd95Bz549MWzYMKN820hERBXDPERkXRRCCGHuIIiIiIiIiCoD9iARERERERE9wgKJiIiIiIjoERZIREREREREj7BAIiIiIiIieoQFEhERERER0SMskIiIiIiIiB5hgURERERERPQICyQiIiIiIqJHWCARERERERE9wgKJiIiIiIjoERZIREREREREj7BAIiIiIiIieuT/AfvbRgCfm3UPAAAAAElFTkSuQmCC"/>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=portable-model-workflow">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=interchange-conclusion">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">model_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s2">"ssh_topological.json"</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">create_model_spec</span><span class="p">(</span>
-    <span class="s2">"ssh_model"</span><span class="p">,</span>
-    <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">"n_cells"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"t1"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="s2">"t2"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"periodic"</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-<span class="p">)</span>
-<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
-
-<span class="n">inspection</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-    <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"quantum_lattice_models.cli"</span><span class="p">,</span> <span class="s2">"inspect"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">model_path</span><span class="p">)],</span>
-    <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Portable SSH model"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  file: </span><span class="si">{</span><span class="n">model_path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repository_root</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  local degrees: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">local_degrees</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  interactions: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">interactions</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">has_dimension</span> <span class="o">=</span> <span class="s1">'"dimension"'</span> <span class="ow">in</span> <span class="n">inspection</span><span class="o">.</span><span class="n">stdout</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  inspection contains dimension: </span><span class="si">{</span><span class="n">has_dimension</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Portable SSH model
-  file: results/notebooks/ssh_topological.json
-  local degrees: 8
-  interactions: 7
-  inspection contains dimension: True
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cli-spectrum-workflow">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">spectrum</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-    <span class="p">[</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
-        <span class="s2">"-m"</span><span class="p">,</span>
-        <span class="s2">"quantum_lattice_models.cli"</span><span class="p">,</span>
-        <span class="s2">"spectrum"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">model_path</span><span class="p">),</span>
-    <span class="p">],</span>
-    <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">energies</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"SSH spectrum from portable model file"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"index | energy"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"--- | ---"</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">energy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">energies</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">index</span><span class="si">:</span><span class="s2">&gt;5d</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2"> .6f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>SSH spectrum from portable model file
-index | energy
---- | ---
-    0 | -1.280566
-    1 | -1.086119
-    2 | -0.818731
-    3 | -0.013178
-    4 |  0.013178
-    5 |  0.818731
-    6 |  1.086119
-    7 |  1.280566
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cli-artifact-workflow">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">plot_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s2">"cli_ssh_spectrum.png"</span>
-<span class="n">bundle_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s2">"ssh_topological.bundle"</span>
-<span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-    <span class="p">[</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
-        <span class="s2">"-m"</span><span class="p">,</span>
-        <span class="s2">"quantum_lattice_models.cli"</span><span class="p">,</span>
-        <span class="s2">"plot"</span><span class="p">,</span>
-        <span class="s2">"--model"</span><span class="p">,</span>
-        <span class="s2">"ssh_model"</span><span class="p">,</span>
-        <span class="s2">"--n-cells"</span><span class="p">,</span>
-        <span class="s2">"4"</span><span class="p">,</span>
-        <span class="s2">"--t1"</span><span class="p">,</span>
-        <span class="s2">"0.35"</span><span class="p">,</span>
-        <span class="s2">"--t2"</span><span class="p">,</span>
-        <span class="s2">"1.0"</span><span class="p">,</span>
-        <span class="s2">"--output"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">plot_path</span><span class="p">),</span>
-    <span class="p">],</span>
-    <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-    <span class="p">[</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
-        <span class="s2">"-m"</span><span class="p">,</span>
-        <span class="s2">"quantum_lattice_models.cli"</span><span class="p">,</span>
-        <span class="s2">"export"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">model_path</span><span class="p">),</span>
-        <span class="s2">"--artifact"</span><span class="p">,</span>
-        <span class="s2">"bundle"</span><span class="p">,</span>
-        <span class="s2">"--output"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">bundle_path</span><span class="p">),</span>
-    <span class="p">],</span>
-    <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"CLI artifacts"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"  plot: </span><span class="si">{</span><span class="n">plot_path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repository_root</span><span class="p">)</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">plot_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1024</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> KiB)"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  bundle files: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">bundle_path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>CLI artifacts
-  plot: results/notebooks/cli_ssh_spectrum.png (24.2 KiB)
-  bundle files: lattice.json, manifest.json, matrix.npz, metadata.json, model.json
-</pre>
-</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The registered model remains reconstructable from <code>model.json</code>; the external model remains analyzable and portable through its persisted matrix file without pretending that an unavailable builder can reconstruct it.</p>
 </div>
 </div>
 </div>

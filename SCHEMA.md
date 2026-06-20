@@ -31,12 +31,72 @@ The current schema version is `1.0`.
 | `parameters` | object | Validated builder parameters |
 | `lattice` | object or null | Optional `LatticeSpec` |
 | `basis` | string or null | Registered Hilbert-space basis |
+| `local_degrees` | object list | Indexed physical spins, orbitals, modes, or Nambu components |
+| `basis_mappings` | object list | Mapping from local degrees to tensor factors, modes, or single-particle indices |
+| `interactions` | object list | Portable onsite and two-body operator terms |
 | `representation` | `dense` or `sparse` | Requested matrix representation |
 | `units` | string map | Units keyed by parameter or quantity |
 | `conventions` | string map | Signs, gauges, orderings, and interpretation rules |
 | `references` | string list | DOI, URL, citation, or local reference identifiers |
 | `provenance` | object | Source, generator, import, or environment information |
 | `metadata` | object | Portable user-defined data |
+
+The reserved `external_matrix` family represents imported Hamiltonians that do
+not have a registered reconstruction builder. Its `basis` must be nonempty,
+`parameters` must be empty, and the matrix itself must be retained in a
+portable NPY/NPZ Hamiltonian file. The model record may carry optional lattice
+geometry, units, conventions, references, provenance, and metadata like any
+other model.
+
+The reserved `graph_spin` family represents portable arbitrary spin-$1/2$
+graphs. Its `parameters` contain only `n_sites`; its physical-system records
+carry the Pauli interactions, fields, geometry, labels, and tensor-factor
+mapping used for dense or sparse reconstruction.
+
+## Physical-system records
+
+`LocalDegreeOfFreedom` records contain:
+
+- Contiguous `index` and physical `site`
+- `kind`: `spin`, `fermion`, `boson`, `orbital`, or `nambu`
+- Positive `local_dimension`
+- Optional label, component, orbital, and portable metadata
+
+`BasisIndexMapping` assigns every local degree exactly once to a nonnegative
+`basis_index`. Its role distinguishes local tensor-factor order,
+single-particle matrix-state order, and general mode order. A spin tensor
+factor is not a Hamiltonian row index.
+
+`InteractionTerm` currently represents one-site or two-site terms. It stores
+the participating local-degree indices, one compatible operator per degree, a
+finite complex coefficient, interaction kind, optional label and unit, and
+portable metadata. Spin operators are `I`, `X`, `Y`, and `Z`; orbital,
+fermionic, and bosonic records use identity, creation, annihilation, and number
+operators where applicable. Truncated bosons additionally use `number_pair`
+for \(n(n-1)\). Nambu records use explicit particle and hole components for
+BdG matrix-state ordering and pairing links.
+
+Multiple local degrees may reference the same physical site. For example,
+Fermi-Hubbard has up/down fermionic modes per site and a Kitaev BdG
+specification has particle/hole components per site. Their basis mappings and
+indices remain distinct.
+
+These fields are optional for compatibility with existing schema `1.0` files.
+Newly created specifications populate them for supported model families.
+
+## Artifact bundles
+
+A directory bundle contains independently readable portable artifacts:
+
+- `matrix.npz`, or `matrix.npy` with `matrix.npy.json`
+- `model.json`
+- `metadata.json`
+- `lattice.json` when lattice data exists
+- `manifest.json` listing the generated artifact files and matrix format
+
+The matrix artifact remains the canonical round-trip input for
+`load_hamiltonian`; the other files support selective interchange and
+inspection.
 
 Registry discovery reports whether a model has a sparse construction path and
 its package validation status (`validated`, `tested`, or `unvalidated`).

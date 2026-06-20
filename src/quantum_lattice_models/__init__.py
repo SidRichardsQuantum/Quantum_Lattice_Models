@@ -58,6 +58,13 @@ from quantum_lattice_models.observables import (
     static_spin_structure_factor,
     total_magnetization_z,
 )
+from quantum_lattice_models.physical import (
+    BASIS_MAPPING_ROLES,
+    LOCAL_DEGREE_KINDS,
+    BasisIndexMapping,
+    InteractionTerm,
+    LocalDegreeOfFreedom,
+)
 from quantum_lattice_models.registry import (
     ModelPreset,
     get_model_info,
@@ -70,9 +77,12 @@ from quantum_lattice_models.registry import (
     unregister_model,
 )
 from quantum_lattice_models.specs import (
+    EXTERNAL_MATRIX_FAMILY,
+    GRAPH_SPIN_FAMILY,
     SPEC_SCHEMA_VERSION,
     LatticeSpec,
     ModelSpec,
+    create_graph_spin_spec,
     create_model_from_preset,
     create_model_spec,
     load_model,
@@ -107,7 +117,14 @@ from quantum_lattice_models.spin import (
     xy_chain,
     xy_chain_sparse,
 )
-from quantum_lattice_models.storage import load_hamiltonian, metadata_path, save_hamiltonian
+from quantum_lattice_models.storage import (
+    EXPORT_ARTIFACTS,
+    export_hamiltonian_artifact,
+    import_hamiltonian,
+    load_hamiltonian,
+    metadata_path,
+    save_hamiltonian,
+)
 from quantum_lattice_models.tight_binding import (
     aubry_andre_harper_chain,
     kagome_lattice_index,
@@ -246,14 +263,25 @@ __all__ = [
     "bipartite_entanglement_entropy",
     "inverse_participation_ratio",
     "SPEC_SCHEMA_VERSION",
+    "EXTERNAL_MATRIX_FAMILY",
+    "GRAPH_SPIN_FAMILY",
     "LatticeSpec",
     "ModelSpec",
     "HamiltonianResult",
+    "LocalDegreeOfFreedom",
+    "BasisIndexMapping",
+    "InteractionTerm",
+    "LOCAL_DEGREE_KINDS",
+    "BASIS_MAPPING_ROLES",
     "create_model_spec",
+    "create_graph_spin_spec",
     "create_model_from_preset",
     "load_model",
     "migrate_spec_data",
     "save_hamiltonian",
+    "export_hamiltonian_artifact",
+    "EXPORT_ARTIFACTS",
+    "import_hamiltonian",
     "load_hamiltonian",
     "metadata_path",
     "ModelPreset",

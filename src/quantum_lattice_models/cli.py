@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 from quantum_lattice_models.comparison import compare_models
-from quantum_lattice_models.diagnostics import inspect_model
+from quantum_lattice_models.diagnostics import diagnose_matrix, inspect_model
 from quantum_lattice_models.interchange import (
     export_graphml,
     export_lattice_csv,
@@ -34,7 +34,13 @@ from quantum_lattice_models.specs import (
     load_model,
 )
 from quantum_lattice_models.spectra import eigenvalues
-from quantum_lattice_models.storage import save_hamiltonian
+from quantum_lattice_models.storage import (
+    EXPORT_ARTIFACTS,
+    export_hamiltonian_artifact,
+    import_hamiltonian,
+    load_hamiltonian,
+    save_hamiltonian,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -62,12 +68,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     create_parser.add_argument("--output", required=True, help="Output model JSON path")
 
-    inspect_parser = subparsers.add_parser("inspect", help="Inspect a model JSON file")
-    inspect_parser.add_argument("path", help="Model JSON path")
+    inspect_parser = subparsers.add_parser(
+        "inspect", help="Inspect a model JSON or portable Hamiltonian file"
+    )
+    inspect_parser.add_argument("path", help="Model JSON or portable NPY/NPZ path")
     inspect_parser.add_argument("--json", action="store_true")
 
-    validate_parser = subparsers.add_parser("validate", help="Validate a model JSON file")
-    validate_parser.add_argument("path", help="Model JSON path")
+    validate_parser = subparsers.add_parser(
+        "validate", help="Validate a model JSON or portable Hamiltonian file"
+    )
+    validate_parser.add_argument("path", help="Model JSON or portable NPY/NPZ path")
     validate_parser.add_argument("--json", action="store_true")
 
     presets_parser = subparsers.add_parser("presets", help="List named model presets")
@@ -96,6 +106,23 @@ def main(argv: list[str] | None = None) -> int:
     import_parser.add_argument("--metadata", help="Metadata JSON sidecar for CSV imports")
     import_parser.add_argument("--output", required=True, help="Output model JSON path")
 
+    matrix_import_parser = subparsers.add_parser(
+        "import-matrix", help="Import an external Hamiltonian matrix with metadata"
+    )
+    matrix_import_parser.add_argument("path", help="External NPY or NPZ matrix path")
+    matrix_import_parser.add_argument(
+        "--metadata", required=True, help="External matrix metadata JSON path"
+    )
+    matrix_import_parser.add_argument(
+        "--allow-non-hermitian",
+        action="store_true",
+        help="Allow importing a non-Hermitian square matrix.",
+    )
+    matrix_import_parser.add_argument(
+        "--format", choices=("npy", "npz"), default="npz", help="Portable output format"
+    )
+    matrix_import_parser.add_argument("--output", required=True, help="Portable matrix output path")
+
     lattice_export_parser = subparsers.add_parser(
         "export-lattice", help="Export lattice data from a model JSON file"
     )
@@ -114,11 +141,17 @@ def main(argv: list[str] | None = None) -> int:
     _add_model_arguments(spectrum_parser, required=False)
 
     export_parser = subparsers.add_parser(
-        "export", help="Build and export a Hamiltonian from a model JSON file"
+        "export", help="Export artifacts from a model JSON or portable matrix file"
     )
-    export_parser.add_argument("path", help="Portable model JSON path")
+    export_parser.add_argument("path", help="Portable model JSON or NPY/NPZ path")
+    export_parser.add_argument(
+        "--artifact",
+        choices=EXPORT_ARTIFACTS,
+        default="matrix",
+        help="Artifact to export; the default preserves matrix export behavior.",
+    )
     export_parser.add_argument("--format", choices=("npy", "npz"), default="npz")
-    export_parser.add_argument("--output", help="Output matrix path")
+    export_parser.add_argument("--output", help="Output file or bundle directory")
 
     plot_parser = subparsers.add_parser("plot", help="Save a spectrum plot for a model")
     _add_model_arguments(plot_parser)
@@ -174,19 +207,40 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "inspect":
-        summary = load_model(args.path).summary()
+        if _is_hamiltonian_path(args.path):
+            result = load_hamiltonian(args.path)
+            diagnostics = diagnose_matrix(result.matrix)
+            summary = {
+                **result.model.summary(),
+                "matrix": {
+                    "shape": list(diagnostics.shape),
+                    "sparse": diagnostics.sparse,
+                    "nonzero_entries": diagnostics.nonzero_entries,
+                    "density": diagnostics.density,
+                    "storage_bytes": diagnostics.storage_bytes,
+                    "hermitian": diagnostics.hermitian,
+                },
+            }
+        else:
+            summary = load_model(args.path).summary()
         _print_json(summary)
         return 0
 
     if args.command == "validate":
-        spec = load_model(args.path)
-        spec.validate()
-        if args.json:
-            _print_json(
-                {"valid": True, "family": spec.family, "schema_version": spec.schema_version}
-            )
+        if _is_hamiltonian_path(args.path):
+            result = load_hamiltonian(args.path)
+            result.model.validate()
+            family = result.model.family
+            schema_version = result.model.schema_version
         else:
-            print(f"valid\t{spec.family}\t{spec.schema_version}")
+            spec = load_model(args.path)
+            spec.validate()
+            family = spec.family
+            schema_version = spec.schema_version
+        if args.json:
+            _print_json({"valid": True, "family": family, "schema_version": schema_version})
+        else:
+            print(f"valid\t{family}\t{schema_version}")
         return 0
 
     if args.command == "presets":
@@ -254,6 +308,15 @@ def main(argv: list[str] | None = None) -> int:
         print(spec.save(args.output))
         return 0
 
+    if args.command == "import-matrix":
+        result = import_hamiltonian(
+            args.path,
+            metadata_path=args.metadata,
+            require_hermitian=not args.allow_non_hermitian,
+        )
+        print(save_hamiltonian(result, args.output, format=args.format))
+        return 0
+
     if args.command == "export-lattice":
         spec = load_model(args.path)
         if spec.lattice is None:
@@ -286,10 +349,20 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "export":
-        spec = load_model(args.path)
-        output = args.output or str(Path(args.path).with_suffix(f".{args.format}"))
-        saved = save_hamiltonian(spec.build_result(), output, format=args.format)
-        print(saved)
+        if _is_hamiltonian_path(args.path):
+            source = load_hamiltonian(args.path)
+        else:
+            spec = load_model(args.path)
+            source = spec if args.artifact in {"model", "lattice"} else spec.build_result()
+        output = args.output or str(_default_export_path(args.path, args.artifact, args.format))
+        outputs = export_hamiltonian_artifact(
+            source,
+            output,
+            artifact=args.artifact,
+            format=args.format,
+        )
+        for exported in outputs:
+            print(exported)
         return 0
 
     if args.command == "plot":
@@ -369,8 +442,23 @@ def _build_source(args: argparse.Namespace):
         ]
         if supplied_parameters:
             raise ValueError("Model parameters cannot be combined with a model JSON path.")
+        if _is_hamiltonian_path(args.path):
+            return load_hamiltonian(args.path).matrix
         return load_model(args.path).hamiltonian()
     return _build_model(args)
+
+
+def _is_hamiltonian_path(path: str | Path) -> bool:
+    return Path(path).suffix.lower() in {".npy", ".npz"}
+
+
+def _default_export_path(path: str | Path, artifact: str, output_format: str) -> Path:
+    source = Path(path)
+    if artifact == "matrix":
+        return source.with_suffix(f".{output_format}")
+    if artifact == "bundle":
+        return source.with_suffix(".bundle")
+    return source.with_suffix(f".{artifact}.json")
 
 
 def _parameter_values(model_name: str, cli_values: dict[str, object]) -> dict[str, object]:

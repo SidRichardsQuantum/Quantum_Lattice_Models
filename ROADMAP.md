@@ -1,38 +1,32 @@
 # Roadmap
 
-Quantum Lattice Models helps users create or import lattice models and preserve
-the information required to understand, reconstruct, validate, analyze, and
-exchange them.
+This document lists future work only. Implemented capabilities belong in the
+README, changelog, validation matrix, and model reference.
 
-```text
-create or import -> validate -> inspect -> build -> analyze -> export or save
-```
-
-The package includes spin, tight-binding, Hubbard, and BdG models because these
-are useful lattice-model representations with distinct bases and conventions.
-It also includes lightweight analysis tools that make models immediately
-inspectable and scientifically verifiable. It is not intended to become a
+The package will continue to focus on portable lattice-model data, lightweight
+reference analysis, and optional ecosystem adapters rather than becoming a
 general-purpose many-body solver or workflow-execution framework.
 
 This roadmap describes intended direction, not a compatibility guarantee.
-Priorities may change as the model schema and import workflows are exercised.
+Priorities may change as the package is exercised.
 
 ## Product Scope
 
-Development is organized into three layers.
+Future development is organized into three layers.
 
 ### Core model and data layer
 
-This is the package's primary responsibility:
+Future core work includes:
 
-- Lattice geometry, sites, orbitals, labels, unit cells, and bonds
-- Model parameters, basis conventions, boundary conditions, and units
-- Dense, sparse, and symmetry-reduced Hamiltonian construction
-- Portable specifications, validation, schema migration, and provenance
-- Import and export of model, lattice, matrix, and metadata formats
-- Reusable transformations such as disorder, defects, boundaries, and
-  relabeling
-- Registry and plugin contracts for built-in and third-party model families
+- A unified physical-system representation connecting geometry, local degrees
+  of freedom, basis ordering, and interaction terms
+- Periodic unit-cell geometry, reciprocal-space data, and Bloch Hamiltonians
+- Additional symmetry-reduced Hamiltonian construction
+- Richer matrix imports and optional model-specification formats
+- Spatial transformations such as interfaces, twisted boundaries, and
+  long-range bond generation
+- Portable result and visual-artifact descriptions
+- Stable plugin contracts for third-party model families and data adapters
 
 Core features should preserve enough information for a model to be reconstructed
 and interpreted in a different process or external package.
@@ -42,16 +36,15 @@ and interpreted in a different process or external package.
 Small, dependency-light tools are in scope when they help users inspect,
 validate, compare, or demonstrate a model:
 
-- Exact and low-energy spectra, gaps, eigenstates, and density of states
-- Matrix diagnostics, conserved-sector checks, and resource estimates
-- Occupations, magnetization, correlations, structure factors, localization,
-  reduced density matrices, and entanglement
 - Band structures and topological invariants
+- Solver safeguards, convergence reporting, and conserved-quantity diagnostics
+- Additional occupations, correlations, currents, and entanglement support
 - Time-independent evolution, compact quench workflows, and expectation-value
   time series
 - Small parameter sweeps, finite-size studies, and thermal reference
   calculations
-- Plotting and deterministic tabular summaries
+- Reproducible lattice diagrams, interaction graphs, matrix views, and
+  analysis plots
 
 These capabilities should remain transparent and modest in scope. Where
 specialized packages provide stronger solvers or workflows, this package should
@@ -62,18 +55,21 @@ export a well-described model to them rather than duplicate their functionality.
 Integrations should be optional and translate through the stable model
 representation:
 
-- Graph and structure formats such as NetworkX, GraphML, CSV, ASE, or pymatgen
-- Operator packages such as OpenFermion, PennyLane, and Qiskit
+- Structure formats such as ASE, pymatgen, and selected CIF workflows
+- Visual and tabular formats such as SVG, Graphviz DOT, CSV, and plot-data JSON
+- Operator packages such as OpenFermion and Qiskit
 - Solver ecosystems such as QuSpin, NetKet, or QuTiP where conventions map
   explicitly
 - Third-party model, importer, exporter, and analysis plugins
 
 ## Guiding Principles
 
-- Treat geometry, parameters, basis conventions, symmetries, units, references,
-  and provenance as first-class data.
+- Treat geometry, local degrees of freedom, parameters, basis conventions,
+  symmetries, units, references, and provenance as first-class data.
 - Use one validated representation across creation, import, construction,
   analysis, and export.
+- Keep physical data and declarative visual metadata portable; treat rendered
+  images as derived artifacts.
 - Keep dense, sparse, and reduced-basis behavior consistent.
 - Prefer explicit physical conventions over implicit defaults.
 - Keep core dependencies lightweight and place integrations behind optional
@@ -85,116 +81,57 @@ representation:
 - Report computational scaling honestly and avoid surprising dense
   conversions.
 
-## Current Foundation
+## Priority 1: Extend the Unified Physical-System Representation
 
-### Implemented through v0.1.4
+Portable models should explicitly connect physical structure to Hamiltonian
+indices and local state spaces. This representation should work for spin,
+tight-binding, Hubbard, bosonic, and BdG systems without treating their bases
+as interchangeable.
 
-- Typed model registry and generated command-line parameters
-- Dimension, memory, storage, Hermiticity, and particle-hole diagnostics
-- Scientific validation matrix and analytic reference checks
-- Versioned `ModelSpec` and `LatticeSpec` JSON files
-- Dense and sparse model reconstruction
-- CLI `create`, `inspect`, and `validate` workflows
-- Generated model-reference documentation
-
-### Implemented in v0.1.5
-
-- Explicit schema migration behavior and stricter portable-file validation
-- Metadata-preserving `HamiltonianResult`
-- Dense NPY and dense/sparse NPZ persistence
-- File-oriented CLI `spectrum` and `export` workflows
-- Shared graph-based dense and sparse spin construction
-- Sparse Ising, XY, XXZ, Heisenberg, J1-J2, and ladder builders
-
-### Implemented after v0.1.5
-
-- Fixed-magnetization bases and reduced XXZ and Heisenberg Hamiltonians
-- Explicit reduced-basis mappings, dimension estimates, metadata, and
-  persistence
-- Site and total magnetization
-- Same-axis full and connected spin correlation matrices
-- Static spin structure factors
-- Reduced density matrices and bipartite entanglement entropy
-- Full-space and reduced-basis cross-validation
-- Model filtering by category, basis, sparse support, and validation status
-- Named canonical-phase and reference-limit presets
-- Pre-build dimension, memory, representation, and warning reports
-- Deterministic JSON CLI output
-- Model parameter, matrix, spectrum, and gap comparisons
-
-## Priority 1: Complete Model Import and Interchange
-
-The package is currently stronger at creating models than importing them. This
-is the highest-priority gap.
-
-Implemented:
-
-- Published schema, compatibility, metadata, and migration policy
-- End-to-end CSV and GraphML import/export documentation
-- Paired site/bond CSV with metadata sidecars
-- Optional NetworkX and GraphML adapters
-- Immutable transformations for relabeling, subgraphs, vacancies, bonds,
-  boundaries, and reproducible disorder
-- Standardized lattice/model units, conventions, references, and provenance
-
-### Schema and metadata
-
-- Document the JSON schema and complex-number encoding.
-- Define compatibility and deprecation policies.
-- Add explicit migrations when the schema changes.
-- Complete lattice metadata for site, orbital, sublattice, and unit-cell
-  labels.
-- Record physical units, references, gauge choices, basis ordering, and
-  provenance consistently.
-- Add validation status and convention metadata to registry entries.
-
-### Tabular and graph import/export
-
-- Import and export site coordinates and labels as CSV.
-- Import and export bond or edge tables, including complex amplitudes.
-- Support paired coordinate and edge-list files.
-- Add NetworkX and GraphML adapters behind an optional extra.
-- Preserve labels, edge attributes, directedness, Hermiticity conventions, and
-  user metadata during round trips.
-
-### Matrix and model persistence
-
-- Extend round-trip coverage for NPY and NPZ.
-- Add optional YAML model specifications.
-- Define how imported matrices are associated with basis and geometry metadata.
-- Add deterministic summaries and machine-readable CLI output.
-- Add file-oriented `import` and richer `export` commands.
+- Add carefully scoped multi-site interaction records beyond current onsite and
+  two-body terms.
+- Add richer multi-orbital site semantics, orbital geometry, and local
+  constraints.
+- Add explicit conserved quantities and symmetry actions on local degrees.
+- Define stable mappings for reduced bases without confusing sector rows with
+  full-basis or local-factor indices.
+- Preserve physical-system records through additional importers and ecosystem
+  adapters.
 
 ### Completion criteria
 
 A user should be able to:
 
-1. Create a built-in model or import a custom lattice.
-2. Attach parameters, geometry, conventions, labels, units, and provenance.
-3. Validate and inspect the model before construction.
-4. Save and reload it in another process.
-5. Build an equivalent dense, sparse, or supported reduced Hamiltonian.
-6. Run reference analysis or export it to another tool without reconstructing
-   missing context manually.
+1. Import or create a spin, tight-binding, Hubbard, bosonic, or BdG model and
+   identify what each basis component physically represents.
+2. Map geometry sites, orbitals, local degrees of freedom, and interaction
+   terms to Hamiltonian indices without model-specific assumptions.
+3. Preserve labels and conventions through construction, persistence,
+   visualization, and export.
+4. Use the same portable representation as the input to generic diagram,
+   graph, and analysis tools.
 
-## Priority 2: Lattice Transformations
+## Priority 2: Extend Model Import and Interchange
+
+- Add optional YAML model specifications.
+- Add schema migrations only when future schema revisions require them.
+
+## Priority 3: Lattice Transformations
 
 Finite lattices are particularly useful when translation symmetry is broken.
 Transformations should operate on portable lattice/model data rather than
 creating unrelated builder functions.
 
-- Reproducible onsite and bond disorder with explicit distributions and seeds
-- Vacancies, impurities, modified bonds, and boundary potentials
-- Relabeling, subgraph extraction, and repeated unit-cell construction
+- Impurity and boundary-potential transformations
+- Repeated unit-cell construction
 - Domain walls, interfaces, and spatially varying parameters
-- Open, periodic, and twisted boundary transformations where meaningful
+- Twisted boundary transformations where meaningful
 - Long-range bonds generated by distance or power-law rules
-- Transformation provenance and deterministic serialization
 
 Lightweight ensemble summaries may report means, variances, and realization
 metadata, but distributed ensemble execution is outside the core package.
 
-## Priority 3: Periodic Lattice Representation
+## Priority 4: Periodic Lattice Representation
 
 Periodic geometry should be represented as data rather than encoded separately
 inside every model builder.
@@ -211,7 +148,62 @@ inside every model builder.
 The representation should support SSH, Rice-Mele, square, triangular,
 honeycomb, kagome, Haldane, and related user-defined systems.
 
-## Priority 4: Reference Analysis
+## Priority 5: Visualization and Diagram Workflows
+
+Visualization should be a lightweight client of portable model and result data,
+not a parallel source of physical truth.
+
+### Geometry and interaction diagrams
+
+- Lattice geometry and interaction graphs for both particle and spin models
+- Site, orbital, sublattice, unit-cell, and local-degree-of-freedom labels
+- Bond and interaction styling by type, direction, phase, strength, range, or
+  spin axis
+- Unit-cell outlines, primitive vectors, boundary links, defects, impurities,
+  interfaces, and disorder annotations
+- Spin textures and local expectation-value arrows where state data is
+  available
+- Reusable layout controls that do not alter physical geometry
+
+### Reciprocal-space and matrix views
+
+- Reciprocal lattices, Brillouin zones, high-symmetry points, and momentum paths
+- Hamiltonian magnitude, phase, sparsity, block structure, and basis labels
+- Clear distinction between physical adjacency diagrams and matrix-connectivity
+  diagrams
+
+### Analysis plots and output formats
+
+- Standard plots for spectra, bands, density of states, occupations,
+  correlations, entanglement, dynamics, and parameter sweeps
+- SVG, PNG, and PDF figure output
+- Graphviz DOT and styled NetworkX export
+- CSV and JSON export for underlying plot coordinates and tabular results
+- Deterministic visual defaults suitable for documentation and regression
+  testing
+
+Physical data and declarative visual metadata may be portable. Rendered image
+bytes should remain derived artifacts rather than being embedded in
+`ModelSpec`.
+
+## Priority 6: Result and Visual-Artifact Records
+
+Add a compact portable record that connects numerical and visual outputs to the
+model and analysis that produced them.
+
+- Source model identity or embedded portable specification
+- Analysis name, parameters, coordinate labels, and numerical results
+- Solver method, tolerances, residuals, convergence status, and warnings
+- Declarative plot or diagram specifications, including selections, labels,
+  styling, and annotations
+- Generated table, figure, diagram, and plot-data filenames
+- Package version, creation time, references, and provenance
+- Deterministic JSON persistence and bundle integration
+
+These records should support reproducibility and exchange without becoming a
+general workflow engine or embedding large rendered images in model data.
+
+## Priority 7: Reference Analysis
 
 Reference analysis should stay directly connected to model inspection,
 validation, and interchange.
@@ -223,7 +215,7 @@ validation, and interchange.
   control.
 - Return convergence status, tolerances, residuals, and whether a result is
   exact or iterative.
-- Add dry-run estimates before expensive construction or diagonalization.
+- Add pre-diagonalization cost and solver-selection estimates.
 - Add degeneracy and commutator-based conserved-quantity diagnostics.
 
 This should remain a compact interface, not a replacement for specialized
@@ -266,7 +258,7 @@ many-body solver packages.
 Checkpointing, distributed execution, and general workflow orchestration should
 be delegated to external tools.
 
-## Priority 5: Symmetry-Reduced Bases
+## Priority 8: Symmetry-Reduced Bases
 
 Reduced bases should be added where the conserved quantity is explicit and the
 mapping to the full basis is testable.
@@ -277,8 +269,9 @@ mapping to the full basis is testable.
 - Consider spin-inversion or parity sectors where they offer a clear benefit.
 - Consider translation sectors only after periodic geometry and momentum
   conventions stabilize.
-- Preserve sector labels, basis-state mappings, and resource estimates.
-- Validate sector spectra and observables against full-space blocks.
+
+New sectors must preserve labels, basis-state mappings, and resource estimates,
+and their spectra and observables must be validated against full-space blocks.
 
 ## Model Families
 
@@ -309,8 +302,12 @@ documented conventions, reference checks, and a concrete interchange use case.
 
 ### Planned adapters
 
-- NetworkX and GraphML
 - ASE or pymatgen structure import, including selected CIF workflows
+- XYZ and selected structure/coordinate formats where model semantics remain
+  explicit
+- SVG and Graphviz DOT diagram export
+- Styled NetworkX graph export
+- CSV and JSON export for observables, coordinates, and plot data
 - OpenFermion operator export
 - Expanded PennyLane and Qiskit export
 - QuSpin, NetKet, or QuTiP adapters where basis mappings are explicit
@@ -325,36 +322,34 @@ documented conventions, reference checks, and a concrete interchange use case.
 
 ## Scientific Verification and Project Maturity
 
-Every built-in model and format should document and test its conventions.
+Future maturity work:
 
-- Basis ordering and local-state conventions
-- Operator normalization and signs
-- Gauge choices and boundary conditions
-- Parameter units and references
-- Analytic limits and known spectra or eigenstates
-- Dense/sparse/reduced equivalence where applicable
 - Gauge-equivalent constructions where applicable
-- Import/export round trips and malformed-input failures
-- Supported Python-version policy
 - Type-complete public API and `py.typed`
 - Coverage expectations and representative benchmarks
 - Installation and CLI tests from built wheels
-- Reproducible release and generated-documentation checks
 
 ## Near-Term Backlog
 
 Recommended implementation order:
 
 1. Design periodic unit-cell and displacement-vector geometry.
-2. Add Bloch Hamiltonians and band-structure workflows.
-3. Add Berry/Zak phases and winding numbers, followed by Haldane Chern-number
-   validation.
-4. Add compact dense/sparse dynamics and quench helpers.
-5. Add fixed-particle-number Hubbard sectors.
-6. Add lightweight sweeps and finite-size summaries.
-7. Add small-system thermal observables and broadened spectral helpers.
-8. Add high-value benchmark models only when their conventions and validation
-    are ready.
+2. Add reusable lattice and interaction-graph SVG and
+   plot-data export.
+3. Add Bloch Hamiltonians, band structures, reciprocal-space diagrams, and
+   Brillouin-zone paths.
+4. Add portable result and declarative visual-artifact records integrated with
+   export bundles.
+5. Add Berry/Zak phases and winding numbers, followed by Haldane Chern-number
+   validation and corresponding plots.
+6. Add compact dense/sparse dynamics and quench helpers with expectation-value
+   plots.
+7. Add fixed-particle-number Hubbard sectors.
+8. Add lightweight sweeps, finite-size summaries, and machine-readable plot
+    data.
+9. Add small-system thermal observables and broadened spectral helpers.
+10. Add high-value benchmark models only when their conventions, diagrams, and
+    validation are ready.
 
 ## Explicit Non-Goals
 
@@ -366,6 +361,7 @@ The project is not intended to:
   resumable execution engine.
 - Hide exponential Hilbert-space scaling from users.
 - Infer a physically complete model from atomic coordinates alone.
+- Treat a visually plausible diagram as sufficient physical model data.
 - Promise lossless conversion to every external package or basis convention.
 - Treat single-particle, BdG, spin, bosonic, and fermionic matrices as
   interchangeable.

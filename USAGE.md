@@ -32,7 +32,11 @@ notebooks/13_hamiltonian_structure_gallery.ipynb
 notebooks/14_sparse_dense_scaling.ipynb
 notebooks/15_pennylane_export.ipynb
 notebooks/16_model_registry_and_cli.ipynb
-notebooks/17_cli_plot_walkthrough.ipynb
+notebooks/17_portable_physical_system_records.ipynb
+notebooks/18_model_import_export_and_bundles.ipynb
+notebooks/19_graph_spin_model_workflow.ipynb
+notebooks/20_fixed_magnetization_spin_sectors.ipynb
+notebooks/21_lattice_import_and_transformations.ipynb
 ```
 
 ## Transverse-Field Ising Chain
@@ -176,6 +180,24 @@ $\{|0\rangle,\ldots,|n_{\max}\rangle\}$, where $n_{\max}$ is
 `max_occupancy`.
 The Fermi-Hubbard builder uses orbital order
 $(0\uparrow,0\downarrow,1\uparrow,1\downarrow,\ldots)$.
+
+Portable specifications expose the same conventions directly:
+
+```python
+from quantum_lattice_models import create_model_spec
+
+bose_spec = create_model_spec(
+    "bose_hubbard_chain",
+    parameters={"n_sites": 3, "max_occupancy": 2},
+)
+fermi_spec = create_model_spec(
+    "fermi_hubbard_chain",
+    parameters={"n_sites": 3},
+)
+
+print(bose_spec.local_degrees)   # one truncated boson factor per site
+print(fermi_spec.local_degrees)  # up/down fermionic modes per site
+```
 
 Sparse variants are available for larger small-system workflows:
 
@@ -342,8 +364,10 @@ graph and state plots do not need duplicate coordinate arguments:
 import numpy as np
 
 from quantum_lattice_models import Lattice, custom_tight_binding
+from quantum_lattice_models import create_model_spec
 from quantum_lattice_models.plotting import (
     plot_hamiltonian_matrix,
+    plot_interaction_graph,
     plot_lattice_graph,
     plot_lattice_state,
     plot_parameter_sweep,
@@ -361,6 +385,32 @@ plot_hamiltonian_matrix(H, mode="phase")
 
 values, vectors = eigensystem(H)
 plot_lattice_state(H, vectors[:, 0])
+
+spin_model = create_model_spec(
+    "xxz_chain",
+    parameters={"n_sites": 4, "coupling": 1.0, "anisotropy": 0.7},
+)
+plot_interaction_graph(spin_model)
+```
+
+`plot_interaction_graph` also supports Hubbard and BdG specifications and
+offsets multiple local modes that share a physical site.
+
+Portable arbitrary spin graphs can be constructed from existing spin records:
+
+```python
+from quantum_lattice_models import (
+    SpinField,
+    SpinInteraction,
+    create_graph_spin_spec,
+)
+
+graph_model = create_graph_spin_spec(
+    3,
+    interactions=(SpinInteraction(0, 2, "X", "Z", 0.3),),
+    fields=(SpinField(1, "Y", -0.2),),
+)
+plot_interaction_graph(graph_model)
 ```
 
 `plot_spectrum(..., highlight_gap=True, zero_line=True)` can emphasize the
@@ -616,6 +666,7 @@ Additional plotting helpers include:
 - `plot_hofstadter_butterfly`
 - `plot_parameter_sweep`
 - `plot_lattice_graph`
+- `plot_interaction_graph`
 - `plot_lattice_state`
 - `plot_hamiltonian_matrix`
 - `apply_plot_style`
@@ -634,17 +685,16 @@ If PennyLane is not installed, `to_pennylane_terms` raises an `ImportError` with
 
 ## Command-Line Examples
 
-Each example saves one PNG under `images/`:
+Examples produce focused figures under `images/` or portable artifacts under
+`results/examples/`:
 
 ```bash
-python examples/ising_spectrum.py
-python examples/heisenberg_density.py
+python examples/heisenberg_density_of_states.py
 python examples/ssh_edge_state.py
-python examples/tight_binding_spectrum.py
-python examples/rice_mele_spectrum.py
 python examples/hofstadter_butterfly.py
-python examples/bose_hubbard_spectrum.py
-python examples/haldane_spectrum.py
 python examples/kagome_graph.py
-python examples/hamiltonian_matrix.py
+python examples/haldane_matrix_structure.py
+python examples/physical_interaction_graph.py
+python examples/portable_model_bundle.py
+python examples/external_matrix_import.py
 ```

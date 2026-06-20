@@ -18,7 +18,7 @@ def main() -> None:
     H = heisenberg_chain(n_sites=5, jx=1.0, jy=1.0, jz=1.0, field=0.2)
     ax = plot_density_of_states(H, bins=16)
     ax.figure.tight_layout()
-    ax.figure.savefig(output_dir / "heisenberg_density.png", dpi=160)
+    ax.figure.savefig(output_dir / "heisenberg_density_of_states.png", dpi=160)
     plt.close(ax.figure)
 
 

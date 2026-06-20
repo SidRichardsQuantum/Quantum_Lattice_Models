@@ -122,10 +122,88 @@ NPZ exports are self-contained and preserve metadata for dense and CSR sparse
 matrices. NPY exports support dense matrices and write a matching
 `.npy.json` metadata sidecar.
 
+External Hamiltonians can be imported without assigning them to a registered
+builder:
+
+```bash
+quantum-lattice import-matrix external.npy \
+  --metadata external-metadata.json \
+  --output portable.npz
+quantum-lattice inspect portable.npz
+quantum-lattice spectrum portable.npz
+```
+
+Imported matrices use the explicit `external_matrix` family. They retain their
+basis, optional lattice geometry, units, conventions, references, and
+provenance, but cannot be reconstructed if the persisted matrix is discarded.
+
+Exports can select a single artifact or create a deterministic directory
+bundle:
+
+```bash
+quantum-lattice export model.json --artifact model --output exported-model.json
+quantum-lattice export model.json --artifact lattice --output lattice.json
+quantum-lattice export model.json --artifact metadata --output metadata.json
+quantum-lattice export model.json --artifact bundle --output model.bundle
+```
+
+A bundle contains `matrix.npz`, `model.json`, `metadata.json`, optional
+`lattice.json`, and `manifest.json`. The default `--artifact matrix` behavior
+remains unchanged.
+
 Spin models now share a graph-based sparse construction backend. Existing dense
 builders retain their return types, while matching sparse builders are
 available with a `_sparse` suffix. Arbitrary spin graphs can use
 `SpinInteraction`, `SpinField`, and `graph_spin_hamiltonian_sparse`.
+
+Portable specifications for Ising, Heisenberg, XXZ, SSH, and custom
+tight-binding models also describe their physical local degrees of freedom,
+basis ordering, and onsite or two-body interactions:
+
+```python
+from quantum_lattice_models import create_model_spec
+from quantum_lattice_models.plotting import plot_interaction_graph
+
+model = create_model_spec(
+    "xxz_chain",
+    parameters={"n_sites": 4, "coupling": 1.0, "anisotropy": 0.7},
+)
+
+print(model.local_degrees)
+print(model.basis_mappings)
+print(model.interactions)
+plot_interaction_graph(model)
+```
+
+For spin models, basis mappings identify local tensor-factor order rather than
+Hamiltonian row indices. For single-particle models, they identify direct
+matrix-basis indices.
+
+The same representation covers truncated Bose-Hubbard factors, spin-resolved
+Fermi-Hubbard modes, and Kitaev BdG particle/hole components. Multiple local
+modes on one physical site remain distinct and are offset in interaction
+diagrams.
+
+Arbitrary spin graphs can be made portable:
+
+```python
+from quantum_lattice_models import (
+    SpinField,
+    SpinInteraction,
+    create_graph_spin_spec,
+)
+
+model = create_graph_spin_spec(
+    3,
+    interactions=(
+        SpinInteraction(0, 1, "X", "Y", 0.25),
+        SpinInteraction(1, 2, "Z", "Z", -0.7),
+    ),
+    fields=(SpinField(2, "X", 0.4),),
+    positions=((0.0, 0.0), (1.0, 0.0), (0.5, 0.8)),
+)
+H = model.hamiltonian(sparse=True)
+```
 
 XXZ and Heisenberg chains with equal $XX$ and $YY$ couplings can also be built
 directly in a fixed total Pauli-$Z$ magnetization sector:
@@ -335,7 +413,11 @@ Current notebooks, numbered in the recommended learning order:
 - `notebooks/14_sparse_dense_scaling.ipynb`
 - `notebooks/15_pennylane_export.ipynb`
 - `notebooks/16_model_registry_and_cli.ipynb`
-- `notebooks/17_cli_plot_walkthrough.ipynb`
+- `notebooks/17_portable_physical_system_records.ipynb`
+- `notebooks/18_model_import_export_and_bundles.ipynb`
+- `notebooks/19_graph_spin_model_workflow.ipynb`
+- `notebooks/20_fixed_magnetization_spin_sectors.ipynb`
+- `notebooks/21_lattice_import_and_transformations.ipynb`
 
 ## Development
 

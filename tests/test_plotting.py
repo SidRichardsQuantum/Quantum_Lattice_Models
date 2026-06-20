@@ -7,6 +7,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
+from quantum_lattice_models import create_model_spec
 from quantum_lattice_models.models import (
     Lattice,
     custom_tight_binding,
@@ -17,6 +18,7 @@ from quantum_lattice_models.plotting import (
     plot_density,
     plot_hamiltonian_matrix,
     plot_hofstadter_butterfly,
+    plot_interaction_graph,
     plot_lattice_graph,
     plot_lattice_state,
     plot_parameter_sweep,
@@ -98,4 +100,39 @@ def test_parameter_sweep_plotter() -> None:
         parameter_name="Hopping",
     )
     assert ax.get_xlabel() == "Hopping"
+    plt.close(ax.figure)
+
+
+def test_interaction_graph_consumes_portable_spin_and_hopping_terms() -> None:
+    spin = create_model_spec(
+        "xxz_chain",
+        parameters={"n_sites": 3, "coupling": 1.0, "anisotropy": 0.5, "field": 0.2},
+    )
+    ax = plot_interaction_graph(spin)
+    assert ax.get_title() == "Physical interaction graph"
+    assert len(ax.lines) == 2
+    assert any("XX=" in text.get_text() for text in ax.texts)
+    assert any("Z=0.2" in text.get_text() for text in ax.texts)
+    plt.close(ax.figure)
+
+    ssh = create_model_spec("ssh_model", parameters={"n_cells": 2})
+    ax = plot_interaction_graph(ssh, show_coefficients=False)
+    assert len(ax.lines) == 3
+    assert {text.get_text() for text in ax.texts} >= {"A0", "B0", "A1", "B1"}
+    plt.close(ax.figure)
+
+
+def test_interaction_graph_offsets_multiple_modes_on_one_site() -> None:
+    fermi = create_model_spec("fermi_hubbard_chain", parameters={"n_sites": 2})
+    ax = plot_interaction_graph(fermi, show_coefficients=False)
+    offsets = ax.collections[0].get_offsets()
+
+    assert offsets.shape == (4, 2)
+    assert offsets[0, 1] != offsets[1, 1]
+    assert offsets[2, 1] != offsets[3, 1]
+    plt.close(ax.figure)
+
+    bdg = create_model_spec("kitaev_chain_bdg", parameters={"n_sites": 2})
+    ax = plot_interaction_graph(bdg, show_coefficients=False)
+    assert ax.collections[0].get_offsets().shape == (4, 2)
     plt.close(ax.figure)

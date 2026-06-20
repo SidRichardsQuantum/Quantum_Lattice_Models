@@ -29,7 +29,7 @@ def main() -> None:
     plot_hamiltonian_matrix(H, ax=axes[1], mode="phase")
     axes[1].set_title("Haldane hopping phase")
     figure.tight_layout()
-    figure.savefig(output_dir / "hamiltonian_matrix.png", dpi=160)
+    figure.savefig(output_dir / "haldane_matrix_structure.png", dpi=160)
     plt.close(figure)
 
 

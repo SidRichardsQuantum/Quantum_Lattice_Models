@@ -8,8 +8,29 @@ from pathlib import Path
 import numpy as np
 import scipy.sparse as sp
 
-from quantum_lattice_models.specs import ModelSpec
+from quantum_lattice_models.diagnostics import is_hermitian
+from quantum_lattice_models.physical import (
+    BasisIndexMapping,
+    InteractionTerm,
+    LocalDegreeOfFreedom,
+)
+from quantum_lattice_models.specs import EXTERNAL_MATRIX_FAMILY, LatticeSpec, ModelSpec
 from quantum_lattice_models.types import HamiltonianResult
+
+_IMPORT_METADATA_FIELDS = {
+    "basis",
+    "basis_dimension",
+    "lattice",
+    "local_degrees",
+    "basis_mappings",
+    "interactions",
+    "units",
+    "conventions",
+    "references",
+    "provenance",
+    "metadata",
+}
+EXPORT_ARTIFACTS = ("matrix", "metadata", "model", "lattice", "bundle")
 
 
 def save_hamiltonian(
@@ -81,13 +102,166 @@ def load_hamiltonian(path: str | Path) -> HamiltonianResult:
         raise ValueError("Hamiltonian path must end in .npy or .npz.")
 
     model = ModelSpec.from_dict(metadata["model"])
+    representation = "sparse" if sp.issparse(matrix) else "dense"
+    expected_shape = metadata.get("matrix_shape")
+    if expected_shape is not None and list(matrix.shape) != expected_shape:
+        raise ValueError("Stored matrix shape does not match its metadata.")
+    if metadata.get("representation") != representation:
+        raise ValueError("Stored matrix representation does not match its metadata.")
+    if model.representation != representation:
+        raise ValueError("Stored matrix representation does not match its model specification.")
+    if metadata.get("basis") != model.basis:
+        raise ValueError("Stored matrix basis does not match its model specification.")
+    if model.family == EXTERNAL_MATRIX_FAMILY:
+        expected_dimension = model.metadata.get("matrix_dimension")
+        if expected_dimension != matrix.shape[0]:
+            raise ValueError("Stored external matrix dimension does not match its metadata.")
     return HamiltonianResult(
         matrix=matrix,
         model=model,
         basis=str(metadata["basis"]),
-        representation=str(metadata["representation"]),
+        representation=representation,
         metadata=dict(metadata.get("metadata", {})),
     )
+
+
+def import_hamiltonian(
+    path: str | Path,
+    *,
+    metadata_path: str | Path,
+    require_hermitian: bool = True,
+) -> HamiltonianResult:
+    """Import an external NPY or NPZ matrix with explicit portable metadata."""
+
+    source = Path(path)
+    metadata_source = Path(metadata_path)
+    decoded = json.loads(metadata_source.read_text())
+    if not isinstance(decoded, dict):
+        raise ValueError("External matrix metadata must contain a JSON object.")
+    unknown = sorted(set(decoded) - _IMPORT_METADATA_FIELDS)
+    if unknown:
+        raise ValueError(f"Unknown external matrix metadata fields: {', '.join(unknown)}.")
+
+    basis = decoded.get("basis")
+    if not isinstance(basis, str) or not basis.strip():
+        raise ValueError("External matrix metadata requires a nonempty 'basis' string.")
+    lattice_data = decoded.get("lattice")
+    if lattice_data is not None and not isinstance(lattice_data, dict):
+        raise ValueError("External matrix metadata 'lattice' must be an object or null.")
+    lattice = None if lattice_data is None else LatticeSpec.from_dict(lattice_data)
+    local_degrees = tuple(
+        LocalDegreeOfFreedom.from_dict(record)
+        for record in _metadata_records(decoded.get("local_degrees", []), "local_degrees")
+    )
+    basis_mappings = tuple(
+        BasisIndexMapping.from_dict(record)
+        for record in _metadata_records(decoded.get("basis_mappings", []), "basis_mappings")
+    )
+    interactions = tuple(
+        InteractionTerm.from_dict(record)
+        for record in _metadata_records(decoded.get("interactions", []), "interactions")
+    )
+
+    matrix = _load_external_matrix(source)
+    basis_dimension = decoded.get("basis_dimension")
+    if basis_dimension is not None and (
+        not isinstance(basis_dimension, int) or isinstance(basis_dimension, bool)
+    ):
+        raise ValueError("External matrix metadata 'basis_dimension' must be an integer.")
+    _validate_external_matrix(
+        matrix,
+        basis_dimension=basis_dimension,
+        require_hermitian=require_hermitian,
+    )
+    representation = "sparse" if sp.issparse(matrix) else "dense"
+    dimension = int(matrix.shape[0])
+    provenance = _object_mapping(decoded.get("provenance", {}), "provenance")
+    provenance = {
+        **provenance,
+        "import": {
+            "format": source.suffix.lower().lstrip("."),
+            "source": str(source),
+            "metadata_source": str(metadata_source),
+        },
+    }
+    user_metadata = _object_mapping(decoded.get("metadata", {}), "metadata")
+    model = ModelSpec(
+        family=EXTERNAL_MATRIX_FAMILY,
+        basis=basis,
+        representation=representation,
+        lattice=lattice,
+        local_degrees=local_degrees,
+        basis_mappings=basis_mappings,
+        interactions=interactions,
+        units=_string_mapping(decoded.get("units", {}), "units"),
+        conventions=_string_mapping(decoded.get("conventions", {}), "conventions"),
+        references=_string_list(decoded.get("references", []), "references"),
+        provenance=provenance,
+        metadata={**user_metadata, "matrix_dimension": dimension},
+    )
+    model.validate()
+    return HamiltonianResult(
+        matrix=matrix,
+        model=model,
+        basis=basis,
+        representation=representation,
+        metadata={
+            "imported": True,
+            "source_format": source.suffix.lower().lstrip("."),
+            "hermitian": is_hermitian(matrix),
+        },
+    )
+
+
+def export_hamiltonian_artifact(
+    source: HamiltonianResult | ModelSpec,
+    path: str | Path,
+    *,
+    artifact: str = "matrix",
+    format: str = "npz",
+) -> tuple[Path, ...]:
+    """Export one portable artifact or a deterministic directory bundle."""
+
+    if artifact not in EXPORT_ARTIFACTS:
+        raise ValueError(f"Artifact must be one of: {', '.join(EXPORT_ARTIFACTS)}.")
+    output = Path(path)
+    if artifact == "model":
+        model = source.model if isinstance(source, HamiltonianResult) else source
+        return (model.save(_with_suffix(output, "json")),)
+    if artifact == "lattice":
+        model = source.model if isinstance(source, HamiltonianResult) else source
+        if model.lattice is None:
+            raise ValueError("Export source does not contain portable lattice data.")
+        return (_write_json(_with_suffix(output, "json"), model.lattice.to_dict()),)
+    if not isinstance(source, HamiltonianResult):
+        raise ValueError(f"Artifact {artifact!r} requires a constructed Hamiltonian result.")
+    result = source
+    if artifact == "matrix":
+        return (save_hamiltonian(result, output, format=format),)
+    if artifact == "metadata":
+        return (_write_json(_with_suffix(output, "json"), result.to_metadata()),)
+
+    _prepare_bundle_directory(output)
+    matrix = save_hamiltonian(result, output / f"matrix.{format}", format=format)
+    model = result.model.save(output / "model.json")
+    metadata = _write_json(output / "metadata.json", result.to_metadata())
+    paths = [matrix]
+    if format == "npy":
+        paths.append(metadata_path(matrix))
+    paths.extend((model, metadata))
+    if result.model.lattice is not None:
+        paths.append(_write_json(output / "lattice.json", result.model.lattice.to_dict()))
+    manifest = _write_json(
+        output / "manifest.json",
+        {
+            "artifact": "quantum-lattice-hamiltonian-bundle",
+            "files": [item.name for item in paths],
+            "format": format,
+            "schema_version": result.model.schema_version,
+        },
+    )
+    paths.append(manifest)
+    return tuple(paths)
 
 
 def metadata_path(matrix_path: str | Path) -> Path:
@@ -95,6 +269,104 @@ def metadata_path(matrix_path: str | Path) -> Path:
 
     path = Path(matrix_path)
     return path.with_suffix(path.suffix + ".json")
+
+
+def _load_external_matrix(path: Path) -> np.ndarray | sp.csr_matrix:
+    if path.suffix.lower() == ".npy":
+        return np.asarray(np.load(path, allow_pickle=False))
+    if path.suffix.lower() != ".npz":
+        raise ValueError("External matrix path must end in .npy or .npz.")
+
+    with np.load(path, allow_pickle=False) as archive:
+        keys = set(archive.files)
+        if "matrix" in keys:
+            return np.asarray(archive["matrix"])
+        if {"data", "indices", "indptr", "shape"} <= keys:
+            shape_values = np.asarray(archive["shape"]).reshape(-1)
+            if shape_values.size != 2:
+                raise ValueError("Sparse NPZ shape must contain exactly two dimensions.")
+            shape = tuple(int(value) for value in shape_values)
+            return sp.csr_matrix(
+                (archive["data"], archive["indices"], archive["indptr"]),
+                shape=shape,
+            )
+        if len(keys) == 1:
+            return np.asarray(archive[next(iter(keys))])
+    raise ValueError(
+        "NPZ matrix must contain 'matrix', one unnamed array, or CSR "
+        "'data', 'indices', 'indptr', and 'shape' arrays."
+    )
+
+
+def _validate_external_matrix(
+    matrix: np.ndarray | sp.spmatrix,
+    *,
+    basis_dimension: int | None,
+    require_hermitian: bool,
+) -> None:
+    if len(matrix.shape) != 2 or matrix.shape[0] < 1 or matrix.shape[0] != matrix.shape[1]:
+        raise ValueError("External Hamiltonian matrix must be nonempty and square.")
+    values = matrix.data if sp.issparse(matrix) else np.asarray(matrix)
+    if not np.issubdtype(values.dtype, np.number):
+        raise ValueError("External Hamiltonian matrix must contain numeric values.")
+    if not np.all(np.isfinite(values)):
+        raise ValueError("External Hamiltonian matrix must contain only finite values.")
+    if basis_dimension is not None and basis_dimension != matrix.shape[0]:
+        raise ValueError(
+            "External matrix dimension must equal metadata basis_dimension when supplied."
+        )
+    if require_hermitian and not is_hermitian(matrix):
+        raise ValueError(
+            "External Hamiltonian matrix must be Hermitian; "
+            "set require_hermitian=False to import a non-Hermitian matrix."
+        )
+
+
+def _object_mapping(value: object, name: str) -> dict[str, object]:
+    if not isinstance(value, dict) or not all(isinstance(key, str) for key in value):
+        raise ValueError(f"External matrix metadata '{name}' must be an object.")
+    return dict(value)
+
+
+def _string_mapping(value: object, name: str) -> dict[str, str]:
+    mapping = _object_mapping(value, name)
+    if not all(isinstance(item, str) for item in mapping.values()):
+        raise ValueError(f"External matrix metadata '{name}' values must be strings.")
+    return {key: str(item) for key, item in mapping.items()}
+
+
+def _string_list(value: object, name: str) -> tuple[str, ...]:
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ValueError(f"External matrix metadata '{name}' must be a list of strings.")
+    return tuple(value)
+
+
+def _metadata_records(value: object, name: str) -> list[dict[str, object]]:
+    if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+        raise ValueError(f"External matrix metadata '{name}' must be a list of objects.")
+    return value
+
+
+def _write_json(path: Path, value: object) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+    return path
+
+
+def _prepare_bundle_directory(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    for name in (
+        "matrix.npy",
+        "matrix.npy.json",
+        "matrix.npz",
+        "model.json",
+        "metadata.json",
+        "lattice.json",
+        "manifest.json",
+    ):
+        candidate = path / name
+        if candidate.exists():
+            candidate.unlink()
 
 
 def _with_suffix(path: Path, output_format: str) -> Path:
