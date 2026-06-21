@@ -7,7 +7,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from typing import get_args, get_type_hints
 
-from quantum_lattice_models import hubbard, lattice, spin, tight_binding, topological
+import numpy as np
+
+from quantum_lattice_models import benchmarks, hubbard, lattice, spin, tight_binding, topological
 
 
 @dataclass(frozen=True)
@@ -93,6 +95,13 @@ _PARAMETER_DESCRIPTIONS = {
     "periodic_y": "Enable periodic boundaries along y.",
     "hermitian": "Add Hermitian-conjugate reverse bonds.",
     "bonds": "Custom bond as source,target or source,target,value.",
+    "disorder": "Disorder amplitude.",
+    "seed": "Reproducible random seed.",
+    "power": "Power-law decay exponent.",
+    "diagonal_hopping": "Diagonal hopping amplitude.",
+    "mass": "Sublattice or leg mass term.",
+    "base_hopping": "Sawtooth-chain base hopping.",
+    "tooth_hopping": "Sawtooth-chain tooth hopping.",
 }
 
 _EXCLUDED_CLI_PARAMETERS = {"lattice", "positions", "model_name"}
@@ -490,6 +499,74 @@ MODEL_REGISTRY: dict[str, ModelInfo] = {
         {"n_rows": 4, "n_cols": 4, "t1": 1.0, "t2": 0.18},
     ),
 }
+
+for _builder, _category, _basis, _dimension, _description, _defaults in (
+    (
+        benchmarks.anderson_chain,
+        "tight_binding",
+        "single particle",
+        "n_sites",
+        "Anderson-disordered tight-binding chain",
+        {"n_sites": 16, "hopping": 1.0, "disorder": 2.0, "seed": 0},
+    ),
+    (
+        benchmarks.long_range_tight_binding_chain,
+        "tight_binding",
+        "single particle",
+        "n_sites",
+        "Power-law long-range tight-binding chain",
+        {"n_sites": 12, "hopping": 1.0, "power": 3.0},
+    ),
+    (
+        benchmarks.creutz_ladder,
+        "topological",
+        "single particle",
+        "2*n_cells",
+        "Creutz ladder",
+        {"n_cells": 8, "hopping": 1.0, "diagonal_hopping": 1.0, "flux": np.pi},
+    ),
+    (
+        benchmarks.sawtooth_chain,
+        "tight_binding",
+        "single particle",
+        "2*n_cells",
+        "Sawtooth flat-band chain",
+        {"n_cells": 8, "base_hopping": 1.0, "tooth_hopping": np.sqrt(2.0)},
+    ),
+    (
+        benchmarks.lieb_lattice,
+        "tight_binding",
+        "single particle",
+        "3*n_rows*n_cols",
+        "Finite Lieb flat-band lattice",
+        {"n_rows": 3, "n_cols": 3, "hopping": 1.0},
+    ),
+    (
+        benchmarks.xyz_chain,
+        "spin",
+        "qubit",
+        "2**n_sites",
+        "XYZ spin chain",
+        {"n_sites": 4, "jx": 1.0, "jy": 0.8, "jz": 0.6},
+    ),
+    (
+        benchmarks.random_field_heisenberg_chain,
+        "spin",
+        "qubit",
+        "2**n_sites",
+        "Random-field Heisenberg chain",
+        {"n_sites": 4, "coupling": 1.0, "disorder": 1.0, "seed": 0},
+    ),
+):
+    MODEL_REGISTRY[_builder.__name__] = _info(
+        _category,
+        _basis,
+        _dimension,
+        "LatticeHamiltonian" if _basis == "single particle" else "DenseHamiltonian",
+        _description,
+        _builder,
+        _defaults,
+    )
 
 MODEL_PRESETS: dict[str, ModelPreset] = {
     "ssh_trivial": ModelPreset(

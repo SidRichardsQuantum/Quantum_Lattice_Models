@@ -1,5 +1,65 @@
 # Changelog
 
+## v0.1.7
+
+This release adds a portable periodic-lattice layer, generic Bloch and band
+analysis, deterministic visual-data exports, spatial lattice transformations,
+reference topological invariants, and reproducible analysis-result records.
+
+### Added
+
+- Versioned periodic unit cells with primitive and reciprocal vectors, orbital
+  positions, cell-displacement bonds, onsite terms, labels, and JSON
+  persistence.
+- Generic cell- and orbital-gauge Bloch Hamiltonians, momentum paths, band
+  energies, eigenvectors, plotting, and CSV or JSON export.
+- Periodic SSH, Rice-Mele, square, honeycomb, kagome, and Haldane constructors.
+- Finite supercell expansion with independently selectable periodic axes.
+- Deterministic SVG and plot-data exports for lattices, periodic diagrams,
+  physical interaction graphs, and band structures.
+- Impurity and domain-wall potentials, twisted boundaries, and distance-based
+  power-law bond generation.
+- Discretized Zak phases, two-band chiral winding numbers, and
+  Fukui-Hatsugai-Suzuki Chern numbers.
+- CLI workflows for periodic model creation, bands, topology, and SVG export.
+- Analytic dispersion and topological-phase validation for SSH, square, and
+  Haldane models.
+- Versioned `AnalysisResult` records carrying source identity, parameters,
+  coordinates, numerical arrays, solver details, warnings, declarative plot
+  metadata, package version, provenance, and optional creation time.
+- Deterministic readable JSON and compressed self-contained NPZ
+  analysis-result persistence.
+- Portable result producers for spectra, band structures, Zak phases, winding
+  and Chern numbers, and spin magnetization or correlation observables.
+- Hamiltonian bundles with optional `analyses/` records and manifest entries.
+- The `inspect-result`, `export-result`, and `plot-result` commands, plus
+  `--result-output` support for spectrum, band, and topology workflows.
+- Plot regeneration from stored spectrum, band, scalar-topology, and observable
+  results without reconstructing the source Hamiltonian.
+- Structured dense and sparse eigensolver selection with sparse-to-dense
+  safeguards, residuals, convergence metadata, degeneracy groups, and memory
+  estimates.
+- Gauge-invariant Berry-curvature meshes, occupied-subspace Wilson loops,
+  reciprocal-space records, and corresponding heatmap or reciprocal diagrams.
+- Dense and sparse time evolution, quench workflows, expectation-value time
+  series, and Loschmidt amplitudes and echoes.
+- One- and two-parameter sweeps, finite-size studies, extrema metadata, and
+  reusable line or heatmap result plots.
+- Fixed-particle-number Bose-Hubbard bases, sparse sector Hamiltonians,
+  embedding, and sector-aware site occupations.
+- Stable canonical thermal reference calculations for partition functions,
+  internal and free energy, entropy, heat capacity, and thermal expectations.
+- Single-particle occupations, bond currents, mixed-axis spin correlations,
+  total-spin diagnostics, and broadened local density of states.
+- Analysis SVG/PDF rendering and matrix real, imaginary, magnitude, phase, and
+  sparsity data export.
+- Anderson, long-range tight-binding, Creutz-ladder, sawtooth, Lieb-lattice,
+  XYZ-chain, and random-field Heisenberg benchmark models.
+
+### Changed
+
+- Updated project version metadata to `0.1.7`.
+
 ## v0.1.6
 
 This release expands portable interchange, adds fixed-magnetization spin

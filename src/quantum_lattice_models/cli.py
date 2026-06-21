@@ -8,6 +8,12 @@ from pathlib import Path
 
 import numpy as np
 
+from quantum_lattice_models.analysis import (
+    load_analysis_result,
+    save_analysis_result,
+    spectrum_result,
+    topology_result,
+)
 from quantum_lattice_models.comparison import compare_models
 from quantum_lattice_models.diagnostics import diagnose_matrix, inspect_model
 from quantum_lattice_models.interchange import (
@@ -17,7 +23,21 @@ from quantum_lattice_models.interchange import (
     import_lattice_csv,
 )
 from quantum_lattice_models.lattice import Bond
-from quantum_lattice_models.plotting import plot_spectrum
+from quantum_lattice_models.periodic import (
+    haldane_unit_cell,
+    honeycomb_unit_cell,
+    kagome_unit_cell,
+    load_periodic_lattice,
+    rice_mele_unit_cell,
+    square_unit_cell,
+    ssh_unit_cell,
+    standard_momentum_path,
+)
+from quantum_lattice_models.plotting import (
+    plot_analysis_result,
+    plot_band_structure,
+    plot_spectrum,
+)
 from quantum_lattice_models.registry import (
     MODEL_REGISTRY,
     ParameterInfo,
@@ -41,6 +61,20 @@ from quantum_lattice_models.storage import (
     load_hamiltonian,
     save_hamiltonian,
 )
+from quantum_lattice_models.topology import chern_number, winding_number, zak_phase
+from quantum_lattice_models.visual_export import (
+    export_band_data,
+    export_periodic_svg,
+)
+
+_PERIODIC_BUILDERS = {
+    "ssh": ssh_unit_cell,
+    "rice-mele": rice_mele_unit_cell,
+    "square": square_unit_cell,
+    "honeycomb": honeycomb_unit_cell,
+    "kagome": kagome_unit_cell,
+    "haldane": haldane_unit_cell,
+}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -138,6 +172,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     spectrum_parser.add_argument("path", nargs="?", help="Portable model JSON path")
     spectrum_parser.add_argument("--json", action="store_true")
+    spectrum_parser.add_argument("--result-output")
     _add_model_arguments(spectrum_parser, required=False)
 
     export_parser = subparsers.add_parser(
@@ -152,10 +187,75 @@ def main(argv: list[str] | None = None) -> int:
     )
     export_parser.add_argument("--format", choices=("npy", "npz"), default="npz")
     export_parser.add_argument("--output", help="Output file or bundle directory")
+    export_parser.add_argument(
+        "--analysis",
+        action="append",
+        default=[],
+        help="Analysis-result JSON/NPZ path to include in a bundle.",
+    )
 
     plot_parser = subparsers.add_parser("plot", help="Save a spectrum plot for a model")
     _add_model_arguments(plot_parser)
     plot_parser.add_argument("--output", default="spectrum.png", help="Output PNG path")
+
+    periodic_parser = subparsers.add_parser(
+        "create-periodic", help="Create a portable periodic unit-cell JSON file"
+    )
+    periodic_parser.add_argument("family", choices=tuple(_PERIODIC_BUILDERS))
+    periodic_parser.add_argument("--t1", type=float, default=None)
+    periodic_parser.add_argument("--t2", type=float, default=None)
+    periodic_parser.add_argument("--hopping", type=float, default=None)
+    periodic_parser.add_argument("--phi", type=float, default=None)
+    periodic_parser.add_argument("--sublattice-potential", type=float, default=None)
+    periodic_parser.add_argument("--output", required=True)
+
+    bands_parser = subparsers.add_parser(
+        "bands", help="Calculate bands from a periodic unit-cell JSON file"
+    )
+    bands_parser.add_argument("path")
+    bands_parser.add_argument("--points-per-segment", type=int, default=64)
+    bands_parser.add_argument("--data-output")
+    bands_parser.add_argument("--plot-output")
+    bands_parser.add_argument("--result-output")
+    bands_parser.add_argument("--json", action="store_true")
+
+    topology_parser = subparsers.add_parser(
+        "topology", help="Calculate a topological invariant for a periodic model"
+    )
+    topology_parser.add_argument("path")
+    topology_parser.add_argument("invariant", choices=("zak", "winding", "chern"))
+    topology_parser.add_argument("--band", type=int, default=0)
+    topology_parser.add_argument("--n-points", type=int, default=401)
+    topology_parser.add_argument("--mesh", type=int, default=31)
+    topology_parser.add_argument("--occupied-bands", type=int, default=1)
+    topology_parser.add_argument("--result-output")
+    topology_parser.add_argument("--json", action="store_true")
+
+    periodic_svg_parser = subparsers.add_parser(
+        "export-periodic-svg", help="Export a repeated periodic unit-cell diagram"
+    )
+    periodic_svg_parser.add_argument("path")
+    periodic_svg_parser.add_argument("--repeats-x", type=int, default=3)
+    periodic_svg_parser.add_argument("--repeats-y", type=int, default=3)
+    periodic_svg_parser.add_argument("--output", required=True)
+
+    result_inspect_parser = subparsers.add_parser(
+        "inspect-result", help="Inspect a portable analysis-result file"
+    )
+    result_inspect_parser.add_argument("path")
+
+    result_export_parser = subparsers.add_parser(
+        "export-result", help="Convert a portable analysis result between JSON and NPZ"
+    )
+    result_export_parser.add_argument("path")
+    result_export_parser.add_argument("--format", choices=("json", "npz"), required=True)
+    result_export_parser.add_argument("--output", required=True)
+
+    result_plot_parser = subparsers.add_parser(
+        "plot-result", help="Regenerate a plot from a portable analysis result"
+    )
+    result_plot_parser.add_argument("path")
+    result_plot_parser.add_argument("--output", required=True)
 
     args = parser.parse_args(argv)
     if args.command == "models":
@@ -341,6 +441,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "spectrum":
         H = _build_source(args)
         values = np.real_if_close(eigenvalues(H)).real
+        if args.result_output:
+            model = None
+            if args.path is not None and not _is_hamiltonian_path(args.path):
+                model = load_model(args.path)
+            elif args.path is not None:
+                model = load_hamiltonian(args.path).model
+            result = spectrum_result(H, model=model)
+            print(save_analysis_result(result, args.result_output))
         if args.json:
             _print_json({"eigenvalues": values.tolist()})
         else:
@@ -360,6 +468,7 @@ def main(argv: list[str] | None = None) -> int:
             output,
             artifact=args.artifact,
             format=args.format,
+            analyses=tuple(load_analysis_result(path) for path in args.analysis),
         )
         for exported in outputs:
             print(exported)
@@ -372,6 +481,113 @@ def main(argv: list[str] | None = None) -> int:
         output = Path(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
         ax = plot_spectrum(H)
+        ax.figure.tight_layout()
+        ax.figure.savefig(output, dpi=160)
+        plt.close(ax.figure)
+        print(output)
+        return 0
+
+    if args.command == "create-periodic":
+        kwargs = _periodic_parameters(args)
+        periodic = _PERIODIC_BUILDERS[args.family](**kwargs)
+        print(periodic.save(args.output))
+        return 0
+
+    if args.command == "bands":
+        periodic = load_periodic_lattice(args.path)
+        path = standard_momentum_path(
+            periodic,
+            points_per_segment=args.points_per_segment,
+        )
+        bands = periodic.bands(path, eigenvectors=False)
+        analysis = bands.to_analysis_result(
+            periodic=periodic,
+            parameters={"points_per_segment": args.points_per_segment},
+        )
+        if args.result_output:
+            print(save_analysis_result(analysis, args.result_output))
+        if args.data_output:
+            print(export_band_data(bands, args.data_output))
+        if args.plot_output:
+            import matplotlib.pyplot as plt
+
+            output = Path(args.plot_output)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            ax = plot_band_structure(bands)
+            ax.figure.tight_layout()
+            ax.figure.savefig(output, dpi=160)
+            plt.close(ax.figure)
+            print(output)
+        if args.json:
+            _print_json(bands.to_dict())
+        elif not args.data_output and not args.plot_output:
+            for distance, energies in zip(bands.distances, bands.energies, strict=True):
+                print("\t".join([f"{distance:.12g}", *(f"{value:.12g}" for value in energies)]))
+        return 0
+
+    if args.command == "topology":
+        periodic = load_periodic_lattice(args.path)
+        if args.invariant == "zak":
+            value = zak_phase(periodic, band=args.band, n_points=args.n_points)
+            parameters = {"band": args.band, "n_points": args.n_points}
+            solver = {"method": "discrete Wilson loop", "gauge_tolerant": True}
+        elif args.invariant == "winding":
+            value = winding_number(periodic, n_points=args.n_points)
+            parameters = {"n_points": args.n_points}
+            solver = {"method": "unwrapped off-diagonal phase", "gauge_tolerant": True}
+        else:
+            value = chern_number(
+                periodic,
+                occupied_bands=args.occupied_bands,
+                mesh=(args.mesh, args.mesh),
+            )
+            parameters = {
+                "occupied_bands": args.occupied_bands,
+                "mesh": [args.mesh, args.mesh],
+            }
+            solver = {"method": "Fukui-Hatsugai-Suzuki", "gauge_tolerant": True}
+        if args.result_output:
+            result = topology_result(
+                args.invariant,
+                value,
+                periodic=periodic,
+                parameters=parameters,
+                solver=solver,
+            )
+            print(save_analysis_result(result, args.result_output))
+        if args.json:
+            _print_json({"invariant": args.invariant, "value": value})
+        else:
+            print(f"{value:.12g}")
+        return 0
+
+    if args.command == "export-periodic-svg":
+        periodic = load_periodic_lattice(args.path)
+        print(
+            export_periodic_svg(
+                periodic,
+                args.output,
+                repeats=(args.repeats_x, args.repeats_y),
+            )
+        )
+        return 0
+
+    if args.command == "inspect-result":
+        _print_json(load_analysis_result(args.path).summary())
+        return 0
+
+    if args.command == "export-result":
+        result = load_analysis_result(args.path)
+        print(save_analysis_result(result, args.output, format=args.format))
+        return 0
+
+    if args.command == "plot-result":
+        import matplotlib.pyplot as plt
+
+        result = load_analysis_result(args.path)
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        ax = plot_analysis_result(result)
         ax.figure.tight_layout()
         ax.figure.savefig(output, dpi=160)
         plt.close(ax.figure)
@@ -555,6 +771,28 @@ def _print_key_values(value: dict[str, object]) -> None:
         if isinstance(item, (dict, list, tuple)):
             item = json.dumps(item, sort_keys=True, default=_json_default)
         print(f"{key}\t{item}")
+
+
+def _periodic_parameters(args: argparse.Namespace) -> dict[str, object]:
+    supplied = {
+        name: getattr(args, name)
+        for name in ("t1", "t2", "hopping", "phi", "sublattice_potential")
+        if getattr(args, name) is not None
+    }
+    accepted = {
+        "ssh": {"t1", "t2"},
+        "rice-mele": {"t1", "t2", "sublattice_potential"},
+        "square": {"hopping"},
+        "honeycomb": {"hopping"},
+        "kagome": {"hopping"},
+        "haldane": {"t1", "t2", "phi", "sublattice_potential"},
+    }[args.family]
+    unsupported = sorted(set(supplied) - accepted)
+    if unsupported:
+        raise ValueError(
+            f"Periodic family {args.family!r} does not accept: {', '.join(unsupported)}."
+        )
+    return {name: value for name, value in supplied.items() if name in accepted}
 
 
 if __name__ == "__main__":

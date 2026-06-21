@@ -6,8 +6,12 @@ import pytest
 from quantum_lattice_models import (
     LatticeSpec,
     add_lattice_bonds,
+    add_long_range_bonds,
     apply_bond_disorder,
+    apply_domain_wall,
+    apply_impurity_potential,
     apply_onsite_disorder,
+    apply_twisted_boundary,
     lattice_subgraph,
     relabel_lattice,
     remove_lattice_bonds,
@@ -85,3 +89,17 @@ def test_transformation_validation_failures() -> None:
         remove_lattice_sites(lattice, range(4))
     with pytest.raises(ValueError, match="distribution"):
         apply_onsite_disorder(lattice, 1.0, seed=1, distribution="invalid")
+
+
+def test_impurity_domain_wall_twist_and_long_range_transformations() -> None:
+    lattice = _chain()
+    impurity = apply_impurity_potential(lattice, {1: 0.7, 3: -0.2})
+    wall = apply_domain_wall(lattice, position=1.5, left=-0.4, right=0.4)
+    ring = add_lattice_bonds(lattice, [(3, 0, -1.0)])
+    twisted = apply_twisted_boundary(ring, np.pi / 2)
+    long_range = add_long_range_bonds(lattice, min_distance=1.1, max_distance=2.1)
+
+    assert impurity.metadata["onsite_potential"] == [0.0, 0.7, 0.0, -0.2]
+    assert wall.metadata["onsite_potential"] == [-0.4, -0.4, 0.4, 0.4]
+    assert twisted.bonds[-1].value == pytest.approx(-1j)
+    assert {(bond.source, bond.target) for bond in long_range.bonds} >= {(0, 2), (1, 3)}

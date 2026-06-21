@@ -236,6 +236,113 @@ entropy = bipartite_entanglement_entropy(
 )
 ```
 
+## Periodic Unit Cells and Band Topology
+
+Translationally invariant single-particle models use a separate portable
+representation whose bonds carry integer cell displacements:
+
+```python
+from quantum_lattice_models import (
+    ssh_unit_cell,
+    standard_momentum_path,
+    winding_number,
+)
+from quantum_lattice_models.plotting import plot_band_structure
+
+model = ssh_unit_cell(t1=0.4, t2=1.2)
+path = standard_momentum_path(model)
+bands = model.bands(path)
+plot_band_structure(bands)
+print(winding_number(model))
+```
+
+Built-in periodic constructors cover SSH, Rice-Mele, square, honeycomb, kagome,
+and Haldane unit cells. Periodic specifications preserve primitive vectors,
+orbital positions, displacement-vector bonds, conventions, and provenance in
+JSON. They can be expanded into finite `LatticeSpec` supercells.
+
+Equivalent CLI workflows are available:
+
+```bash
+quantum-lattice create-periodic ssh --t1 0.4 --t2 1.2 --output ssh-periodic.json
+quantum-lattice bands ssh-periodic.json --data-output bands.csv --plot-output bands.png
+quantum-lattice topology ssh-periodic.json winding
+```
+
+SVG and underlying plot coordinates can be exported independently of
+Matplotlib. Topological reference analysis includes Zak phases, chiral winding
+numbers, and occupied-subspace Chern numbers.
+
+## Portable Analysis Results
+
+`AnalysisResult` keeps numerical output associated with its source, analysis
+parameters, coordinates, solver details, warnings, provenance, and a
+declarative plot description:
+
+```python
+from quantum_lattice_models import (
+    create_model_spec,
+    save_analysis_result,
+    spectrum_result,
+)
+
+model = create_model_spec("tight_binding_chain", parameters={"n_sites": 8})
+result = spectrum_result(model.hamiltonian(), model=model)
+save_analysis_result(result, "spectrum.npz")
+```
+
+Band structures provide `to_analysis_result()`. Dedicated result producers are
+also available for Zak phases, winding and Chern numbers, and spin
+magnetization or correlation observables. JSON is intended for readable
+exchange; NPZ stores numerical arrays compactly without pickles.
+
+Stored records can be inspected, converted, and plotted without rebuilding the
+Hamiltonian:
+
+```bash
+quantum-lattice spectrum chain.json --result-output spectrum.npz
+quantum-lattice inspect-result spectrum.npz
+quantum-lattice export-result spectrum.npz --format json --output spectrum.json
+quantum-lattice plot-result spectrum.npz --output spectrum.png
+```
+
+Analysis records can be included in deterministic Hamiltonian bundles with
+repeated `--analysis RESULT` options.
+
+## Advanced Reference Analysis
+
+The package includes structured, small-system reference workflows that return
+portable `AnalysisResult` records:
+
+```python
+from quantum_lattice_models import (
+    berry_curvature,
+    evolve_state,
+    solve_eigenpairs,
+    thermal_observables,
+)
+
+solver = solve_eigenpairs(H_sparse, k=4)
+dynamics = evolve_state(H_sparse, initial_state, times)
+thermal = thermal_observables(H_dense, temperatures)
+curvature = berry_curvature(periodic_model, mesh=(31, 31))
+```
+
+Sparse eigensolvers report residuals and reject unexpected complete
+diagonalization of large sparse matrices. Dynamics supports dense matrix
+exponentials and sparse Krylov propagation. Parameter sweeps, finite-size
+studies, Wilson loops, reciprocal-space data, and two-parameter heatmaps use the
+same result and plotting infrastructure.
+
+Fixed-particle-number Bose-Hubbard sectors reduce the truncated occupation
+basis while retaining explicit occupation tuples and embedding support.
+Additional observables cover occupations, currents, mixed spin correlations,
+total spin, and local density of states.
+
+New benchmark families include Anderson and power-law chains, Creutz and
+sawtooth ladders, the flat-band Lieb lattice, XYZ chains, and random-field
+Heisenberg chains.
+
 ## Why Lattice Models Matter
 
 Small lattice Hamiltonians are useful because they are concrete, inspectable testbeds.

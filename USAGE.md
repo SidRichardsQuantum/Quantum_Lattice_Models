@@ -644,6 +644,34 @@ Pass `basis=sector.basis` to the same functions when the state comes from
 `xxz_chain_sector` or `heisenberg_chain_sector`. Correlations and reduced
 density matrices operate directly on the reduced state vector.
 
+## Portable Analysis Results
+
+```python
+from quantum_lattice_models import save_analysis_result, spectrum_result
+from quantum_lattice_models.models import tight_binding_chain
+
+result = spectrum_result(tight_binding_chain(n_sites=6))
+save_analysis_result(result, "spectrum.npz")
+```
+
+Result records can also be created from band structures, topology helpers, and
+spin observables. Stored records support:
+
+```bash
+quantum-lattice inspect-result spectrum.npz
+quantum-lattice export-result spectrum.npz --format json --output spectrum.json
+quantum-lattice plot-result spectrum.npz --output spectrum.png
+```
+
+Use `--result-output` with `spectrum`, `bands`, or `topology`. Bundle exports
+accept repeated `--analysis RESULT` options.
+
+Structured reference helpers such as `solve_eigenpairs`, `evolve_state`,
+`quench_dynamics`, `parameter_sweep`, `two_parameter_sweep`,
+`finite_size_sweep`, `thermal_observables`, `berry_curvature`, and
+`wilson_loop` return the same result type and can be passed directly to
+`plot_analysis_result`.
+
 ## Plotting
 
 ```python

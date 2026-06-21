@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import scipy.sparse as sp
 
+from quantum_lattice_models.analysis import AnalysisResult, save_analysis_result
 from quantum_lattice_models.diagnostics import is_hermitian
 from quantum_lattice_models.physical import (
     BasisIndexMapping,
@@ -219,11 +220,14 @@ def export_hamiltonian_artifact(
     *,
     artifact: str = "matrix",
     format: str = "npz",
+    analyses: tuple[AnalysisResult, ...] = (),
 ) -> tuple[Path, ...]:
     """Export one portable artifact or a deterministic directory bundle."""
 
     if artifact not in EXPORT_ARTIFACTS:
         raise ValueError(f"Artifact must be one of: {', '.join(EXPORT_ARTIFACTS)}.")
+    if artifact != "bundle" and analyses:
+        raise ValueError("Analysis records can only be attached to bundle exports.")
     output = Path(path)
     if artifact == "model":
         model = source.model if isinstance(source, HamiltonianResult) else source
@@ -251,13 +255,27 @@ def export_hamiltonian_artifact(
     paths.extend((model, metadata))
     if result.model.lattice is not None:
         paths.append(_write_json(output / "lattice.json", result.model.lattice.to_dict()))
+    if analyses:
+        analysis_directory = output / "analyses"
+        analysis_directory.mkdir(parents=True, exist_ok=True)
+        for index, analysis in enumerate(analyses):
+            name = _safe_analysis_name(analysis.analysis)
+            paths.append(
+                save_analysis_result(
+                    analysis,
+                    analysis_directory / f"{index:03d}-{name}.npz",
+                )
+            )
     manifest = _write_json(
         output / "manifest.json",
         {
             "artifact": "quantum-lattice-hamiltonian-bundle",
-            "files": [item.name for item in paths],
+            "files": [str(item.relative_to(output)) for item in paths],
             "format": format,
             "schema_version": result.model.schema_version,
+            "analyses": [
+                str(item.relative_to(output)) for item in paths if item.parent.name == "analyses"
+            ],
         },
     )
     paths.append(manifest)
@@ -363,12 +381,22 @@ def _prepare_bundle_directory(path: Path) -> None:
         "metadata.json",
         "lattice.json",
         "manifest.json",
+        "analyses",
     ):
         candidate = path / name
-        if candidate.exists():
+        if candidate.is_dir():
+            for item in candidate.iterdir():
+                item.unlink()
+            candidate.rmdir()
+        elif candidate.exists():
             candidate.unlink()
 
 
 def _with_suffix(path: Path, output_format: str) -> Path:
     suffix = f".{output_format}"
     return path if path.suffix.lower() == suffix else path.with_suffix(suffix)
+
+
+def _safe_analysis_name(value: str) -> str:
+    normalized = "".join(character if character.isalnum() else "-" for character in value.lower())
+    return normalized.strip("-") or "analysis"

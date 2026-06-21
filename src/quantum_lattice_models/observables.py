@@ -226,6 +226,105 @@ def inverse_participation_ratio(vector: np.ndarray) -> float:
     return float(np.sum(probabilities**2) / norm**2)
 
 
+def single_particle_occupations(state: np.ndarray) -> np.ndarray:
+    """Return normalized site/orbital occupations for a single-particle state."""
+
+    vector = np.asarray(state, dtype=complex).reshape(-1)
+    probabilities = np.abs(vector) ** 2
+    norm = probabilities.sum()
+    if norm == 0:
+        raise ValueError("state must have nonzero norm.")
+    return probabilities / norm
+
+
+def bond_current(
+    state: np.ndarray,
+    source: int,
+    target: int,
+    hopping: complex,
+) -> float:
+    """Return the oriented single-particle bond current ``2 Im(t ψ_i* ψ_j)``."""
+
+    vector = np.asarray(state, dtype=complex).reshape(-1)
+    if not 0 <= source < vector.size or not 0 <= target < vector.size:
+        raise ValueError("Bond-current indices are out of range.")
+    return float(2.0 * np.imag(complex(hopping) * np.conjugate(vector[source]) * vector[target]))
+
+
+def mixed_spin_correlation_matrix(
+    state: np.ndarray,
+    n_sites: int,
+    source_axis: str,
+    target_axis: str,
+    *,
+    basis: FixedMagnetizationBasis | None = None,
+) -> np.ndarray:
+    """Return mixed-axis ``<P_i Q_j>`` spin correlations."""
+
+    source_axis = _validated_axis(source_axis)
+    target_axis = _validated_axis(target_axis)
+    result = np.empty((n_sites, n_sites), dtype=complex)
+    for source in range(n_sites):
+        for target in range(n_sites):
+            operators = {source: source_axis}
+            if target == source:
+                if source_axis != target_axis:
+                    # Pauli products on one site: XY=iZ, YZ=iX, ZX=iY.
+                    products = {
+                        ("X", "Y"): (1j, "Z"),
+                        ("Y", "Z"): (1j, "X"),
+                        ("Z", "X"): (1j, "Y"),
+                        ("Y", "X"): (-1j, "Z"),
+                        ("Z", "Y"): (-1j, "X"),
+                        ("X", "Z"): (-1j, "Y"),
+                    }
+                    phase, axis = products[(source_axis, target_axis)]
+                    result[source, target] = phase * _pauli_expectation(
+                        state, n_sites, {source: axis}, basis=basis
+                    )
+                else:
+                    result[source, target] = _state_norm_squared(state)
+            else:
+                operators[target] = target_axis
+                result[source, target] = _pauli_expectation(state, n_sites, operators, basis=basis)
+    return np.real_if_close(result)
+
+
+def total_spin_squared(
+    state: np.ndarray,
+    n_sites: int,
+    *,
+    basis: FixedMagnetizationBasis | None = None,
+) -> float:
+    """Return ``<S^2>`` for spin-1/2 sites with ``S=Σσ/2``."""
+
+    value = 0.75 * n_sites * _state_norm_squared(state)
+    for axis in ("X", "Y", "Z"):
+        correlations = spin_correlation_matrix(state, n_sites, axis=axis, basis=basis)
+        value += 0.5 * sum(
+            correlations[left, right].real
+            for left in range(n_sites)
+            for right in range(left + 1, n_sites)
+        )
+    return float(value)
+
+
+def local_density_of_states(
+    hamiltonian: np.ndarray,
+    energies: Sequence[float],
+    *,
+    broadening: float = 0.05,
+) -> np.ndarray:
+    """Return Lorentzian-broadened local density of states by site and energy."""
+
+    if broadening <= 0:
+        raise ValueError("broadening must be positive.")
+    values, vectors = np.linalg.eigh(np.asarray(hamiltonian))
+    grid = np.asarray(energies, dtype=float)
+    lorentzian = broadening / np.pi / ((grid[:, None] - values[None, :]) ** 2 + broadening**2)
+    return lorentzian @ (np.abs(vectors) ** 2).T
+
+
 def _pauli_expectation(
     state: np.ndarray,
     n_sites: int,

@@ -5,6 +5,8 @@ from __future__ import annotations
 import numpy as np
 
 from quantum_lattice_models._model_utils import as_dense
+from quantum_lattice_models.analysis import AnalysisResult
+from quantum_lattice_models.periodic import BandStructure
 from quantum_lattice_models.specs import ModelSpec
 from quantum_lattice_models.spectra import density_of_states, eigenvalues
 from quantum_lattice_models.tight_binding import ssh_edge_state_localization
@@ -26,6 +28,120 @@ _INTERACTION_COLORS = {
     "hopping": COLORBLIND_PALETTE["purple"],
     "mixed": "0.45",
 }
+
+
+def plot_analysis_result(result: AnalysisResult, ax=None):
+    """Regenerate a standard plot from a portable analysis result."""
+
+    import matplotlib.pyplot as plt
+
+    result.validate()
+    kind = result.plot.get("kind")
+    if ax is None:
+        _, ax = plt.subplots()
+    if kind == "spectrum":
+        x = result.coordinates[str(result.plot.get("x", "index"))]
+        y = result.values[str(result.plot.get("y", "eigenvalues"))]
+        ax.scatter(x, y, s=24, color=COLORBLIND_PALETTE["blue"])
+        ax.set_xlabel("Eigenvalue index")
+        ax.set_ylabel("Energy")
+        ax.set_title("Spectrum")
+    elif kind == "bands":
+        x = result.coordinates[str(result.plot.get("x", "distance"))]
+        energies = result.values[str(result.plot.get("y", "energies"))]
+        for band in range(energies.shape[1]):
+            ax.plot(x, energies[:, band], color=COLORBLIND_PALETTE["blue"], linewidth=1.4)
+        labels = tuple(str(item) for item in result.plot.get("labels", []))
+        indices = tuple(int(item) for item in result.plot.get("label_indices", []))
+        if labels:
+            ticks = [x[index] for index in indices]
+            ax.set_xticks(ticks, labels)
+            for position in ticks:
+                ax.axvline(position, color="0.82", linewidth=0.7, zorder=0)
+        ax.set_xlabel("Momentum path")
+        ax.set_ylabel("Energy")
+        ax.set_title("Band structure")
+    elif kind == "observable":
+        name = str(result.plot.get("primary"))
+        values = np.asarray(result.values[name]).reshape(-1)
+        sites = result.coordinates.get("site", np.arange(values.size))
+        ax.plot(sites, values, marker="o", color=COLORBLIND_PALETTE["red"])
+        ax.set_xlabel("Site")
+        ax.set_ylabel(name.replace("_", " ").title())
+        ax.set_title("Observable")
+    elif kind == "scalar":
+        label = str(result.plot.get("label", result.analysis))
+        value = float(np.asarray(result.values["value"]).reshape(()))
+        ax.bar([label], [value], color=COLORBLIND_PALETTE["blue"])
+        ax.set_ylabel("Value")
+        ax.set_title(result.analysis.replace("_", " ").title())
+    elif kind in {"time_series", "sweep"}:
+        x_name = str(result.plot.get("x"))
+        y_name = str(result.plot.get("y"))
+        x = result.coordinates[x_name]
+        y = result.values[y_name]
+        if y.ndim == 1:
+            ax.plot(x, np.real_if_close(y), color=COLORBLIND_PALETTE["blue"])
+        else:
+            for column in range(y.shape[1]):
+                ax.plot(x, np.real_if_close(y[:, column]))
+        ax.set_xlabel(x_name.replace("_", " ").title())
+        ax.set_ylabel(y_name.replace("_", " ").title())
+        ax.set_title(result.analysis.replace("_", " ").title())
+    elif kind == "heatmap":
+        x = result.coordinates[str(result.plot.get("x"))]
+        y = result.coordinates[str(result.plot.get("y"))]
+        values = result.values[str(result.plot.get("values"))]
+        image = ax.pcolormesh(x, y, values, shading="auto", cmap="viridis")
+        ax.figure.colorbar(image, ax=ax)
+        ax.set_xlabel(str(result.plot.get("x")).replace("_", " ").title())
+        ax.set_ylabel(str(result.plot.get("y")).replace("_", " ").title())
+        ax.set_title(result.analysis.replace("_", " ").title())
+    elif kind == "reciprocal":
+        vectors = result.values[str(result.plot.get("vectors"))]
+        zone = result.values[str(result.plot.get("zone"))]
+        closed = np.vstack((zone, zone[0]))
+        ax.plot(closed[:, 0], closed[:, 1], color=COLORBLIND_PALETTE["blue"])
+        for vector in vectors:
+            ax.arrow(0, 0, vector[0], vector[1], width=0.01, length_includes_head=True)
+        ax.set_aspect("equal")
+        ax.set_title("Reciprocal space")
+    else:
+        raise ValueError(f"Unsupported analysis plot kind {kind!r}.")
+    apply_plot_style(ax)
+    return ax
+
+
+def plot_band_structure(
+    bands: BandStructure,
+    ax=None,
+    *,
+    zero_line: bool = False,
+    **line_kwargs,
+):
+    """Plot sampled band energies against cumulative momentum-path distance."""
+
+    import matplotlib.pyplot as plt
+
+    if ax is None:
+        _, ax = plt.subplots()
+    kwargs = {"color": COLORBLIND_PALETTE["blue"], "linewidth": 1.4}
+    kwargs.update(line_kwargs)
+    for band in range(bands.energies.shape[1]):
+        ax.plot(bands.distances, bands.energies[:, band], **kwargs)
+    if zero_line:
+        ax.axhline(0.0, color="0.35", linewidth=0.8, linestyle="--")
+    if bands.labels:
+        ticks = [bands.distances[index] for index in bands.label_indices]
+        ax.set_xticks(ticks, bands.labels)
+        for position in ticks:
+            ax.axvline(position, color="0.82", linewidth=0.7, zorder=0)
+    ax.set_xlim(float(bands.distances[0]), float(bands.distances[-1]))
+    ax.set_xlabel("Momentum path")
+    ax.set_ylabel("Energy")
+    ax.set_title("Band structure")
+    apply_plot_style(ax)
+    return ax
 
 
 def plot_spectrum(

@@ -6,6 +6,9 @@ GraphML adapters translate through the same lattice representation.
 
 The current schema version is `1.0`.
 
+Periodic unit-cell and analysis-result records also use independently versioned
+`1.0` schemas.
+
 ## Compatibility policy
 
 - Files with `schema_version: "1.0"` are validated strictly.
@@ -92,11 +95,26 @@ A directory bundle contains independently readable portable artifacts:
 - `model.json`
 - `metadata.json`
 - `lattice.json` when lattice data exists
+- Optional `analyses/*.npz` portable analysis records
 - `manifest.json` listing the generated artifact files and matrix format
 
 The matrix artifact remains the canonical round-trip input for
 `load_hamiltonian`; the other files support selective interchange and
 inspection.
+
+## Analysis-result record
+
+`AnalysisResult` stores an analysis name, named coordinate and value arrays,
+parameters, embedded source identity, solver metadata, warnings, declarative
+plot metadata, provenance, package version, optional creation time, and user
+metadata. JSON records encode array dtype, shape, and data explicitly.
+Self-contained NPZ records store arrays separately from deterministic JSON
+metadata and never require pickle loading.
+
+The analysis schema is strict: unknown top-level fields, unsupported schema
+versions, object-dtype arrays, non-finite numerical values, and declared-shape
+mismatches are rejected. A plot record references named stored arrays, allowing
+supported plots to be regenerated without reconstructing a Hamiltonian.
 
 Registry discovery reports whether a model has a sparse construction path and
 its package validation status (`validated`, `tested`, or `unvalidated`).
