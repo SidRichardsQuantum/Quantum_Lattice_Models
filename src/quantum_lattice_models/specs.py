@@ -781,7 +781,7 @@ def _infer_physical_system(
         return _ssh_physical_system(parameters, lattice)
     if base == "bose_hubbard_chain":
         return _bose_hubbard_physical_system(parameters, lattice)
-    if base == "fermi_hubbard_chain":
+    if base in {"fermi_hubbard_chain", "fermi_hubbard_chain_sector"}:
         return _fermi_hubbard_physical_system(parameters, lattice)
     if base == "kitaev_chain_bdg":
         return _kitaev_bdg_physical_system(parameters, lattice)

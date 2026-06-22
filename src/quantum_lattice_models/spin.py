@@ -16,6 +16,7 @@ from quantum_lattice_models._model_utils import (
     validate_positive_int,
 )
 from quantum_lattice_models.operators import PAULI_MATRICES
+from quantum_lattice_models.reduced import ReducedBasisMapping
 from quantum_lattice_models.types import DenseHamiltonian, PauliTerm
 
 
@@ -48,6 +49,16 @@ class FixedMagnetizationBasis:
     states: tuple[int, ...]
 
     @property
+    def mapping(self) -> ReducedBasisMapping:
+        return ReducedBasisMapping(
+            kind="fixed_magnetization",
+            full_dimension=2**self.n_sites,
+            states=self.states,
+            quantum_numbers={"magnetization": self.magnetization},
+            metadata={"n_sites": self.n_sites},
+        )
+
+    @property
     def dimension(self) -> int:
         """Return the reduced Hilbert-space dimension."""
 
@@ -62,20 +73,12 @@ class FixedMagnetizationBasis:
     def embed(self, state: np.ndarray) -> np.ndarray:
         """Embed a reduced state vector into the full computational basis."""
 
-        vector = np.asarray(state, dtype=complex).reshape(-1)
-        if vector.size != self.dimension:
-            raise ValueError("Reduced state length must match the sector dimension.")
-        full = np.zeros(2**self.n_sites, dtype=complex)
-        full[np.asarray(self.states, dtype=int)] = vector
-        return full
+        return self.mapping.embed(state)
 
     def project(self, state: np.ndarray) -> np.ndarray:
         """Project a full computational-basis state vector into this sector."""
 
-        vector = np.asarray(state, dtype=complex).reshape(-1)
-        if vector.size != 2**self.n_sites:
-            raise ValueError("Full state length must equal 2**n_sites.")
-        return vector[np.asarray(self.states, dtype=int)]
+        return self.mapping.project(state)
 
     def to_metadata(self) -> dict[str, object]:
         """Return portable sector metadata."""
@@ -86,6 +89,7 @@ class FixedMagnetizationBasis:
             "magnetization": self.magnetization,
             "dimension": self.dimension,
             "basis_states": list(self.states),
+            "mapping": self.mapping.to_dict(),
         }
 
 
@@ -112,6 +116,89 @@ class SpinSectorHamiltonian:
             "sector": self.basis.to_metadata(),
             "parameters": dict(self.parameters),
         }
+
+
+def graph_spin_sector(
+    n_sites: int,
+    magnetization: int,
+    interactions: Iterable[SpinInteraction] = (),
+    fields: Iterable[SpinField] = (),
+    *,
+    tolerance: float = 1e-12,
+) -> SpinSectorHamiltonian:
+    """Project a magnetization-conserving arbitrary spin graph without densifying."""
+
+    basis = fixed_magnetization_basis(n_sites, magnetization)
+    terms = _graph_terms(n_sites, interactions, fields)
+    state_to_index = basis.state_to_index
+    entries: dict[tuple[int, int], complex] = {}
+    leakage: dict[tuple[int, int], complex] = {}
+    for column, state in enumerate(basis.states):
+        for term in terms:
+            target, amplitude = _apply_pauli_labels(state, term.operators)
+            value = term.coefficient * amplitude
+            if abs(value) <= tolerance:
+                continue
+            row = state_to_index.get(target)
+            destination = entries if row is not None else leakage
+            key = (row if row is not None else target, column)
+            destination[key] = destination.get(key, 0.0j) + value
+    broken = {key: value for key, value in leakage.items() if abs(value) > tolerance}
+    if broken:
+        raise ValueError(
+            "Graph interactions do not conserve the requested total magnetization; "
+            f"found {len(broken)} nonzero transitions outside the sector."
+        )
+    rows = [row for row, _ in entries]
+    columns = [column for _, column in entries]
+    values = list(entries.values())
+    matrix = sp.coo_matrix(
+        (values, (rows, columns)),
+        shape=(basis.dimension, basis.dimension),
+        dtype=complex,
+    ).tocsr()
+    matrix.sum_duplicates()
+    matrix.eliminate_zeros()
+    return SpinSectorHamiltonian(
+        matrix,
+        basis,
+        "graph_spin_sector",
+        {
+            "n_sites": n_sites,
+            "magnetization": magnetization,
+            "interaction_count": len(terms),
+        },
+    )
+
+
+def graph_spin_model_sector(model, magnetization: int) -> SpinSectorHamiltonian:
+    """Build a fixed-magnetization sector directly from a portable graph-spin model."""
+
+    from quantum_lattice_models.specs import GRAPH_SPIN_FAMILY
+
+    if model.family != GRAPH_SPIN_FAMILY:
+        raise ValueError("graph_spin_model_sector requires a graph_spin ModelSpec.")
+    interactions = []
+    fields = []
+    for term in model.interactions:
+        if len(term.degrees) == 1:
+            fields.append(SpinField(term.degrees[0], term.operators[0], term.coefficient))
+        else:
+            interactions.append(
+                SpinInteraction(
+                    term.degrees[0],
+                    term.degrees[1],
+                    term.operators[0],
+                    term.operators[1],
+                    term.coefficient,
+                )
+            )
+    return graph_spin_sector(
+        int(model.parameters["n_sites"]),
+        magnetization,
+        interactions,
+        fields,
+    )
 
 
 def fixed_magnetization_basis(
@@ -232,6 +319,64 @@ def xxz_chain_sector_sparse(
     """Registered sparse alias for :func:`xxz_chain_sector`."""
 
     return xxz_chain_sector(n_sites, magnetization, coupling, anisotropy, field, periodic)
+
+
+def heisenberg_ladder_sector(
+    n_rungs: int,
+    magnetization: int,
+    leg_coupling: float = 1.0,
+    rung_coupling: float = 1.0,
+    field: float = 0.0,
+    periodic: bool = False,
+) -> SpinSectorHamiltonian:
+    """Build a two-leg Heisenberg ladder in a fixed-magnetization sector."""
+
+    validate_positive_int(n_rungs, "n_rungs")
+    n_sites = 2 * n_rungs
+    basis = fixed_magnetization_basis(n_sites, magnetization)
+    leg_bonds = nearest_neighbor_bonds(n_rungs, periodic)
+    weighted_bonds = [(i, j, leg_coupling) for i, j in leg_bonds]
+    weighted_bonds.extend((n_rungs + i, n_rungs + j, leg_coupling) for i, j in leg_bonds)
+    weighted_bonds.extend((rung, n_rungs + rung, rung_coupling) for rung in range(n_rungs))
+    matrix = sp.csr_matrix((basis.dimension, basis.dimension), dtype=complex)
+    for source, target, coupling in weighted_bonds:
+        matrix += _xxz_sector_matrix(
+            basis,
+            ((source, target),),
+            transverse_coupling=coupling,
+            longitudinal_coupling=coupling,
+            field=0.0,
+        )
+    if field:
+        matrix += sp.eye(basis.dimension, format="csr") * field * magnetization
+    return SpinSectorHamiltonian(
+        matrix,
+        basis,
+        "heisenberg_ladder_sector",
+        {
+            "n_rungs": n_rungs,
+            "magnetization": magnetization,
+            "leg_coupling": leg_coupling,
+            "rung_coupling": rung_coupling,
+            "field": field,
+            "periodic": periodic,
+        },
+    )
+
+
+def heisenberg_ladder_sector_sparse(
+    n_rungs: int,
+    magnetization: int,
+    leg_coupling: float = 1.0,
+    rung_coupling: float = 1.0,
+    field: float = 0.0,
+    periodic: bool = False,
+) -> SpinSectorHamiltonian:
+    """Registered sparse alias for :func:`heisenberg_ladder_sector`."""
+
+    return heisenberg_ladder_sector(
+        n_rungs, magnetization, leg_coupling, rung_coupling, field, periodic
+    )
 
 
 def graph_spin_hamiltonian_sparse(
@@ -564,6 +709,23 @@ def _sparse_pauli_string(operators: tuple[str, ...]) -> sp.csr_matrix:
     for label in operators:
         result = sp.kron(result, sp.csr_matrix(PAULI_MATRICES[label]), format="csr")
     return result
+
+
+def _apply_pauli_labels(state: int, operators: tuple[str, ...]) -> tuple[int, complex]:
+    target = state
+    amplitude = 1.0 + 0.0j
+    n_sites = len(operators)
+    for site, label in enumerate(operators):
+        mask = 1 << (n_sites - 1 - site)
+        bit = bool(target & mask)
+        if label == "X":
+            target ^= mask
+        elif label == "Y":
+            amplitude *= -1j if bit else 1j
+            target ^= mask
+        elif label == "Z":
+            amplitude *= -1.0 if bit else 1.0
+    return target, amplitude
 
 
 def _xxz_sector_matrix(

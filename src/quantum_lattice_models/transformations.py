@@ -345,6 +345,79 @@ def apply_domain_wall(
     return replace(transformed, provenance=provenance)
 
 
+def apply_spatial_potential(
+    lattice: LatticeSpec,
+    potential,
+    *,
+    label: str = "spatial_potential",
+) -> LatticeSpec:
+    """Add a continuously varying onsite potential evaluated at each coordinate."""
+
+    lattice.validate()
+    if not lattice.positions:
+        raise ValueError("Spatial potentials require lattice positions.")
+    values = {
+        site: complex(potential(np.asarray(position, dtype=float)))
+        for site, position in enumerate(lattice.positions)
+    }
+    transformed = apply_impurity_potential(lattice, values)
+    return replace(
+        transformed,
+        provenance=lattice.provenance
+        + (
+            {
+                "operation": "spatial_potential",
+                "parameters": {
+                    "label": label,
+                    "values": [_portable_number(value) for value in values.values()],
+                },
+            },
+        ),
+    )
+
+
+def apply_interface(
+    lattice: LatticeSpec,
+    *,
+    axis: int = 0,
+    position: float = 0.0,
+    left: complex = 0.0,
+    right: complex = 0.0,
+    width: float = 0.0,
+) -> LatticeSpec:
+    """Apply a sharp or linearly interpolated onsite interface."""
+
+    if width < 0:
+        raise ValueError("width must be nonnegative.")
+
+    def profile(coordinate: np.ndarray) -> complex:
+        distance = coordinate[axis] - position
+        if width == 0:
+            return left if distance < 0 else right
+        fraction = np.clip(0.5 + distance / width, 0.0, 1.0)
+        return (1 - fraction) * left + fraction * right
+
+    if not lattice.positions or not 0 <= axis < len(lattice.positions[0]):
+        raise ValueError("axis is out of range for lattice positions.")
+    transformed = apply_spatial_potential(lattice, profile, label="interface")
+    return replace(
+        transformed,
+        provenance=lattice.provenance
+        + (
+            {
+                "operation": "interface",
+                "parameters": {
+                    "axis": axis,
+                    "position": position,
+                    "width": width,
+                    "left": _portable_number(left),
+                    "right": _portable_number(right),
+                },
+            },
+        ),
+    )
+
+
 def apply_twisted_boundary(
     lattice: LatticeSpec,
     angle: float,
@@ -433,6 +506,189 @@ def add_long_range_bonds(
             "power": power,
         },
         bonds=lattice.bonds + tuple(additions),
+    )
+
+
+def graph_spin_subgraph(model, sites: Iterable[int]):
+    """Return a graph-spin model with geometry and interactions remapped together."""
+
+    from quantum_lattice_models.specs import GRAPH_SPIN_FAMILY, create_graph_spin_spec
+    from quantum_lattice_models.spin import SpinField, SpinInteraction
+
+    if model.family != GRAPH_SPIN_FAMILY or model.lattice is None:
+        raise ValueError("graph_spin_subgraph requires a graph_spin model with geometry.")
+    selected = tuple(dict.fromkeys(int(site) for site in sites))
+    if not selected or any(not 0 <= site < model.lattice.n_sites for site in selected):
+        raise ValueError("sites must contain valid graph-spin site indices.")
+    site_mapping = {site: index for index, site in enumerate(selected)}
+    degree_by_site = {degree.site: degree.index for degree in model.local_degrees}
+    degree_mapping = {
+        degree_by_site[site]: new_site
+        for site, new_site in site_mapping.items()
+        if site in degree_by_site
+    }
+    interactions = []
+    fields = []
+    for term in model.interactions:
+        if not all(degree in degree_mapping for degree in term.degrees):
+            continue
+        mapped = tuple(degree_mapping[degree] for degree in term.degrees)
+        if len(mapped) == 1:
+            fields.append(SpinField(mapped[0], term.operators[0], term.coefficient))
+        else:
+            interactions.append(
+                SpinInteraction(
+                    mapped[0],
+                    mapped[1],
+                    term.operators[0],
+                    term.operators[1],
+                    term.coefficient,
+                )
+            )
+    lattice = lattice_subgraph(model.lattice, selected)
+    return create_graph_spin_spec(
+        len(selected),
+        interactions=tuple(interactions),
+        fields=tuple(fields),
+        positions=lattice.positions,
+        site_labels=lattice.site_labels,
+        units=model.units,
+        conventions=model.conventions,
+        references=model.references,
+        provenance={
+            **model.provenance,
+            "transformation": "graph_spin_subgraph",
+            "source_sites": list(selected),
+        },
+        metadata=dict(model.metadata),
+        representation=model.representation,
+    )
+
+
+def particle_model_subgraph(model, sites: Iterable[int]):
+    """Extract a single-particle model while remapping geometry and interactions."""
+
+    from quantum_lattice_models.specs import create_model_spec
+
+    if model.lattice is None or not model.local_degrees:
+        raise ValueError("particle_model_subgraph requires portable geometry and local degrees.")
+    if any(
+        degree.kind not in {"orbital", "fermion"} or degree.local_dimension != 2
+        for degree in model.local_degrees
+    ):
+        raise ValueError("particle_model_subgraph currently supports single-particle orbitals.")
+    selected_sites = tuple(dict.fromkeys(int(site) for site in sites))
+    if not selected_sites or any(not 0 <= site < model.lattice.n_sites for site in selected_sites):
+        raise ValueError("sites must contain valid model site indices.")
+    selected_degrees = [degree for degree in model.local_degrees if degree.site in selected_sites]
+    if len(selected_degrees) != len(selected_sites):
+        raise ValueError("Each selected site must map to exactly one local degree.")
+    site_mapping = {site: index for index, site in enumerate(selected_sites)}
+    degree_mapping = {degree.index: site_mapping[degree.site] for degree in selected_degrees}
+    onsite = np.zeros(len(selected_sites), dtype=complex)
+    bonds: list[Bond] = []
+    for term in model.interactions:
+        if not all(degree in degree_mapping for degree in term.degrees):
+            continue
+        mapped = tuple(degree_mapping[degree] for degree in term.degrees)
+        if len(mapped) == 1 and term.operators == ("number",):
+            onsite[mapped[0]] += term.coefficient
+        elif len(mapped) == 2 and set(term.operators) == {"create", "annihilate"}:
+            bonds.append(Bond(mapped[0], mapped[1], term.coefficient))
+    source_lattice = lattice_subgraph(model.lattice, selected_sites)
+    if np.any(np.abs(onsite.imag) > 1e-12):
+        raise ValueError("Portable custom tight-binding onsite values must be real.")
+    onsite_values = tuple(float(value.real) for value in onsite)
+    lattice = replace(
+        source_lattice,
+        bonds=tuple(bonds),
+        metadata={
+            **source_lattice.metadata,
+            "onsite_potential": list(onsite_values),
+            "source_family": model.family,
+        },
+    )
+    return create_model_spec(
+        (
+            "custom_tight_binding_sparse"
+            if model.representation == "sparse"
+            else "custom_tight_binding"
+        ),
+        parameters={
+            "onsite": onsite_values,
+            "hermitian": True,
+        },
+        lattice=lattice,
+        representation=model.representation,
+        units=model.units,
+        conventions=model.conventions,
+        references=model.references,
+        provenance={
+            **model.provenance,
+            "transformation": "particle_model_subgraph",
+            "source_sites": list(selected_sites),
+        },
+        metadata=dict(model.metadata),
+    )
+
+
+def particle_model_vacancies(model, sites: Iterable[int]):
+    """Remove physical sites from a portable single-particle model."""
+
+    removed = set(int(site) for site in sites)
+    if model.lattice is None:
+        raise ValueError("particle_model_vacancies requires model geometry.")
+    retained = [site for site in range(model.lattice.n_sites) if site not in removed]
+    if not retained:
+        raise ValueError("A transformed model must retain at least one site.")
+    return particle_model_subgraph(model, retained)
+
+
+def substitute_particle_bonds(
+    model,
+    substitutions: dict[tuple[int, int], complex],
+):
+    """Replace selected directed hopping amplitudes in a portable particle model."""
+
+    transformed = particle_model_subgraph(
+        model,
+        range(model.lattice.n_sites if model.lattice is not None else 0),
+    )
+    lattice = transformed.lattice
+    if lattice is None:
+        raise RuntimeError("Particle-model transformation lost its lattice.")
+    replacements = {
+        (int(source), int(target)): complex(value)
+        for (source, target), value in substitutions.items()
+    }
+    found: set[tuple[int, int]] = set()
+    bonds = []
+    for bond in lattice.bonds:
+        key = (bond.source, bond.target)
+        if key in replacements:
+            bonds.append(Bond(bond.source, bond.target, replacements[key]))
+            found.add(key)
+        else:
+            bonds.append(bond)
+    missing = sorted(set(replacements) - found)
+    if missing:
+        raise ValueError(f"Cannot substitute missing directed bonds: {missing!r}.")
+    return replace(
+        transformed,
+        lattice=replace(
+            lattice,
+            bonds=tuple(bonds),
+            provenance=lattice.provenance
+            + (
+                {
+                    "operation": "substitute_particle_bonds",
+                    "parameters": {
+                        f"{source},{target}": _portable_number(value)
+                        for (source, target), value in sorted(replacements.items())
+                    },
+                },
+            ),
+        ),
     )
 
 

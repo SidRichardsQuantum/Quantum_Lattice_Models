@@ -29,6 +29,7 @@ boundary, sparse-matrix, and exact-diagonalization conventions are described in
 
 ## Two-dimensional finite lattices
 
+- [Additional benchmark lattices](benchmark_lattices.md)
 - [Square lattice](square_lattice.md)
 - [Triangular lattice](triangular_lattice.md)
 - [Kagome lattice](kagome_lattice.md)

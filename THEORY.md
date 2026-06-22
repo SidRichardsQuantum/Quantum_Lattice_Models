@@ -61,7 +61,9 @@ Periodic boundaries reconnect opposite ends or edges. Chain models use
 `periodic_y` flags.
 
 Periodic finite real-space matrices are distinct from Bloch Hamiltonians
-$H(\mathbf k)$. Bloch and reciprocal-space support remains roadmap work.
+$H(\mathbf k)$. The periodic-lattice API constructs Bloch Hamiltonians in
+documented cell or orbital gauges and supports reciprocal vectors, momentum
+paths, bands, Berry curvature, Wilson loops, and reference invariants.
 
 ## Dense and sparse matrices
 

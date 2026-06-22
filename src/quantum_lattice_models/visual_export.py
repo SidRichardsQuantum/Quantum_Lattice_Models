@@ -4,12 +4,37 @@ from __future__ import annotations
 
 import csv
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 
 from quantum_lattice_models.periodic import BandStructure, PeriodicLatticeSpec
 from quantum_lattice_models.specs import LatticeSpec, ModelSpec
+
+
+@dataclass(frozen=True)
+class MultiPanelPlotSpec:
+    """Declarative layout for several named portable analysis panels."""
+
+    panels: tuple[dict[str, object], ...]
+    columns: int = 2
+    title: str = ""
+
+    def validate(self) -> None:
+        if not self.panels:
+            raise ValueError("Multi-panel plots require at least one panel.")
+        if not isinstance(self.columns, int) or self.columns < 1:
+            raise ValueError("Multi-panel plot columns must be positive.")
+        for panel in self.panels:
+            if not isinstance(panel, dict) or not isinstance(panel.get("kind"), str):
+                raise ValueError("Each panel requires a string plot kind.")
+            if "title" in panel and not isinstance(panel["title"], str):
+                raise ValueError("Panel titles must be strings.")
+
+    def to_dict(self) -> dict[str, object]:
+        self.validate()
+        return {"panels": list(self.panels), "columns": self.columns, "title": self.title}
 
 
 def export_lattice_plot_data(
@@ -126,6 +151,117 @@ def export_matrix_plot_data(matrix: np.ndarray, path: str | Path) -> Path:
         + "\n"
     )
     return output
+
+
+def matrix_block_structure(
+    matrix: np.ndarray,
+    blocks: tuple[tuple[str, int, int], ...],
+) -> dict[str, object]:
+    """Return basis-labeled matrix block boundaries and norms."""
+
+    values = np.asarray(matrix)
+    if values.ndim != 2 or values.shape[0] != values.shape[1]:
+        raise ValueError("Matrix block structure requires a square matrix.")
+    cursor = 0
+    records = []
+    for label, start, stop in blocks:
+        if start != cursor or not start < stop <= values.shape[0]:
+            raise ValueError("Matrix blocks must be contiguous and cover valid ranges.")
+        records.append(
+            {
+                "label": label,
+                "start": start,
+                "stop": stop,
+                "frobenius_norm": float(np.linalg.norm(values[start:stop, start:stop])),
+            }
+        )
+        cursor = stop
+    if cursor != values.shape[0]:
+        raise ValueError("Matrix blocks must cover the complete basis.")
+    return {"shape": list(values.shape), "blocks": records}
+
+
+def spin_texture_plot_data(
+    model: ModelSpec,
+    expectations: np.ndarray,
+) -> dict[str, object]:
+    """Return site coordinates and local spin expectation arrows."""
+
+    if model.lattice is None or not model.lattice.positions:
+        raise ValueError("Spin textures require model positions.")
+    spin_degrees = [degree for degree in model.local_degrees if degree.kind == "spin"]
+    vectors = np.asarray(expectations, dtype=float)
+    if vectors.shape != (len(spin_degrees), 3):
+        raise ValueError("expectations must have shape (number_of_spins, 3).")
+    return {
+        "kind": "spin_texture",
+        "sites": [
+            {
+                "degree": degree.index,
+                "site": degree.site,
+                "position": list(model.lattice.positions[degree.site]),
+                "vector": vectors[index].tolist(),
+                "magnitude": float(np.linalg.norm(vectors[index])),
+            }
+            for index, degree in enumerate(spin_degrees)
+        ],
+    }
+
+
+def lattice_annotation_data(lattice: LatticeSpec) -> dict[str, object]:
+    """Extract deterministic defect, boundary, interface, and disorder annotations."""
+
+    operations = [
+        {
+            "operation": record.get("operation", ""),
+            "parameters": record.get("parameters", {}),
+        }
+        for record in lattice.provenance
+    ]
+    return {
+        "boundary_conditions": dict(lattice.boundary_conditions),
+        "onsite_potential": list(lattice.metadata.get("onsite_potential", [])),
+        "operations": operations,
+    }
+
+
+def to_styled_networkx(model: ModelSpec):
+    """Export a styled physical interaction graph with deterministic attributes."""
+
+    try:
+        import networkx as nx
+    except ImportError as exc:
+        raise ImportError("Styled NetworkX export requires the 'networkx' extra.") from exc
+    model.validate()
+    graph = nx.MultiDiGraph()
+    coordinates = _model_degree_coordinates(model)
+    for degree in model.local_degrees:
+        graph.add_node(
+            degree.index,
+            label=degree.label,
+            kind=degree.kind,
+            site=degree.site,
+            position=tuple(float(value) for value in coordinates[degree.index]),
+        )
+    for index, interaction in enumerate(model.interactions):
+        if len(interaction.degrees) == 1:
+            source = target = interaction.degrees[0]
+        else:
+            source, target = interaction.degrees
+        coefficient = complex(interaction.coefficient)
+        graph.add_edge(
+            source,
+            target,
+            key=index,
+            kind=interaction.kind,
+            operators="".join(interaction.operators),
+            magnitude=abs(coefficient),
+            phase=float(np.angle(coefficient)),
+            color=_interaction_color(interaction.kind, interaction.operators),
+            width=1.0 + min(4.0, abs(coefficient)),
+            label=interaction.label,
+        )
+    return graph
 
 
 def export_lattice_svg(
@@ -345,3 +481,16 @@ def _escape(value: str) -> str:
     return (
         value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
     )
+
+
+def _interaction_color(kind: str, operators: tuple[str, ...]) -> str:
+    signature = "".join(operators)
+    if "Z" in signature:
+        return "#D55E00"
+    if "X" in signature or "Y" in signature:
+        return "#009E73"
+    if "pair" in kind:
+        return "#CC79A7"
+    if "hop" in kind:
+        return "#0072B2"
+    return "#666666"

@@ -236,6 +236,50 @@ entropy = bipartite_entanglement_entropy(
 )
 ```
 
+Spinful Fermi-Hubbard chains can be reduced by separately conserved up- and
+down-spin particle numbers:
+
+```python
+from quantum_lattice_models import (
+    fermi_hubbard_chain_sector,
+    fermi_hubbard_observables,
+)
+
+sector = fermi_hubbard_chain_sector(
+    n_sites=8,
+    n_up=4,
+    n_down=4,
+    interaction=4.0,
+)
+observables = fermi_hubbard_observables(state, sector.basis)
+```
+
+Two-leg Heisenberg ladders also support fixed-magnetization construction.
+`ConservedQuantity` and `commutator_diagnostic` provide model-independent
+checks before a proposed sector is used.
+
+All supported sectors expose a `ReducedBasisMapping` that identifies every
+reduced row with its full-basis state. The same mapping API provides
+projection, embedding, operator reduction, and expectation values. Arbitrary
+portable graph-spin models can be reduced when their combined Pauli terms
+conserve total magnetization:
+
+```python
+from quantum_lattice_models import graph_spin_model_sector
+
+sector = graph_spin_model_sector(model, magnetization=0)
+print(sector.basis.mapping.to_dict())
+```
+
+Single-particle portable models can be transformed without losing the
+relationship between geometry and Hamiltonian indices:
+
+```python
+from quantum_lattice_models import particle_model_vacancies
+
+defected = particle_model_vacancies(model, sites=(3, 7))
+```
+
 ## Periodic Unit Cells and Band Topology
 
 Translationally invariant single-particle models use a separate portable
@@ -272,6 +316,32 @@ quantum-lattice topology ssh-periodic.json winding
 SVG and underlying plot coordinates can be exported independently of
 Matplotlib. Topological reference analysis includes Zak phases, chiral winding
 numbers, and occupied-subspace Chern numbers.
+
+Reference analysis also includes time-dependent midpoint or RK4 propagation,
+gap-closing detection, susceptibility estimates, Berry-curvature convergence,
+and occupied-subspace Wilson-loop winding.
+
+## Optional Interoperability
+
+JSON remains the canonical portable format. Optional adapters provide YAML
+model files, Graphviz DOT, XYZ, ASE geometry, OpenFermion, Qiskit, QuSpin,
+NetKet, and QuTiP translations. These adapters reject unsupported basis or
+operator conventions rather than silently changing semantics.
+
+Third-party model packages can expose registration callbacks through the
+`quantum_lattice_models.models` Python entry-point group and load them with
+`load_model_plugins()`.
+
+Visualization records include spin textures, transformation annotations,
+basis-labeled matrix blocks, multi-panel layouts, and styled NetworkX
+interaction graphs.
+
+## Additional Benchmark Models
+
+Finite graphene, two-dimensional Anderson, checkerboard Chern-insulator, and
+dice/T3 lattice builders are available in matching dense and sparse forms.
+They provide bipartite spectral, disorder, topological, and flat-band reference
+cases for sector, plotting, and interchange workflows.
 
 ## Portable Analysis Results
 

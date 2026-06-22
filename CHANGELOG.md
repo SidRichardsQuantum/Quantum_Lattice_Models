@@ -1,5 +1,72 @@
 # Changelog
 
+## v0.1.8
+
+This release adds generalized symmetry sectors and reduced-basis mappings,
+time-dependent and convergence analysis, interaction-preserving
+transformations, declarative visualization data, optional ecosystem adapters,
+plugin discovery, additional benchmark families, and stronger package
+validation.
+
+### Added
+
+- Generic `ReducedBasisMapping` records with explicit reduced-row to full-state
+  mappings, quantum numbers, labels, JSON-compatible persistence, projection,
+  embedding, operator reduction, and reduced-state expectation values.
+- Shared reduced mappings for fixed-magnetization spin, fixed-particle boson,
+  and spin-resolved Fermi-Hubbard sector bases.
+- Direct fixed-magnetization construction for arbitrary graph-spin
+  interactions, including aggregate leakage checks that accept conserving term
+  combinations such as equal `XX + YY`.
+- Portable graph-spin `ModelSpec` sector construction and full-space block
+  validation.
+- Single-particle model subgraphs, vacancy templates, and directed bond
+  substitution that remap geometry, local degrees, interactions, labels,
+  provenance, and Hamiltonian indices together.
+- Declarative multi-panel plot specifications, matrix block labels and norms,
+  spin-texture arrow data and plotting, lattice transformation annotations, and
+  deterministic styled NetworkX interaction graphs.
+- Dense and sparse finite graphene, two-dimensional Anderson, two-orbital
+  checkerboard Chern-insulator, and dice/T3 flat-band benchmark models.
+- Structural and analytic checks for graphene spectral symmetry, Anderson
+  reproducibility, checkerboard Hermiticity, and dice-lattice zero-energy flat
+  bands.
+- Fixed spin-resolved particle-number Fermi-Hubbard bases labeled by
+  `(n_up, n_down)`, with explicit full-basis mappings, projection, embedding,
+  sparse Hamiltonian construction, registry and CLI integration, dimension
+  estimates, persistence metadata, and full-space block validation.
+- Sector-aware Fermi-Hubbard up/down/total occupations, spin density, and
+  double occupancy.
+- Fixed-magnetization two-leg Heisenberg-ladder sectors with direct sparse
+  construction and full-space validation.
+- Portable `ConservedQuantity` records, explicit commutator norms, and sector
+  compatibility checks.
+- Time-dependent Hamiltonian evolution using midpoint exponential or
+  fourth-order Runge-Kutta propagation with configurable substeps.
+- Gap-closing detection, conjugate-field susceptibility estimates,
+  Berry-curvature mesh convergence reports, and occupied-subspace Wilson-loop
+  determinant winding.
+- Continuous spatial potentials, finite-width interfaces, and graph-spin
+  subgraph transformations that remap geometry and interactions together.
+- Deterministic Graphviz DOT, plot-data JSON, and XYZ coordinate adapters.
+- Optional YAML model specifications and ASE coordinate import.
+- Optional OpenFermion, Qiskit, QuSpin, NetKet, and QuTiP adapters with explicit
+  dependency and basis checks.
+- Python entry-point discovery for third-party model registration callbacks.
+- `py.typed`, coverage configuration, built-wheel installation tests, and CLI
+  smoke tests.
+
+### Changed
+
+- Updated project version metadata to `0.1.8`.
+- Sector persistence metadata now embeds the shared reduced-basis mapping.
+- Expanded optional dependency groups for YAML, structure, operator, graph, and
+  solver ecosystems.
+- Updated the roadmap, schema guide, validation matrix, theory notes, and model
+  documentation to reflect implemented periodic, topological, sector,
+  dynamics, transformation, visualization, benchmark, and interchange
+  capabilities.
+
 ## v0.1.7
 
 This release adds a portable periodic-lattice layer, generic Bloch and band

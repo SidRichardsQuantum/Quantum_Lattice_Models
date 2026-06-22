@@ -16,7 +16,8 @@ $$
 ## Basis and scaling
 
 $R$ rungs contain $2R$ spins, so the dense matrix dimension is $2^{2R}$.
-This grows particularly quickly.
+This grows particularly quickly. Fixed total Pauli-$Z$ magnetization sectors
+use dimension $\binom{2R}{(2R-M)/2}$.
 
 ## Package use
 
@@ -24,6 +25,10 @@ This grows particularly quickly.
 from quantum_lattice_models import heisenberg_ladder
 
 H = heisenberg_ladder(n_rungs=3, leg_coupling=1.0, rung_coupling=0.7)
+
+from quantum_lattice_models import heisenberg_ladder_sector
+
+sector = heisenberg_ladder_sector(n_rungs=6, magnetization=0)
 ```
 
 ## Parameters

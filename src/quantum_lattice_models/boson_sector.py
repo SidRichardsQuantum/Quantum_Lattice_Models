@@ -9,6 +9,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from quantum_lattice_models._model_utils import nearest_neighbor_bonds
+from quantum_lattice_models.reduced import ReducedBasisMapping
 
 
 @dataclass(frozen=True)
@@ -19,6 +20,25 @@ class FixedParticleNumberBasis:
     states: tuple[tuple[int, ...], ...]
 
     @property
+    def mapping(self) -> ReducedBasisMapping:
+        local_dim = self.max_occupancy + 1
+        indices = tuple(
+            sum(
+                occupation * local_dim ** (self.n_sites - 1 - site)
+                for site, occupation in enumerate(state)
+            )
+            for state in self.states
+        )
+        return ReducedBasisMapping(
+            kind="fixed_particle_number",
+            full_dimension=local_dim**self.n_sites,
+            states=indices,
+            quantum_numbers={"n_particles": self.n_particles},
+            labels=tuple(str(state) for state in self.states),
+            metadata={"n_sites": self.n_sites, "max_occupancy": self.max_occupancy},
+        )
+
+    @property
     def dimension(self) -> int:
         return len(self.states)
 
@@ -27,17 +47,10 @@ class FixedParticleNumberBasis:
         return {state: index for index, state in enumerate(self.states)}
 
     def embed(self, state: np.ndarray) -> np.ndarray:
-        local_dim = self.max_occupancy + 1
-        vector = np.asarray(state, dtype=complex).reshape(-1)
-        if vector.size != self.dimension:
-            raise ValueError("Reduced state length must match sector dimension.")
-        full = np.zeros(local_dim**self.n_sites, dtype=complex)
-        for amplitude, occupations in zip(vector, self.states, strict=True):
-            index = 0
-            for occupation in occupations:
-                index = index * local_dim + occupation
-            full[index] = amplitude
-        return full
+        return self.mapping.embed(state)
+
+    def project(self, state: np.ndarray) -> np.ndarray:
+        return self.mapping.project(state)
 
 
 @dataclass(frozen=True)
@@ -45,6 +58,13 @@ class BoseHubbardSector:
     matrix: sp.csr_matrix
     basis: FixedParticleNumberBasis
     parameters: dict[str, object]
+
+    def to_metadata(self) -> dict[str, object]:
+        return {
+            "model_name": "bose_hubbard_chain_sector",
+            "sector": self.basis.mapping.to_dict(),
+            "parameters": dict(self.parameters),
+        }
 
 
 def fixed_particle_number_basis(

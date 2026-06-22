@@ -30,4 +30,5 @@ H = haldane_honeycomb_lattice(
 
 Complex next-nearest-neighbor phases and Hermitian conjugates are tested.
 Finite real-space spectra do not directly provide a Chern number; Bloch and
-topological-analysis support is planned.
+The periodic Haldane unit-cell API supports band structures, Berry-curvature
+meshes, Chern numbers, Wilson loops, and convergence reports.

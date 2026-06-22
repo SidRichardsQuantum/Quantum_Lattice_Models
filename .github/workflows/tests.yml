@@ -31,4 +31,22 @@ jobs:
           python -m pip install -e ".[dev]"
 
       - name: Run tests
-        run: pytest
+        run: pytest --cov=quantum_lattice_models --cov-report=term-missing
+
+  wheel-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel
+      - name: Install wheel and exercise CLI
+        run: |
+          python -m pip install dist/*.whl
+          cd /tmp
+          quantum-lattice models --json
+          python -c "import quantum_lattice_models; assert quantum_lattice_models.__file__"

@@ -20,11 +20,8 @@ Future core work includes:
 
 - A unified physical-system representation connecting geometry, local degrees
   of freedom, basis ordering, and interaction terms
-- Periodic unit-cell geometry, reciprocal-space data, and Bloch Hamiltonians
 - Additional symmetry-reduced Hamiltonian construction
 - Richer matrix imports and optional model-specification formats
-- Spatial transformations such as interfaces, twisted boundaries, and
-  long-range bond generation
 - Portable result and visual-artifact descriptions
 - Stable plugin contracts for third-party model families and data adapters
 
@@ -92,9 +89,10 @@ as interchangeable.
   two-body terms.
 - Add richer multi-orbital site semantics, orbital geometry, and local
   constraints.
-- Add explicit conserved quantities and symmetry actions on local degrees.
-- Define stable mappings for reduced bases without confusing sector rows with
-  full-basis or local-factor indices.
+- Add symmetry actions on local degrees beyond the current named conserved
+  quantities and commutator diagnostics.
+- Extend shared reduced-basis mappings to future parity and translation
+  sectors.
 - Preserve physical-system records through additional importers and ecosystem
   adapters.
 
@@ -113,8 +111,9 @@ A user should be able to:
 
 ## Priority 2: Extend Model Import and Interchange
 
-- Add optional YAML model specifications.
 - Add schema migrations only when future schema revisions require them.
+- Preserve richer orbital and interaction semantics through structure imports.
+- Add portable adapter capability reports before translating a model.
 
 ## Priority 3: Additional Lattice Transformations
 
@@ -122,9 +121,10 @@ Finite lattices are particularly useful when translation symmetry is broken.
 Transformations should operate on portable lattice/model data rather than
 creating unrelated builder functions.
 
-- General interfaces and continuously spatially varying parameters
-- Geometry-aware defect templates beyond site removal
-- Model-level transformations that update interactions alongside geometry
+- Geometry-aware defect templates beyond current vacancies, subgraphs, and
+  bond substitutions
+- Extend model-level geometry/interaction transformations to interacting
+  particle models.
 
 Lightweight ensemble summaries may report means, variances, and realization
 metadata, but distributed ensemble execution is outside the core package.
@@ -142,14 +142,12 @@ not a parallel source of physical truth.
   spin axis
 - Unit-cell outlines, primitive vectors, boundary links, defects, impurities,
   interfaces, and disorder annotations
-- Spin textures and local expectation-value arrows where state data is
-  available
-- Reusable layout controls that do not alter physical geometry
+- Reusable layout controls beyond the current declarative multi-panel records
 
 ### Reciprocal-space and matrix views
 
 - Reciprocal lattices, Brillouin zones, high-symmetry points, and momentum paths
-- Hamiltonian magnitude, phase, sparsity, block structure, and basis labels
+- Richer automatic symmetry-block discovery for matrix views
 - Clear distinction between physical adjacency diagrams and matrix-connectivity
   diagrams
 
@@ -157,8 +155,6 @@ not a parallel source of physical truth.
 
 - Standard plots for spectra, bands, density of states, occupations,
   correlations, entanglement, dynamics, and parameter sweeps
-- PDF figure output
-- Graphviz DOT and styled NetworkX export
 - Deterministic visual defaults suitable for documentation and regression
   testing
 
@@ -174,7 +170,7 @@ regeneration. Future extensions include:
 
 - Solver residuals, convergence histories, and iterative-status conventions
 - Generated table, figure, diagram, and plot-data filename references
-- Multi-panel declarative plot specifications and styling validation
+- Broader styling validation and cross-panel axis/link conventions
 - Result-schema migrations when future revisions require them
 
 ## Priority 7: Reference Analysis
@@ -184,7 +180,6 @@ validation, and interchange.
 
 ### Spectral and solver safeguards
 
-- Add commutator-based conserved-quantity diagnostics.
 - Extend iterative solver reporting with backend-specific iteration counts.
 
 This should remain a compact interface, not a replacement for specialized
@@ -201,14 +196,12 @@ many-body solver packages.
 
 ### Lightweight dynamics
 
-- Time-dependent Hamiltonians and higher-order propagation controls
 - Additional state-distance and dynamical-order diagnostics
 
 ### Lightweight sweeps and thermal tools
 
-- Gap-closing and extrema detection
-- Susceptibility helpers with explicit conjugate fields
-- Broadened density-of-states and simple single-particle spectral functions
+- Simple single-particle spectral functions beyond the current broadened local
+  density of states
 
 Checkpointing, distributed execution, and general workflow orchestration should
 be delegated to external tools.
@@ -218,8 +211,6 @@ be delegated to external tools.
 Reduced bases should be added where the conserved quantity is explicit and the
 mapping to the full basis is testable.
 
-- Extend fixed-magnetization support to compatible graph and ladder models.
-- Add particle-number and spin sectors for Fermi-Hubbard models.
 - Consider spin-inversion or parity sectors where they offer a clear benefit.
 - Consider translation sectors only after periodic geometry and momentum
   conventions stabilize.
@@ -232,15 +223,11 @@ and their spectra and observables must be validated against full-space blocks.
 New named builders should provide a clear benchmark or exercise reusable
 infrastructure.
 
-Near-term candidates:
+Implemented benchmark families include graphene, two-dimensional Anderson,
+checkerboard Chern-insulator, and dice/\(T_3\) lattices.
 
-- Plain honeycomb or graphene lattice
-- Anderson-disordered two-dimensional lattices
+Remaining candidate:
 
-Candidates after periodic and topological support:
-
-- Checkerboard or related two-band Chern-insulator model
-- Dice or \(T_3\) lattice
 - Kitaev honeycomb spin model
 
 Research-oriented geometries such as pyrochlore lattices, quasicrystal
@@ -251,21 +238,18 @@ documented conventions, reference checks, and a concrete interchange use case.
 
 ### Planned adapters
 
-- ASE or pymatgen structure import, including selected CIF workflows
-- XYZ and selected structure/coordinate formats where model semantics remain
-  explicit
-- SVG and Graphviz DOT diagram export
+YAML, ASE, XYZ, SVG, Graphviz DOT, CSV/JSON plot data, OpenFermion, Qiskit,
+QuSpin, NetKet, and QuTiP adapters are available. Remaining adapter work:
+
+- pymatgen and selected CIF workflows
 - Styled NetworkX graph export
-- CSV and JSON export for observables, coordinates, and plot data
-- OpenFermion operator export
-- Expanded PennyLane and Qiskit export
-- QuSpin, NetKet, or QuTiP adapters where basis mappings are explicit
+- Expanded PennyLane export
+- Capability reports and broader convention coverage for existing adapters
 
 ### Plugin discovery
 
-- Python entry points for third-party model packages
-- Registration of builders, parameter schemas, importers, exporters, and
-  lightweight analysis routines
+- Registration of importers, exporters, and lightweight analysis routines in
+  addition to the current model-builder entry points
 - Compatibility checks for plugin and schema versions
 - Explicit, diagnosable plugin loading
 
@@ -274,23 +258,22 @@ documented conventions, reference checks, and a concrete interchange use case.
 Future maturity work:
 
 - Gauge-equivalent constructions where applicable
-- Type-complete public API and `py.typed`
-- Coverage expectations and representative benchmarks
-- Installation and CLI tests from built wheels
+- Increase annotation completeness now that the package ships `py.typed`.
+- Raise coverage expectations as optional-adapter test environments are added.
+- Add performance regression thresholds to representative benchmarks.
 
 ## Near-Term Backlog
 
 Recommended implementation order:
 
-1. Add reciprocal-space and Berry-curvature diagrams.
-2. Add compact dense/sparse dynamics and quench helpers with expectation-value
-   plots.
-3. Add fixed-particle-number Hubbard sectors.
-4. Add lightweight sweeps, finite-size summaries, and machine-readable plot
-    data.
-5. Add small-system thermal observables and broadened spectral helpers.
-6. Add high-value benchmark models only when their conventions, diagrams, and
-    validation are ready.
+1. Add parity sectors and extend transformations to interacting particle
+   models.
+2. Add adapter capability reports and selected pymatgen/CIF workflows.
+3. Add solver iteration reporting and simple spectral-function records.
+4. Improve annotation completeness, optional-adapter CI, and benchmark
+   regression thresholds.
+5. Add the Kitaev honeycomb model only with documented gauge and sector
+   conventions.
 
 ## Explicit Non-Goals
 

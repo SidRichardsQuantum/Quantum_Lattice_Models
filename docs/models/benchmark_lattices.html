@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Additional Benchmark Lattices — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Additional Benchmark Lattices</span>
+      </nav>
+      <article class="model-article" data-model-page="benchmark_lattices">
+<h1>Additional Benchmark Lattices</h1>
+<h2>Graphene</h2>
+<p><code>graphene_lattice</code> is the nearest-neighbor limit of the finite honeycomb
+construction. With zero onsite terms it is bipartite and its finite spectrum
+is symmetric around zero.</p>
+<h2>Two-dimensional Anderson model</h2>
+<p><code>anderson_square_lattice</code> adds reproducible uniform onsite disorder in
+$[-W/2,W/2]$ to a square-lattice hopping Hamiltonian. The random seed and
+boundary conditions are explicit parameters.</p>
+<h2>Checkerboard Chern insulator</h2>
+<p><code>checkerboard_chern_insulator</code> uses a two-orbital Qi-Wu-Zhang-type real-space
+representation,</p>
+<p>$$
+H(\mathbf k)=t\sin k_x,\sigma_x+t\sin k_y,\sigma_y+
+(m+t\cos k_x+t\cos k_y)\sigma_z.
+$$</p>
+<p>The orbital ordering is row-major unit cells with two orbitals per cell.</p>
+<h2>Dice or $T_3$ lattice</h2>
+<p><code>dice_lattice</code> has one hub and two rim sites per unit cell. Its bipartite
+imbalance produces a zero-energy flat-band subspace in finite open systems.</p>
+<h2>Package use</h2>
+<pre><code class="language-python">from quantum_lattice_models import (
+    anderson_square_lattice_sparse,
+    checkerboard_chern_insulator,
+    dice_lattice,
+    graphene_lattice,
+)
+
+graphene = graphene_lattice(3, 4)
+disordered = anderson_square_lattice_sparse(12, 12, disorder=4.0, seed=7)
+chern = checkerboard_chern_insulator(4, 4, mass=1.0)
+dice = dice_lattice(3, 4)
+</code></pre>
+<h2>Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Parameter</th>
+<th style="text-align:right">Type</th>
+<th style="text-align:right">Default</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>graphene_lattice</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>graphene_lattice</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>graphene_lattice</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>graphene_lattice</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>graphene_lattice</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>graphene_lattice_sparse</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>graphene_lattice_sparse</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>graphene_lattice_sparse</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>graphene_lattice_sparse</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>graphene_lattice_sparse</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice</code></td>
+<td><code>disorder</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice</code></td>
+<td><code>seed</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice_sparse</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice_sparse</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>4</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice_sparse</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice_sparse</code></td>
+<td><code>disorder</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice_sparse</code></td>
+<td><code>seed</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice_sparse</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice_sparse</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator</code></td>
+<td><code>mass</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator_sparse</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator_sparse</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator_sparse</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator_sparse</code></td>
+<td><code>mass</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator_sparse</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator_sparse</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>dice_lattice</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>dice_lattice</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>dice_lattice</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>dice_lattice</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>dice_lattice</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>dice_lattice_sparse</code></td>
+<td><code>n_rows</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>dice_lattice_sparse</code></td>
+<td><code>n_cols</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>3</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>dice_lattice_sparse</code></td>
+<td><code>hopping</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>dice_lattice_sparse</code></td>
+<td><code>periodic_x</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>dice_lattice_sparse</code></td>
+<td><code>periodic_y</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>Validation and cautions</h2>
+<p>Dense and sparse builders are cross-checked. The package validates graphene
+spectral symmetry, Anderson reproducibility, checkerboard Hermiticity, and the
+dice zero-energy flat-band subspace. Finite models do not by themselves imply
+thermodynamic or bulk topological conclusions.</p>
+
+      </article>
+    </main>
+  </body>
+</html>

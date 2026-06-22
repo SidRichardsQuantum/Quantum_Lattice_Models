@@ -5,11 +5,22 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from importlib.metadata import entry_points
 from typing import get_args, get_type_hints
 
 import numpy as np
 
-from quantum_lattice_models import benchmarks, hubbard, lattice, spin, tight_binding, topological
+from quantum_lattice_models import (
+    benchmarks,
+    fermion_sector,
+    hubbard,
+    lattice,
+    spin,
+    tight_binding,
+    topological,
+)
+
+PLUGIN_API_VERSION = "1.0"
 
 
 @dataclass(frozen=True)
@@ -72,6 +83,8 @@ _PARAMETER_DESCRIPTIONS = {
     "h_z": "Longitudinal z-field strength.",
     "field": "Uniform z-field strength.",
     "magnetization": "Total Pauli-Z eigenvalue for a conserved spin sector.",
+    "n_up": "Fixed number of spin-up fermions.",
+    "n_down": "Fixed number of spin-down fermions.",
     "coupling": "Overall interaction strength.",
     "anisotropy": "Interaction anisotropy.",
     "leg_coupling": "Spin-ladder leg coupling.",
@@ -557,6 +570,38 @@ for _builder, _category, _basis, _dimension, _description, _defaults in (
         "Random-field Heisenberg chain",
         {"n_sites": 4, "coupling": 1.0, "disorder": 1.0, "seed": 0},
     ),
+    (
+        benchmarks.graphene_lattice,
+        "tight_binding",
+        "single particle",
+        "2*n_rows*n_cols",
+        "Finite nearest-neighbor graphene lattice",
+        {"n_rows": 3, "n_cols": 3, "hopping": 1.0},
+    ),
+    (
+        benchmarks.anderson_square_lattice,
+        "tight_binding",
+        "single particle",
+        "n_rows*n_cols",
+        "Two-dimensional Anderson-disordered square lattice",
+        {"n_rows": 4, "n_cols": 4, "hopping": 1.0, "disorder": 1.0, "seed": 0},
+    ),
+    (
+        benchmarks.checkerboard_chern_insulator,
+        "topological",
+        "single particle",
+        "2*n_rows*n_cols",
+        "Two-orbital checkerboard Chern-insulator benchmark",
+        {"n_rows": 3, "n_cols": 3, "hopping": 1.0, "mass": 1.0},
+    ),
+    (
+        benchmarks.dice_lattice,
+        "tight_binding",
+        "single particle",
+        "3*n_rows*n_cols",
+        "Finite dice/T3 flat-band lattice",
+        {"n_rows": 3, "n_cols": 3, "hopping": 1.0},
+    ),
 ):
     MODEL_REGISTRY[_builder.__name__] = _info(
         _category,
@@ -565,6 +610,42 @@ for _builder, _category, _basis, _dimension, _description, _defaults in (
         "LatticeHamiltonian" if _basis == "single particle" else "DenseHamiltonian",
         _description,
         _builder,
+        _defaults,
+    )
+
+for _sparse_benchmark, _description, _defaults, _dimension in (
+    (
+        benchmarks.graphene_lattice_sparse,
+        "Sparse nearest-neighbor graphene lattice",
+        {"n_rows": 3, "n_cols": 3, "hopping": 1.0},
+        "2*n_rows*n_cols",
+    ),
+    (
+        benchmarks.anderson_square_lattice_sparse,
+        "Sparse two-dimensional Anderson model",
+        {"n_rows": 4, "n_cols": 4, "hopping": 1.0, "disorder": 1.0, "seed": 0},
+        "n_rows*n_cols",
+    ),
+    (
+        benchmarks.checkerboard_chern_insulator_sparse,
+        "Sparse two-orbital checkerboard Chern insulator",
+        {"n_rows": 3, "n_cols": 3, "hopping": 1.0, "mass": 1.0},
+        "2*n_rows*n_cols",
+    ),
+    (
+        benchmarks.dice_lattice_sparse,
+        "Sparse dice/T3 flat-band lattice",
+        {"n_rows": 3, "n_cols": 3, "hopping": 1.0},
+        "3*n_rows*n_cols",
+    ),
+):
+    MODEL_REGISTRY[_sparse_benchmark.__name__] = _info(
+        "topological" if "chern" in _sparse_benchmark.__name__ else "tight_binding",
+        "single particle",
+        _dimension,
+        "scipy.sparse.csr_matrix",
+        _description,
+        _sparse_benchmark,
         _defaults,
     )
 
@@ -690,16 +771,47 @@ for _sector_builder, _description, _defaults in (
         "Fixed-magnetization XXZ spin chain",
         {"n_sites": 6, "magnetization": 0, "coupling": 1.0, "anisotropy": 1.0},
     ),
+    (
+        spin.heisenberg_ladder_sector_sparse,
+        "Fixed-magnetization two-leg Heisenberg ladder",
+        {
+            "n_rungs": 3,
+            "magnetization": 0,
+            "leg_coupling": 1.0,
+            "rung_coupling": 1.0,
+        },
+    ),
 ):
+    dimension = (
+        "comb(2*n_rungs,(2*n_rungs-magnetization)//2)"
+        if "ladder" in _sector_builder.__name__
+        else "comb(n_sites,(n_sites-magnetization)//2)"
+    )
     MODEL_REGISTRY[_sector_builder.__name__] = _info(
         "spin",
         "fixed magnetization qubit",
-        "comb(n_sites,(n_sites-magnetization)//2)",
+        dimension,
         "SpinSectorHamiltonian",
         _description,
         _sector_builder,
         _defaults,
     )
+
+MODEL_REGISTRY["fermi_hubbard_chain_sector_sparse"] = _info(
+    "many_body",
+    "fixed spinful fermion occupation",
+    "comb(n_sites,n_up)*comb(n_sites,n_down)",
+    "FermiHubbardSector",
+    "Spinful Fermi-Hubbard chain in a fixed (N_up, N_down) sector",
+    fermion_sector.fermi_hubbard_chain_sector_sparse,
+    {
+        "n_sites": 4,
+        "n_up": 2,
+        "n_down": 2,
+        "hopping": 1.0,
+        "interaction": 1.0,
+    },
+)
 
 for _validated_model in (
     "transverse_field_ising",
@@ -715,6 +827,16 @@ for _validated_model in (
     "haldane_honeycomb_lattice_sparse",
     "heisenberg_chain_sector_sparse",
     "xxz_chain_sector_sparse",
+    "heisenberg_ladder_sector_sparse",
+    "fermi_hubbard_chain_sector_sparse",
+    "graphene_lattice",
+    "graphene_lattice_sparse",
+    "anderson_square_lattice",
+    "anderson_square_lattice_sparse",
+    "checkerboard_chern_insulator",
+    "checkerboard_chern_insulator_sparse",
+    "dice_lattice",
+    "dice_lattice_sparse",
 ):
     MODEL_REGISTRY[_validated_model] = replace(
         MODEL_REGISTRY[_validated_model],
@@ -822,6 +944,25 @@ def unregister_model(name: str) -> ModelInfo:
         return MODEL_REGISTRY.pop(name)
     except KeyError as exc:
         raise KeyError(f"Unknown model {name!r}.") from exc
+
+
+def load_model_plugins(
+    group: str = "quantum_lattice_models.models",
+) -> dict[str, str]:
+    """Load third-party registration callbacks from Python entry points."""
+
+    loaded: dict[str, str] = {}
+    for entry_point in entry_points(group=group):
+        try:
+            callback = entry_point.load()
+            if not callable(callback):
+                raise TypeError("plugin entry point must resolve to a callable")
+            callback(register_model, api_version=PLUGIN_API_VERSION)
+        except Exception as exc:
+            loaded[entry_point.name] = f"error: {type(exc).__name__}: {exc}"
+        else:
+            loaded[entry_point.name] = "loaded"
+    return loaded
 
 
 def model_table() -> list[dict[str, object]]:

@@ -35,11 +35,19 @@ $(0\uparrow,0\downarrow,1\uparrow,1\downarrow,\ldots)$.</p>
 <p><img src="../diagrams/fermi_hubbard_sign.svg" alt="Fermionic hopping sign" /></p>
 <h2>Basis and scaling</h2>
 <p>There are $2N$ binary orbitals and dimension $2^{2N}$. Dense and CSR builders
-are available.</p>
+are available. Fixed spin-resolved particle numbers reduce the dimension to
+$\binom{N}{N_\uparrow}\binom{N}{N_\downarrow}$ while preserving explicit
+full-basis occupation-state mappings.</p>
 <h2>Package use</h2>
 <pre><code class="language-python">from quantum_lattice_models import fermi_hubbard_chain_sparse
 
 H = fermi_hubbard_chain_sparse(n_sites=4, hopping=1.0, interaction=4.0)
+
+from quantum_lattice_models import fermi_hubbard_chain_sector
+
+sector = fermi_hubbard_chain_sector(
+    n_sites=8, n_up=4, n_down=4, interaction=4.0
+)
 </code></pre>
 <h2>Parameters</h2>
 <table>
@@ -126,8 +134,9 @@ H = fermi_hubbard_chain_sparse(n_sites=4, hopping=1.0, interaction=4.0)
 </tbody>
 </table>
 <h2>Validation and cautions</h2>
-<p>Single-site energies and an explicit fermionic parity-sign case are tested.
-The full occupation basis grows faster than the spin-chain basis.</p>
+<p>Single-site energies and explicit fermionic parity-sign cases are tested.
+Sector matrices are validated against full-space blocks for open and periodic
+chains. The full occupation basis grows faster than the spin-chain basis.</p>
 
       </article>
     </main>

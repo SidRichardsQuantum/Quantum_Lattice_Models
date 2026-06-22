@@ -69,7 +69,9 @@ Periodic boundaries reconnect opposite ends or edges. Chain models use
 <code>periodic</code>; two-dimensional finite lattices use independent <code>periodic_x</code> and
 <code>periodic_y</code> flags.</p>
 <p>Periodic finite real-space matrices are distinct from Bloch Hamiltonians
-$H(\mathbf k)$. Bloch and reciprocal-space support remains roadmap work.</p>
+$H(\mathbf k)$. The periodic-lattice API constructs Bloch Hamiltonians in
+documented cell or orbital gauges and supports reciprocal vectors, momentum
+paths, bands, Berry curvature, Wilson loops, and reference invariants.</p>
 <h2>Dense and sparse matrices</h2>
 <p>Dense matrices are NumPy arrays or metadata-bearing NumPy subclasses. Selected
 lattice and Hubbard models also provide SciPy CSR builders. Matching dense and

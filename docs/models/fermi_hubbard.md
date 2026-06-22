@@ -20,7 +20,9 @@ $(0\uparrow,0\downarrow,1\uparrow,1\downarrow,\ldots)$.
 ## Basis and scaling
 
 There are $2N$ binary orbitals and dimension $2^{2N}$. Dense and CSR builders
-are available.
+are available. Fixed spin-resolved particle numbers reduce the dimension to
+$\binom{N}{N_\uparrow}\binom{N}{N_\downarrow}$ while preserving explicit
+full-basis occupation-state mappings.
 
 ## Package use
 
@@ -28,6 +30,12 @@ are available.
 from quantum_lattice_models import fermi_hubbard_chain_sparse
 
 H = fermi_hubbard_chain_sparse(n_sites=4, hopping=1.0, interaction=4.0)
+
+from quantum_lattice_models import fermi_hubbard_chain_sector
+
+sector = fermi_hubbard_chain_sector(
+    n_sites=8, n_up=4, n_down=4, interaction=4.0
+)
 ```
 
 ## Parameters
@@ -36,5 +44,6 @@ H = fermi_hubbard_chain_sparse(n_sites=4, hopping=1.0, interaction=4.0)
 
 ## Validation and cautions
 
-Single-site energies and an explicit fermionic parity-sign case are tested.
-The full occupation basis grows faster than the spin-chain basis.
+Single-site energies and explicit fermionic parity-sign cases are tested.
+Sector matrices are validated against full-space blocks for open and periodic
+chains. The full occupation basis grows faster than the spin-chain basis.

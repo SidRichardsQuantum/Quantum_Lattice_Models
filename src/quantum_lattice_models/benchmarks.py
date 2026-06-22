@@ -5,9 +5,16 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 import numpy as np
+import scipy.sparse as sp
 
-from quantum_lattice_models._model_utils import add_symmetric_hopping, nearest_neighbor_bonds
+from quantum_lattice_models._model_utils import (
+    add_symmetric_hopping,
+    nearest_neighbor_bonds,
+    validate_positive_int,
+)
+from quantum_lattice_models.geometry import honeycomb_lattice_positions
 from quantum_lattice_models.spin import SpinField, SpinInteraction, graph_spin_hamiltonian
+from quantum_lattice_models.topological import haldane_honeycomb_lattice_sparse
 from quantum_lattice_models.types import LatticeHamiltonian
 
 
@@ -31,6 +38,296 @@ def anderson_chain(
         basis="single_particle",
         lattice_shape=(n_sites,),
         metadata={"disorder": disorder, "seed": seed, "periodic": periodic},
+    )
+
+
+def graphene_lattice(
+    n_rows: int,
+    n_cols: int,
+    hopping: float = 1.0,
+    periodic_x: bool = False,
+    periodic_y: bool = False,
+) -> LatticeHamiltonian:
+    """Return a finite nearest-neighbor graphene/honeycomb Hamiltonian."""
+
+    matrix = graphene_lattice_sparse(n_rows, n_cols, hopping, periodic_x, periodic_y).toarray()
+    return LatticeHamiltonian(
+        matrix,
+        model_name="graphene_lattice",
+        basis="single_particle",
+        lattice_shape=(n_rows, n_cols, 2),
+        metadata={
+            "periodic_x": periodic_x,
+            "periodic_y": periodic_y,
+            "hopping": hopping,
+            "positions": honeycomb_lattice_positions(n_rows, n_cols),
+            "sublattice_labels": tuple(
+                label for _ in range(n_rows * n_cols) for label in ("A", "B")
+            ),
+        },
+    )
+
+
+def graphene_lattice_sparse(
+    n_rows: int,
+    n_cols: int,
+    hopping: float = 1.0,
+    periodic_x: bool = False,
+    periodic_y: bool = False,
+) -> sp.csr_matrix:
+    """Return a sparse finite graphene/honeycomb Hamiltonian."""
+
+    return haldane_honeycomb_lattice_sparse(
+        n_rows,
+        n_cols,
+        t1=hopping,
+        t2=0.0,
+        phi=0.0,
+        sublattice_potential=0.0,
+        periodic_x=periodic_x,
+        periodic_y=periodic_y,
+    )
+
+
+def anderson_square_lattice(
+    n_rows: int,
+    n_cols: int,
+    hopping: float = 1.0,
+    disorder: float = 1.0,
+    seed: int = 0,
+    periodic_x: bool = False,
+    periodic_y: bool = False,
+) -> LatticeHamiltonian:
+    """Return a reproducible two-dimensional Anderson model."""
+
+    matrix = anderson_square_lattice_sparse(
+        n_rows, n_cols, hopping, disorder, seed, periodic_x, periodic_y
+    ).toarray()
+    return LatticeHamiltonian(
+        matrix,
+        model_name="anderson_square_lattice",
+        basis="single_particle",
+        lattice_shape=(n_rows, n_cols),
+        metadata={
+            "disorder": disorder,
+            "seed": seed,
+            "periodic_x": periodic_x,
+            "periodic_y": periodic_y,
+            "positions": _square_positions(n_rows, n_cols),
+        },
+    )
+
+
+def anderson_square_lattice_sparse(
+    n_rows: int,
+    n_cols: int,
+    hopping: float = 1.0,
+    disorder: float = 1.0,
+    seed: int = 0,
+    periodic_x: bool = False,
+    periodic_y: bool = False,
+) -> sp.csr_matrix:
+    """Return a sparse two-dimensional Anderson Hamiltonian."""
+
+    validate_positive_int(n_rows, "n_rows")
+    validate_positive_int(n_cols, "n_cols")
+    rng = np.random.default_rng(seed)
+    matrix = sp.diags(
+        rng.uniform(-disorder / 2, disorder / 2, n_rows * n_cols),
+        format="lil",
+        dtype=complex,
+    )
+
+    def index(row: int, col: int) -> int:
+        return row * n_cols + col
+
+    for row in range(n_rows):
+        for col in range(n_cols):
+            for d_row, d_col, periodic in ((0, 1, periodic_x), (1, 0, periodic_y)):
+                next_row, next_col = row + d_row, col + d_col
+                if next_col >= n_cols:
+                    if not periodic:
+                        continue
+                    next_col = 0
+                if next_row >= n_rows:
+                    if not periodic:
+                        continue
+                    next_row = 0
+                if index(row, col) != index(next_row, next_col):
+                    add_symmetric_hopping(
+                        matrix, index(row, col), index(next_row, next_col), -hopping
+                    )
+    return matrix.tocsr()
+
+
+def checkerboard_chern_insulator(
+    n_rows: int,
+    n_cols: int,
+    hopping: float = 1.0,
+    mass: float = 1.0,
+    periodic_x: bool = False,
+    periodic_y: bool = False,
+) -> LatticeHamiltonian:
+    """Return a two-orbital square-lattice Chern-insulator benchmark."""
+
+    matrix = checkerboard_chern_insulator_sparse(
+        n_rows, n_cols, hopping, mass, periodic_x, periodic_y
+    ).toarray()
+    return LatticeHamiltonian(
+        matrix,
+        model_name="checkerboard_chern_insulator",
+        basis="single_particle",
+        lattice_shape=(n_rows, n_cols, 2),
+        metadata={
+            "mass": mass,
+            "hopping": hopping,
+            "convention": "Qi-Wu-Zhang-type two-orbital checkerboard representation",
+            "positions": _two_orbital_square_positions(n_rows, n_cols),
+            "orbital_labels": tuple(label for _ in range(n_rows * n_cols) for label in ("A", "B")),
+        },
+    )
+
+
+def checkerboard_chern_insulator_sparse(
+    n_rows: int,
+    n_cols: int,
+    hopping: float = 1.0,
+    mass: float = 1.0,
+    periodic_x: bool = False,
+    periodic_y: bool = False,
+) -> sp.csr_matrix:
+    """Return the sparse real-space two-band Chern-insulator matrix."""
+
+    validate_positive_int(n_rows, "n_rows")
+    validate_positive_int(n_cols, "n_cols")
+    sigma_x = np.array([[0, 1], [1, 0]], dtype=complex)
+    sigma_y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+    sigma_z = np.diag([1.0, -1.0]).astype(complex)
+    matrix = sp.lil_matrix((2 * n_rows * n_cols, 2 * n_rows * n_cols), dtype=complex)
+
+    def cell(row: int, col: int) -> int:
+        return 2 * (row * n_cols + col)
+
+    for row in range(n_rows):
+        for col in range(n_cols):
+            start = cell(row, col)
+            matrix[start : start + 2, start : start + 2] += mass * sigma_z
+            for d_row, d_col, periodic, pauli in (
+                (0, 1, periodic_x, sigma_x),
+                (1, 0, periodic_y, sigma_y),
+            ):
+                next_row, next_col = row + d_row, col + d_col
+                if next_col >= n_cols:
+                    if not periodic:
+                        continue
+                    next_col = 0
+                if next_row >= n_rows:
+                    if not periodic:
+                        continue
+                    next_row = 0
+                target = cell(next_row, next_col)
+                hopping_block = 0.5 * hopping * (sigma_z - 1j * pauli)
+                matrix[start : start + 2, target : target + 2] += hopping_block
+                matrix[target : target + 2, start : start + 2] += hopping_block.conj().T
+    return matrix.tocsr()
+
+
+def dice_lattice(
+    n_rows: int,
+    n_cols: int,
+    hopping: float = 1.0,
+    periodic_x: bool = False,
+    periodic_y: bool = False,
+) -> LatticeHamiltonian:
+    """Return a finite dice/T3 lattice with one hub and two rim sites per cell."""
+
+    matrix = dice_lattice_sparse(n_rows, n_cols, hopping, periodic_x, periodic_y).toarray()
+    return LatticeHamiltonian(
+        matrix,
+        model_name="dice_lattice",
+        basis="single_particle",
+        lattice_shape=(n_rows, n_cols, 3),
+        metadata={
+            "hopping": hopping,
+            "periodic_x": periodic_x,
+            "periodic_y": periodic_y,
+            "positions": _dice_positions(n_rows, n_cols),
+            "sublattice_labels": tuple(
+                label for _ in range(n_rows * n_cols) for label in ("hub", "rim-A", "rim-B")
+            ),
+        },
+    )
+
+
+def dice_lattice_sparse(
+    n_rows: int,
+    n_cols: int,
+    hopping: float = 1.0,
+    periodic_x: bool = False,
+    periodic_y: bool = False,
+) -> sp.csr_matrix:
+    """Return a sparse finite dice/T3 lattice Hamiltonian."""
+
+    validate_positive_int(n_rows, "n_rows")
+    validate_positive_int(n_cols, "n_cols")
+    matrix = sp.lil_matrix((3 * n_rows * n_cols, 3 * n_rows * n_cols), dtype=complex)
+
+    def index(row: int, col: int, orbital: int) -> int:
+        return 3 * (row * n_cols + col) + orbital
+
+    def wrapped(row: int, col: int) -> tuple[int, int] | None:
+        if col < 0 or col >= n_cols:
+            if not periodic_x:
+                return None
+            col %= n_cols
+        if row < 0 or row >= n_rows:
+            if not periodic_y:
+                return None
+            row %= n_rows
+        return row, col
+
+    for row in range(n_rows):
+        for col in range(n_cols):
+            hub = index(row, col, 0)
+            for orbital, offsets in (
+                (1, ((0, 0), (0, -1), (-1, 0))),
+                (2, ((0, 0), (0, 1), (1, 0))),
+            ):
+                for d_row, d_col in offsets:
+                    target_cell = wrapped(row + d_row, col + d_col)
+                    if target_cell is not None:
+                        add_symmetric_hopping(
+                            matrix,
+                            hub,
+                            index(*target_cell, orbital),
+                            -hopping,
+                        )
+    return matrix.tocsr()
+
+
+def _square_positions(n_rows: int, n_cols: int) -> np.ndarray:
+    return np.asarray([(float(col), float(-row)) for row in range(n_rows) for col in range(n_cols)])
+
+
+def _two_orbital_square_positions(n_rows: int, n_cols: int) -> np.ndarray:
+    return np.asarray(
+        [
+            (float(col) + offset, float(-row))
+            for row in range(n_rows)
+            for col in range(n_cols)
+            for offset in (-0.12, 0.12)
+        ]
+    )
+
+
+def _dice_positions(n_rows: int, n_cols: int) -> np.ndarray:
+    return np.asarray(
+        [
+            (float(col) + x_offset, float(-row) + y_offset)
+            for row in range(n_rows)
+            for col in range(n_cols)
+            for x_offset, y_offset in ((0.0, 0.0), (-0.25, 0.2), (0.25, -0.2))
+        ]
     )
 
 

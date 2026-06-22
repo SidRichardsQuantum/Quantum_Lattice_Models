@@ -609,6 +609,54 @@ def plot_interaction_graph(
     return ax
 
 
+def plot_spin_texture(
+    model: ModelSpec,
+    expectations: np.ndarray,
+    ax=None,
+    *,
+    scale: float = 0.35,
+    show_labels: bool = True,
+):
+    """Plot local ``(X,Y)`` arrows with ``Z`` expectation encoded by color."""
+
+    import matplotlib.pyplot as plt
+
+    from quantum_lattice_models.visual_export import spin_texture_plot_data
+
+    data = spin_texture_plot_data(model, expectations)
+    if ax is None:
+        _, ax = plt.subplots()
+    positions = np.asarray([site["position"][:2] for site in data["sites"]], dtype=float)
+    vectors = np.asarray([site["vector"] for site in data["sites"]], dtype=float)
+    scatter = ax.scatter(
+        positions[:, 0],
+        positions[:, 1],
+        c=vectors[:, 2],
+        cmap="coolwarm",
+        vmin=-1,
+        vmax=1,
+        zorder=3,
+    )
+    ax.quiver(
+        positions[:, 0],
+        positions[:, 1],
+        vectors[:, 0],
+        vectors[:, 1],
+        angles="xy",
+        scale_units="xy",
+        scale=1 / scale,
+        color="#222222",
+        zorder=4,
+    )
+    if show_labels:
+        for site, position in zip(data["sites"], positions, strict=True):
+            ax.text(position[0], position[1], str(site["site"]), ha="center", va="bottom")
+    ax.figure.colorbar(scatter, ax=ax, label=r"$\langle Z\rangle$")
+    ax.set_aspect("equal")
+    ax.set_title("Local spin texture")
+    return ax
+
+
 def plot_lattice_state(
     H: np.ndarray,
     state: np.ndarray,

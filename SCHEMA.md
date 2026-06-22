@@ -2,7 +2,9 @@
 
 Quantum Lattice Models uses versioned JSON-compatible `ModelSpec` and
 `LatticeSpec` records. JSON is the canonical interchange format; CSV and
-GraphML adapters translate through the same lattice representation.
+GraphML adapters translate through the same lattice representation. Optional
+YAML is a syntax adapter for the same validated model dictionary and does not
+define a separate schema.
 
 The current schema version is `1.0`.
 
@@ -86,6 +88,27 @@ indices remain distinct.
 
 These fields are optional for compatibility with existing schema `1.0` files.
 Newly created specifications populate them for supported model families.
+
+## Reduced-basis mapping
+
+`ReducedBasisMapping` is the common portable description used by spin, boson,
+and fermion sectors. It stores:
+
+- The reduced-basis kind and full Hilbert-space dimension
+- One full-basis integer state for every reduced row
+- Explicit conserved quantum numbers
+- Optional row labels and convention metadata
+
+Projection, embedding, operator reduction, and reduced-state expectation
+values use this record rather than inferring sector indices from local-degree
+or tensor-factor mappings.
+
+## Declarative visual records
+
+Visual metadata may describe multi-panel layouts, spin-texture arrows, matrix
+block boundaries and labels, interaction styles, and lattice transformation
+annotations. These records refer to physical or numerical data and do not
+embed rendered image bytes.
 
 ## Artifact bundles
 
@@ -182,6 +205,19 @@ and edge attributes for complex matrix elements. A canonical lattice JSON
 record is stored as a graph attribute so standardized metadata survives
 round trips. NetworkX and GraphML support requires the optional `networkx`
 extra.
+
+DOT and XYZ are intentionally narrower formats. DOT represents geometry
+connectivity and labels; XYZ represents coordinates and labels but does not
+infer bonds, orbitals, or Hamiltonian terms. ASE imports likewise preserve
+structure data without claiming a complete physical model.
+
+OpenFermion, Qiskit, QuSpin, NetKet, and QuTiP adapters are optional and check
+that local-degree, operator, and basis conventions match the target package.
+
+Model plugins use the `quantum_lattice_models.models` entry-point group. Each
+entry point resolves to a callable accepting `register_model` and the keyword
+`api_version`. Plugins must reject unsupported API versions explicitly; load
+errors are returned as diagnosable status records.
 
 ## Validation
 
