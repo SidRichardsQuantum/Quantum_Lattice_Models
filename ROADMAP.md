@@ -115,6 +115,57 @@ A user should be able to:
 - Preserve richer orbital and interaction semantics through structure imports.
 - Add portable adapter capability reports before translating a model.
 
+## Model Intake and Authoring Experience
+
+Users should be able to import, create, inspect, validate, and translate lattice
+models through a small number of predictable workflows. Future work in this area
+should make the package more useful as a model-intake layer rather than only a
+collection of named Hamiltonian builders.
+
+### Canonical physical-model summaries
+
+- Provide a user-facing summary for imported or constructed models, including
+  sites, orbitals, local degrees of freedom, basis ordering, terms, geometry,
+  boundary conditions, symmetries, sectors, provenance, and reconstruction
+  limits.
+- Make the normalized physical-system representation easy to access from every
+  supported model family, including spin, tight-binding, Hubbard, bosonic, and
+  BdG systems.
+- Clearly distinguish reconstructable model specifications, external imported
+  matrices, lossy ecosystem translations, analysis-only result records, and
+  rendered visual artifacts.
+
+### Import diagnostics and model linting
+
+- Report what each importer inferred, what metadata was missing, which
+  conventions were assumed, and which downstream operations may be unsafe or
+  lossy.
+- Add model-linting checks for Hermiticity, duplicate or missing labels,
+  inconsistent bond directions, invalid local Hilbert spaces, basis-dimension
+  mismatches, advertised symmetry violations, and dense-construction resource
+  risks.
+- Suggest relevant validation checks after import, such as connected-component
+  inspection, conserved-quantity commutators, sector block validation, or
+  reference spectra where applicable.
+
+### Creation recipes and graph-spin workflows
+
+- Add higher-level recipe constructors for common lattice-model authoring
+  tasks, while preserving explicit physical conventions and portable metadata.
+- Keep graph-spin models first-class in import, export, visualization, sector
+  construction, and NetworkX-style workflows.
+- Support arbitrary graph-spin interactions with site labels, coordinates,
+  edge-type metadata, Pauli-term labels, symmetry-sector metadata, and clear
+  conversion limitations.
+
+### Adapter capability reports
+
+- Provide capability reports for importers and exporters before translation,
+  including whether geometry, labels, complex hoppings, spin terms, sectors,
+  units, references, provenance, and reconstruction metadata will be preserved.
+- Expand adapter convention coverage so partial translations fail clearly or
+  report loss explicitly.
+
 ## Priority 3: Additional Lattice Transformations
 
 Finite lattices are particularly useful when translation symmetry is broken.

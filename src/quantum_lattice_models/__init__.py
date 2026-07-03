@@ -103,6 +103,14 @@ from quantum_lattice_models.hubbard import (
     fermi_hubbard_chain,
     fermi_hubbard_chain_sparse,
 )
+from quantum_lattice_models.intake import (
+    AdapterCapabilityReport,
+    ModelLintReport,
+    ModelSummary,
+    adapter_capability_report,
+    describe_model,
+    lint_model,
+)
 from quantum_lattice_models.interchange import (
     export_graphml,
     export_lattice_csv,
@@ -477,8 +485,14 @@ __all__ = [
     "unregister_model",
     "MatrixDiagnostics",
     "ModelInspection",
+    "ModelSummary",
+    "ModelLintReport",
+    "AdapterCapabilityReport",
     "ModelComparison",
     "compare_models",
+    "describe_model",
+    "lint_model",
+    "adapter_capability_report",
     "inspect_model",
     "diagnose_matrix",
     "estimate_dense_memory",

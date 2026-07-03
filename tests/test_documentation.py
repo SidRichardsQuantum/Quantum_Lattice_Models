@@ -64,12 +64,12 @@ def test_notebook_curriculum_is_contiguous_and_rendered() -> None:
 def test_notebooks_share_standard_introductory_content_blocks() -> None:
     import json
 
-    required = ("**Model.**", "**Typical uses.**", "**Parameters.**", "**Useful plots.**")
+    required = ("# ", "**Purpose.**", "**Lattice model.**", "**Variables.**")
     for path in sorted(Path("notebooks").glob("*.ipynb")):
         notebook = json.loads(path.read_text())
-        introduction = "".join(notebook["cells"][0]["source"])
-        for block in required:
-            assert block in introduction, f"{path}: missing {block}"
+        introduction = ["".join(cell["source"]) for cell in notebook["cells"][: len(required)]]
+        for index, block in enumerate(required):
+            assert introduction[index].startswith(block), f"{path}: missing {block}"
 
 
 def test_example_set_focuses_on_distinct_workflows() -> None:

@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.1.9
+
+This release adds lightweight model-intake APIs for summaries, linting, and
+adapter capability reports, and improves roadmap clarity and test-suite
+maintainability for model import, authoring, and optional-export workflows.
+
+### Added
+
+- Added `describe_model` and `ModelSummary` for compact user-facing summaries
+  of portable model specifications and persisted Hamiltonian results.
+- Added `lint_model` and `ModelLintReport` for model-intake diagnostics covering
+  validation errors, duplicate labels, missing geometry metadata, unspecified
+  boundary conditions, non-Hermitian matrices, reconstruction limits, and
+  suggested follow-up checks.
+- Added `adapter_capability_report` and `AdapterCapabilityReport` to report
+  which model semantics are preserved or lost before translating to supported
+  text, graph, visual, operator, and solver-adapter targets.
+
+### Changed
+
+- Updated project version metadata to `0.1.9`.
+- Expanded the roadmap with future model-intake and authoring priorities,
+  including canonical physical-model summaries, import diagnostics, model
+  linting, higher-level creation recipes, first-class graph-spin workflows, and
+  adapter capability reports.
+
+### Tests
+
+- Added intake tests for model summaries, lint diagnostics, and adapter
+  capability reports.
+- Reworked the PennyLane export test to use a lightweight fake optional backend
+  instead of importing PennyLane during the default test run.
+- Added explicit coverage for the missing-PennyLane error path.
+
 ## v0.1.8
 
 This release adds generalized symmetry sectors and reduced-basis mappings,
