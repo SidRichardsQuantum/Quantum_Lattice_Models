@@ -19,6 +19,19 @@ from quantum_lattice_models.spectra import (
 )
 
 
+def test_model_namespaces_preserve_flat_compatibility_exports() -> None:
+    from quantum_lattice_models.models import heisenberg_chain, ssh_model
+    from quantum_lattice_models.models.benchmarks import graphene_lattice
+    from quantum_lattice_models.models.particles import ssh_model as namespaced_ssh
+    from quantum_lattice_models.models.periodic import ssh_unit_cell
+    from quantum_lattice_models.models.spin import heisenberg_chain as namespaced_heisenberg
+
+    assert namespaced_ssh is ssh_model
+    assert namespaced_heisenberg is heisenberg_chain
+    assert graphene_lattice(1, 1).shape == (2, 2)
+    assert ssh_unit_cell().n_orbitals == 2
+
+
 def test_operator_construction_and_validation() -> None:
     assert np.allclose(pauli_string_matrix(("X", "I")), np.kron(PAULI_X, np.eye(2)))
     with pytest.raises(ValueError, match="At least one operator"):

@@ -47,8 +47,19 @@ This repository is organized as an installable package first.
 The real logic lives in `src/quantum_lattice_models/`; notebooks, scripts, and examples should stay thin and import the public package API.
 The top-level `quantum_lattice_models` API imports directly from focused modules
 such as `spin`, `tight_binding`, `hubbard`, and `topological`.
-`quantum_lattice_models.models` remains available as a backwards-compatible
-re-export surface.
+`quantum_lattice_models.models` remains a backwards-compatible re-export
+surface and now provides focused namespaces for new code:
+
+```python
+from quantum_lattice_models.models.spin import heisenberg_chain
+from quantum_lattice_models.models.particles import ssh_model
+from quantum_lattice_models.models.periodic import ssh_unit_cell
+from quantum_lattice_models.models.benchmarks import graphene_lattice
+```
+
+The `topological` model namespace contains finite Haldane, Hofstadter, and
+Kitaev-chain builders. Existing flat imports from `quantum_lattice_models` and
+`quantum_lattice_models.models` remain supported.
 
 ## Implemented Models
 
@@ -521,6 +532,7 @@ plot_lattice_state(H, vectors[:, 0])
 
 ```text
 src/quantum_lattice_models/  Package source
+  models/                    Model builders grouped by physical domain
 tests/                       Pytest test suite
 examples/                    Command-line examples that save plots
 notebooks/                   Thin-client exploratory notebooks
@@ -530,7 +542,7 @@ ROADMAP.md                   Planned capabilities and engineering priorities
 VALIDATION.md                Scientific reference checks and diagnostics
 USAGE.md                     API examples
 THEORY.md                    Shared theory, basis, and numerical conventions
-docs/models/                 Per-model Markdown references and generated HTML
+docs/models/                 Per-model references and generated HTML
 RESULTS.md                   Generated results
 SCHEMA.md                    Portable schema and compatibility policy
 IMPORTING.md                 CSV, GraphML, and transformation workflow
@@ -559,11 +571,13 @@ interchange.py               CSV, NetworkX, and GraphML adapters
 transformations.py           Immutable lattice transformations
 diagnostics.py               Matrix and pre-build resource diagnostics
 comparison.py                Model parameter, matrix, spectrum, and gap comparison
-registry.py                  Structured model metadata
-specs.py                     Versioned portable model and lattice specifications
+registry.py                  Built-in model catalog and registry operations
+_registry_core.py            Registry metadata and parameter validation
+specs.py                     Portable model/lattice records and factories
+_schema_codec.py             Portable JSON encoding and schema validation
 storage.py                   Metadata-preserving NPY and NPZ persistence
 cli.py                       quantum-lattice command-line entry point
-models.py                    Backwards-compatible re-export layer
+models/                      Domain namespaces and compatible flat re-exports
 ```
 
 ## Notebooks as Thin Clients

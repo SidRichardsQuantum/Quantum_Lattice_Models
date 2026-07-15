@@ -113,7 +113,7 @@ A user should be able to:
 
 - Add schema migrations only when future schema revisions require them.
 - Preserve richer orbital and interaction semantics through structure imports.
-- Add portable adapter capability reports before translating a model.
+- Expand capability reports as new importers, exporters, and conventions are added.
 
 ## Model Intake and Authoring Experience
 
@@ -158,11 +158,8 @@ collection of named Hamiltonian builders.
   edge-type metadata, Pauli-term labels, symmetry-sector metadata, and clear
   conversion limitations.
 
-### Adapter capability reports
+### Adapter convention coverage
 
-- Provide capability reports for importers and exporters before translation,
-  including whether geometry, labels, complex hoppings, spin terms, sectors,
-  units, references, provenance, and reconstruction metadata will be preserved.
 - Expand adapter convention coverage so partial translations fail clearly or
   report loss explicitly.
 
@@ -213,7 +210,7 @@ Physical data and declarative visual metadata may be portable. Rendered image
 bytes should remain derived artifacts rather than being embedded in
 `ModelSpec`.
 
-## Priority 6: Extend Result and Visual-Artifact Records
+## Priority 5: Extend Result and Visual-Artifact Records
 
 Portable analysis records now cover spectra, bands, topology, and selected spin
 observables with JSON or NPZ persistence, bundle integration, and plot
@@ -224,7 +221,7 @@ regeneration. Future extensions include:
 - Broader styling validation and cross-panel axis/link conventions
 - Result-schema migrations when future revisions require them
 
-## Priority 7: Reference Analysis
+## Priority 6: Reference Analysis
 
 Reference analysis should stay directly connected to model inspection,
 validation, and interchange.
@@ -257,7 +254,7 @@ many-body solver packages.
 Checkpointing, distributed execution, and general workflow orchestration should
 be delegated to external tools.
 
-## Priority 8: Symmetry-Reduced Bases
+## Priority 7: Symmetry-Reduced Bases
 
 Reduced bases should be added where the conserved quantity is explicit and the
 mapping to the full basis is testable.
@@ -309,8 +306,8 @@ QuSpin, NetKet, and QuTiP adapters are available. Remaining adapter work:
 Future maturity work:
 
 - Gauge-equivalent constructions where applicable
-- Increase annotation completeness now that the package ships `py.typed`.
-- Raise coverage expectations as optional-adapter test environments are added.
+- Expand the type-checking baseline as annotation completeness improves.
+- Raise coverage expectations as optional-adapter coverage grows.
 - Add performance regression thresholds to representative benchmarks.
 
 ## Near-Term Backlog
@@ -319,9 +316,9 @@ Recommended implementation order:
 
 1. Add parity sectors and extend transformations to interacting particle
    models.
-2. Add adapter capability reports and selected pymatgen/CIF workflows.
+2. Add selected pymatgen/CIF workflows and broaden adapter convention coverage.
 3. Add solver iteration reporting and simple spectral-function records.
-4. Improve annotation completeness, optional-adapter CI, and benchmark
+4. Improve annotation completeness, optional-adapter coverage, and benchmark
    regression thresholds.
 5. Add the Kitaev honeycomb model only with documented gauge and sector
    conventions.

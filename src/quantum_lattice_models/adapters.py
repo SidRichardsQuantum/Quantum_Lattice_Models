@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -104,7 +105,7 @@ def import_lattice_xyz(path: str | Path) -> LatticeSpec:
     )
 
 
-def from_ase(atoms) -> LatticeSpec:
+def from_ase(atoms: Any) -> LatticeSpec:
     """Translate an ASE ``Atoms`` object into coordinate-only portable geometry."""
 
     positions = np.asarray(atoms.get_positions(), dtype=float)
@@ -121,7 +122,7 @@ def from_ase(atoms) -> LatticeSpec:
     )
 
 
-def to_openfermion(model: ModelSpec):
+def to_openfermion(model: ModelSpec) -> Any:
     """Translate portable fermion interaction records to ``FermionOperator``."""
 
     try:
@@ -146,7 +147,7 @@ def to_openfermion(model: ModelSpec):
     return operator
 
 
-def to_qiskit_sparse_pauli(model: ModelSpec):
+def to_qiskit_sparse_pauli(model: ModelSpec) -> Any:
     """Translate portable spin terms to Qiskit's ``SparsePauliOp``."""
 
     try:
@@ -167,7 +168,7 @@ def to_qiskit_sparse_pauli(model: ModelSpec):
     return SparsePauliOp(labels, coeffs=coefficients)
 
 
-def to_qutip_qobj(model: ModelSpec):
+def to_qutip_qobj(model: ModelSpec) -> Any:
     """Construct a QuTiP ``Qobj`` while retaining portable model metadata."""
 
     try:
@@ -182,7 +183,7 @@ def to_qutip_qobj(model: ModelSpec):
     return qutip.Qobj(matrix, dims=dims)
 
 
-def to_netket_graph(lattice: LatticeSpec):
+def to_netket_graph(lattice: LatticeSpec) -> Any:
     """Translate finite portable geometry to a NetKet graph."""
 
     try:
@@ -193,7 +194,7 @@ def to_netket_graph(lattice: LatticeSpec):
     return netket.graph.Graph(edges=edges, n_nodes=lattice.n_sites)
 
 
-def to_quspin_hamiltonian(model: ModelSpec, **basis_parameters):
+def to_quspin_hamiltonian(model: ModelSpec, **basis_parameters: Any) -> Any:
     """Translate portable spin Pauli terms to a QuSpin Hamiltonian."""
 
     try:
@@ -214,7 +215,7 @@ def to_quspin_hamiltonian(model: ModelSpec, **basis_parameters):
     return hamiltonian(static, [], basis=basis, dtype=np.complex128)
 
 
-def _yaml():
+def _yaml() -> Any:
     try:
         import yaml
     except ImportError as exc:

@@ -8,6 +8,39 @@ on:
   workflow_dispatch:
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install quality tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Check formatting
+        run: python -m black --check src tests examples scripts
+
+      - name: Lint
+        run: python -m ruff check src tests examples scripts
+
+      - name: Type check
+        run: python -m mypy
+
+      - name: Check generated model documentation
+        run: python scripts/build_model_docs.py --check
+
+      - name: Validate distributions
+        run: |
+          python -m build
+          python -m twine check dist/*
+
   tests:
     runs-on: ubuntu-latest
     strategy:
@@ -32,6 +65,35 @@ jobs:
 
       - name: Run tests
         run: pytest --cov=quantum_lattice_models --cov-report=term-missing
+
+  optional-adapters:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - extra: yaml
+            tests: tests/test_sectors_dynamics_and_plugins.py -k yaml_model_adapter
+          - extra: networkx
+            tests: tests/test_interchange.py tests/test_reduced_transformations_and_benchmarks.py -k networkx
+          - extra: ase
+            tests: tests/test_optional_adapters.py
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install optional adapter
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,${{ matrix.extra }}]"
+
+      - name: Run adapter tests
+        run: python -m pytest -q ${{ matrix.tests }}
 
   wheel-smoke:
     runs-on: ubuntu-latest

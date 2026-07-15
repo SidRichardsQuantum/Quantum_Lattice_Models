@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.1.10
+
+This release improves package maintainability and release confidence without
+changing the supported model or analysis semantics. It introduces focused
+model namespaces, separates registry and schema infrastructure, and expands
+continuous integration for typing, packaging, and optional adapters.
+
+### Added
+
+- Added focused `quantum_lattice_models.models.spin`, `particles`, `periodic`,
+  `topological`, and `benchmarks` namespaces while retaining the historical
+  flat model imports.
+- Added a strict MyPy baseline for public-facing model, intake, adapter,
+  registry, and schema infrastructure.
+- Added independent optional-adapter CI coverage for YAML, NetworkX, and ASE,
+  including an ASE coordinate, cell, and periodicity conversion test.
+
+### Changed
+
+- Updated project version metadata to `0.1.10`.
+- Separated registry metadata and parameter validation from the built-in model
+  catalog, and removed the registry's dependency on package-root imports.
+- Separated portable JSON encoding and schema validation helpers from the
+  model and lattice specification records.
+- Replaced the single `quantum_lattice_models.models` module with a package of
+  domain-specific namespaces; existing imports remain compatible.
+- Cleaned completed roadmap items and restored contiguous priority numbering.
+- Renamed version-based test modules according to the capabilities they cover.
+
+### Tests and packaging
+
+- Added pull-request checks for Black, Ruff, MyPy, generated documentation,
+  distribution builds, and Twine metadata validation.
+- Added namespace compatibility tests for both source and built-wheel imports.
+- Expanded the passing default suite to 169 tests.
+
 ## v0.1.9
 
 This release adds lightweight model-intake APIs for summaries, linting, and
