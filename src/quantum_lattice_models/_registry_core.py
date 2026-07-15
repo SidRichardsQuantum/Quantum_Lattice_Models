@@ -41,6 +41,8 @@ class ModelInfo:
     defaults: dict[str, object] = field(default_factory=dict)
     parameters: tuple[ParameterInfo, ...] = ()
     validation_status: str = "tested"
+    canonical_name: str | None = None
+    is_alias: bool = False
 
 
 @dataclass(frozen=True)

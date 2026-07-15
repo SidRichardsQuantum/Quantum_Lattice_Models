@@ -297,3 +297,12 @@ exported to `docs/notebooks/`. Generated figures are stored in
   provenance, and transformed-model construction.
 
 ![Imported and transformed lattice models](docs/notebook_outputs/21_lattice_import_and_transformations_1.png)
+
+### 22. Portable Model Intake Workflow
+
+- Notebook: `notebooks/22_model_intake_workflow.ipynb`
+- [Rendered HTML](docs/notebooks/22_model_intake_workflow.html)
+- Result: creates a fully described tight-binding model, reports intake and
+  GraphML capabilities, removes one site while preserving physical mappings,
+  round-trips the model, reconstructs the Hamiltonian, and exports a portable
+  bundle.

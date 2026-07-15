@@ -18,8 +18,8 @@ Future development is organized into three layers.
 
 Future core work includes:
 
-- A unified physical-system representation connecting geometry, local degrees
-  of freedom, basis ordering, and interaction terms
+- Extensions to the unified physical-system representation for multi-site
+  terms, constraints, and additional symmetry actions
 - Additional symmetry-reduced Hamiltonian construction
 - Richer matrix imports and optional model-specification formats
 - Portable result and visual-artifact descriptions
@@ -78,12 +78,14 @@ representation:
 - Report computational scaling honestly and avoid surprising dense
   conversions.
 
-## Priority 1: Extend the Unified Physical-System Representation
+## Priority 1: Deepen the Unified Physical-System Representation
 
 Portable models should explicitly connect physical structure to Hamiltonian
 indices and local state spaces. This representation should work for spin,
 tight-binding, Hubbard, bosonic, and BdG systems without treating their bases
-as interchangeable.
+as interchangeable. All built-in logical model families now provide the
+baseline geometry, local-degree, basis-mapping, and interaction records;
+remaining work concerns richer semantics rather than catalog coverage.
 
 - Add carefully scoped multi-site interaction records beyond current onsite and
   two-body terms.
@@ -122,28 +124,19 @@ models through a small number of predictable workflows. Future work in this area
 should make the package more useful as a model-intake layer rather than only a
 collection of named Hamiltonian builders.
 
-### Canonical physical-model summaries
+Canonical summaries, lint reports, adapter capability reports, matching CLI
+commands, and a complete intake notebook are implemented. Future work should
+deepen diagnostics based on user reports rather than add parallel entry points.
 
-- Provide a user-facing summary for imported or constructed models, including
-  sites, orbitals, local degrees of freedom, basis ordering, terms, geometry,
-  boundary conditions, symmetries, sectors, provenance, and reconstruction
-  limits.
-- Make the normalized physical-system representation easy to access from every
-  supported model family, including spin, tight-binding, Hubbard, bosonic, and
-  BdG systems.
-- Clearly distinguish reconstructable model specifications, external imported
-  matrices, lossy ecosystem translations, analysis-only result records, and
-  rendered visual artifacts.
-
-### Import diagnostics and model linting
+### Extended import diagnostics and model linting
 
 - Report what each importer inferred, what metadata was missing, which
   conventions were assumed, and which downstream operations may be unsafe or
   lossy.
-- Add model-linting checks for Hermiticity, duplicate or missing labels,
+- Extend model-linting checks beyond current Hermiticity, label, geometry,
+  reconstruction, and resource diagnostics to cover
   inconsistent bond directions, invalid local Hilbert spaces, basis-dimension
-  mismatches, advertised symmetry violations, and dense-construction resource
-  risks.
+  mismatches, and advertised symmetry violations.
 - Suggest relevant validation checks after import, such as connected-component
   inspection, conserved-quantity commutators, sector block validation, or
   reference spectra where applicable.
@@ -160,8 +153,8 @@ collection of named Hamiltonian builders.
 
 ### Adapter convention coverage
 
-- Expand adapter convention coverage so partial translations fail clearly or
-  report loss explicitly.
+- Expand the existing capability reports so partial translations fail clearly
+  or report loss explicitly for additional target versions and conventions.
 
 ## Priority 3: Additional Lattice Transformations
 
@@ -292,7 +285,7 @@ QuSpin, NetKet, and QuTiP adapters are available. Remaining adapter work:
 - pymatgen and selected CIF workflows
 - Styled NetworkX graph export
 - Expanded PennyLane export
-- Capability reports and broader convention coverage for existing adapters
+- Broader convention coverage for existing adapter capability reports
 
 ### Plugin discovery
 
@@ -306,22 +299,28 @@ QuSpin, NetKet, and QuTiP adapters are available. Remaining adapter work:
 Future maturity work:
 
 - Gauge-equivalent constructions where applicable
-- Expand the type-checking baseline as annotation completeness improves.
-- Raise coverage expectations as optional-adapter coverage grows.
+- Continue expanding the type-checking baseline beyond the modules added in
+  v0.1.11 as annotation completeness improves.
+- Use the scheduled real-backend adapter jobs to guide coverage expectations.
 - Add performance regression thresholds to representative benchmarks.
 
 ## Near-Term Backlog
 
 Recommended implementation order:
 
-1. Add parity sectors and extend transformations to interacting particle
-   models.
-2. Add selected pymatgen/CIF workflows and broaden adapter convention coverage.
-3. Add solver iteration reporting and simple spectral-function records.
-4. Improve annotation completeness, optional-adapter coverage, and benchmark
-   regression thresholds.
+1. Triage public feedback on
+   [import formats](https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/issues/1),
+   [missing model metadata](https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/issues/2),
+   and
+   [adapter priorities](https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/issues/3).
+2. Broaden adapter convention coverage and add selected pymatgen/CIF workflows
+   only when feedback identifies a concrete structure-intake need.
+3. Extend transformations to interacting particle models and consider parity
+   sectors with explicit validation mappings.
+4. Add solver iteration reporting, benchmark regression thresholds, and simple
+   spectral-function records.
 5. Add the Kitaev honeycomb model only with documented gauge and sector
-   conventions.
+   conventions and a concrete interchange use case.
 
 ## Explicit Non-Goals
 

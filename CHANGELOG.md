@@ -1,5 +1,47 @@
 # Changelog
 
+## v0.1.11
+
+This release consolidates the package around one portable physical-system
+representation, reduces model-discovery duplication, and makes model-intake
+diagnostics available through the command line. It is a stabilization release;
+existing builder imports and registered `_sparse` names remain compatible.
+
+### Added
+
+- Added portable geometry, local-degree, basis-mapping, and interaction records
+  for every built-in logical model family and compatibility alias.
+- Added `canonical_model_name`, `is_model_alias`, and
+  `available_representations` registry helpers.
+- Added `quantum-lattice describe`, `lint`, and `adapter-capabilities` commands.
+- Added generated logical-model capability and complete public-API references.
+- Added an end-to-end model-intake notebook covering creation, linting,
+  transformation, persistence, reconstruction, and bundle export.
+- Added a schema `1.0` golden fixture and cross-family physical-record tests.
+- Added Python 3.13 and 3.14 CI, a declared-dependency lower-bound job, and a
+  scheduled real-backend adapter workflow for OpenFermion, Qiskit, QuTiP,
+  NetKet, QuSpin, and PennyLane.
+- Added three more modules to the strict MyPy baseline.
+
+### Changed
+
+- Updated package version metadata to `0.1.11` and declared minimum NumPy,
+  SciPy, and Matplotlib versions.
+- Changed `list_models()` and `model_table()` to list logical models once by
+  default. Pass `include_aliases=True`, or use CLI `--include-aliases`, to
+  include registered implementation aliases such as `_sparse` builders.
+- Added canonical names, alias status, and supported representations to model
+  table rows.
+- Updated the README, usage, import, schema, validation, roadmap, website,
+  results, and generated references to match the unified intake workflow.
+
+### Compatibility
+
+- Direct imports of dense and `_sparse` builders are unchanged.
+- `get_model_info`, `create_model_spec`, direct CLI model selection, and model
+  loading continue to accept registered `_sparse` names.
+- The portable model and analysis schema versions remain `1.0`.
+
 ## v0.1.10
 
 This release improves package maintainability and release confidence without

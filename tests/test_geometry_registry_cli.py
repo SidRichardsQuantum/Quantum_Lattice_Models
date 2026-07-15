@@ -15,6 +15,7 @@ from quantum_lattice_models.geometry import (
 )
 from quantum_lattice_models.registry import (
     ParameterInfo,
+    canonical_model_name,
     get_model_info,
     list_models,
     model_table,
@@ -38,7 +39,10 @@ def test_model_registry_helpers() -> None:
     assert "custom_tight_binding" in names
     assert "xxz_chain" in names
     assert "kitaev_chain_bdg" in names
-    assert "haldane_honeycomb_lattice_sparse" in names
+    assert "haldane_honeycomb_lattice" in names
+    assert "haldane_honeycomb_lattice_sparse" not in names
+    assert "haldane_honeycomb_lattice_sparse" in list_models(include_aliases=True)
+    assert canonical_model_name("haldane_honeycomb_lattice_sparse") == "haldane_honeycomb_lattice"
     assert get_model_info("ssh_model").basis == "single particle"
     assert get_model_info("ssh_model").builder is not None
     assert get_model_info("ssh_model").defaults["n_cells"] == 8
@@ -97,9 +101,53 @@ def test_register_and_unregister_model() -> None:
     assert info.validation_status == "unvalidated"
 
 
+def test_dynamic_sparse_registration_tracks_logical_aliases() -> None:
+    def builder(n_sites: int = 2) -> np.ndarray:
+        return np.zeros((n_sites, n_sites))
+
+    base = "test_dynamic_alias_model"
+    sparse = f"{base}_sparse"
+    register_model(
+        sparse,
+        category="test",
+        basis="single particle",
+        dimension="n_sites",
+        return_type="csr_matrix",
+        description="Temporary sparse implementation",
+        builder=builder,
+    )
+    try:
+        assert not get_model_info(sparse).is_alias
+        register_model(
+            base,
+            category="test",
+            basis="single particle",
+            dimension="n_sites",
+            return_type="ndarray",
+            description="Temporary logical model",
+            builder=builder,
+        )
+        assert get_model_info(sparse).is_alias
+        assert canonical_model_name(sparse) == base
+        assert sparse not in list_models()
+        assert sparse in list_models(include_aliases=True)
+
+        unregister_model(base)
+        assert not get_model_info(sparse).is_alias
+        assert canonical_model_name(sparse) == sparse
+    finally:
+        if base in list_models(include_aliases=True):
+            unregister_model(base)
+        if sparse in list_models(include_aliases=True):
+            unregister_model(sparse)
+
+
 def test_cli_models_and_spectrum(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["models"]) == 0
     assert "ssh_model" in capsys.readouterr().out
+
+    assert main(["models", "--include-aliases"]) == 0
+    assert "tight_binding_chain_sparse" in capsys.readouterr().out
 
     assert main(["spectrum", "--model", "tight_binding_chain", "--n-sites", "3"]) == 0
     assert len(capsys.readouterr().out.strip().splitlines()) == 3

@@ -213,5 +213,18 @@ quantum-lattice spectrum model.json
 quantum-lattice export model.json --format npz
 ```
 
+Use the intake commands before translating an imported model:
+
+```bash
+quantum-lattice describe model.json --json
+quantum-lattice lint model.json --json
+quantum-lattice adapter-capabilities model.json graphml --json
+```
+
+`describe` reports physical content and reconstruction limits. `lint` reports
+missing or inconsistent metadata and suggests validation checks.
+`adapter-capabilities` identifies which semantics a target can preserve before
+an export is attempted.
+
 See [SCHEMA.md](SCHEMA.md) for the compatibility policy and complete field
 definitions.

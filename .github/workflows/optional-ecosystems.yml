@@ -1,0 +1,38 @@
+name: Optional ecosystem adapters
+
+on:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+jobs:
+  real-adapter-smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - extra: openfermion
+            keyword: openfermion
+          - extra: qiskit
+            keyword: qiskit
+          - extra: qutip
+            keyword: qutip
+          - extra: netket
+            keyword: netket
+          - extra: quspin
+            keyword: quspin
+          - extra: pennylane
+            keyword: pennylane
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install adapter and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,${{ matrix.extra }}]"
+      - name: Exercise installed adapter
+        run: python -m pytest -q tests/test_real_optional_adapters.py -k ${{ matrix.keyword }}

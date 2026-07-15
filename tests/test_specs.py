@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -81,6 +82,16 @@ def test_model_spec_json_round_trip_and_dense_sparse_construction(tmp_path) -> N
     )
     kitaev_path = kitaev.save(tmp_path / "kitaev.json")
     assert load_model(kitaev_path).parameters["pairing"] == 0.25j
+
+
+def test_schema_1_0_golden_fixture_remains_readable_and_stable() -> None:
+    path = Path("tests/fixtures/model_schema_1_0.json")
+    raw = json.loads(path.read_text())
+    model = ModelSpec.from_dict(raw)
+
+    assert model.schema_version == "1.0"
+    assert model.to_dict() == raw
+    assert np.allclose(model.hamiltonian(), [[0.0, -1.0], [-1.0, 0.0]])
 
 
 def test_custom_lattice_model_spec_builds_dense_and_sparse() -> None:

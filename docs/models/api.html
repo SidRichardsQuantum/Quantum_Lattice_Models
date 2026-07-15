@@ -1,0 +1,1588 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Public API Reference — Quantum Lattice Models</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+      MathJax = {tex: {inlineMath: [['$', '$']], displayMath: [['$$', '$$']]}};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="model-reference">
+      <nav class="model-breadcrumbs">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Model reference</a>
+        <span>/</span>
+        <span>Public API Reference</span>
+      </nav>
+      <article class="model-article" data-model-page="api">
+<h1>Public API Reference</h1>
+<p>This generated inventory covers every symbol exported from
+<code>quantum_lattice_models</code>. Focused model imports under
+<code>quantum_lattice_models.models</code> are recommended when a workflow only needs one
+physical domain.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Kind</th>
+<th>Defined in</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ANALYSIS_SCHEMA_VERSION</code></td>
+<td>constant</td>
+<td><code>quantum_lattice_models</code></td>
+<td>str(object='') -&gt; str</td>
+</tr>
+<tr>
+<td><code>AdapterCapabilityReport</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.intake</code></td>
+<td>Report what a model translation target can preserve.</td>
+</tr>
+<tr>
+<td><code>AnalysisResult</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.analysis</code></td>
+<td>Portable numerical result with coordinates, provenance, and plot metadata.</td>
+</tr>
+<tr>
+<td><code>BASIS_MAPPING_ROLES</code></td>
+<td>constant</td>
+<td><code>quantum_lattice_models</code></td>
+<td>Built-in immutable sequence.</td>
+</tr>
+<tr>
+<td><code>BandStructure</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Band energies and optional eigenvectors sampled over momentum.</td>
+</tr>
+<tr>
+<td><code>BasisIndexMapping</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.physical</code></td>
+<td>Map one local degree to a basis factor, mode, or single-particle index.</td>
+</tr>
+<tr>
+<td><code>Bond</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.lattice</code></td>
+<td>A directed edge between two lattice sites with an optional matrix element.</td>
+</tr>
+<tr>
+<td><code>BoseHubbardSector</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.boson_sector</code></td>
+<td>BoseHubbardSector(matrix: 'sp.csr_matrix', basis: 'FixedParticleNumberBasis', parameters: 'dict[str, object]')</td>
+</tr>
+<tr>
+<td><code>CellBond</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>A directed hopping from one orbital to an orbital in a displaced cell.</td>
+</tr>
+<tr>
+<td><code>ConservedQuantity</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.conserved</code></td>
+<td>Named operator with optional sector and convention metadata.</td>
+</tr>
+<tr>
+<td><code>EXPORT_ARTIFACTS</code></td>
+<td>constant</td>
+<td><code>quantum_lattice_models</code></td>
+<td>Built-in immutable sequence.</td>
+</tr>
+<tr>
+<td><code>EXTERNAL_MATRIX_FAMILY</code></td>
+<td>constant</td>
+<td><code>quantum_lattice_models</code></td>
+<td>str(object='') -&gt; str</td>
+</tr>
+<tr>
+<td><code>FermiHubbardBasis</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.fermion_sector</code></td>
+<td>Occupation basis with fixed up- and down-spin particle numbers.</td>
+</tr>
+<tr>
+<td><code>FermiHubbardSector</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.fermion_sector</code></td>
+<td>Sparse Fermi-Hubbard Hamiltonian and its explicit reduced basis.</td>
+</tr>
+<tr>
+<td><code>FixedMagnetizationBasis</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Computational basis restricted to a total Pauli-Z eigenvalue.</td>
+</tr>
+<tr>
+<td><code>FixedParticleNumberBasis</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.boson_sector</code></td>
+<td>FixedParticleNumberBasis(n_sites: 'int', n_particles: 'int', max_occupancy: 'int', states: 'tuple[tuple[int, ...], ...]')</td>
+</tr>
+<tr>
+<td><code>GRAPH_SPIN_FAMILY</code></td>
+<td>constant</td>
+<td><code>quantum_lattice_models</code></td>
+<td>str(object='') -&gt; str</td>
+</tr>
+<tr>
+<td><code>HamiltonianResult</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.types</code></td>
+<td>Hamiltonian matrix together with portable construction metadata.</td>
+</tr>
+<tr>
+<td><code>InteractionTerm</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.physical</code></td>
+<td>Portable onsite or two-body operator term.</td>
+</tr>
+<tr>
+<td><code>LOCAL_DEGREE_KINDS</code></td>
+<td>constant</td>
+<td><code>quantum_lattice_models</code></td>
+<td>Built-in immutable sequence.</td>
+</tr>
+<tr>
+<td><code>Lattice</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.lattice</code></td>
+<td>Finite lattice geometry for user-defined single-particle models.</td>
+</tr>
+<tr>
+<td><code>LatticeSpec</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.specs</code></td>
+<td>Portable finite-lattice geometry and metadata.</td>
+</tr>
+<tr>
+<td><code>LocalDegreeOfFreedom</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.physical</code></td>
+<td>One indexed local physical degree of freedom.</td>
+</tr>
+<tr>
+<td><code>MatrixDiagnostics</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Summary of matrix structure, storage, and Hermiticity.</td>
+</tr>
+<tr>
+<td><code>ModelComparison</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.comparison</code></td>
+<td>Parameters, matrix, spectrum, and gap comparison for two models.</td>
+</tr>
+<tr>
+<td><code>ModelInspection</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Pre-build model dimension, storage, basis, and warning report.</td>
+</tr>
+<tr>
+<td><code>ModelLintReport</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.intake</code></td>
+<td>Validation and consistency report for model intake workflows.</td>
+</tr>
+<tr>
+<td><code>ModelPreset</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models._registry_core</code></td>
+<td>Named parameter set for a canonical phase or reference limit.</td>
+</tr>
+<tr>
+<td><code>ModelSpec</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.specs</code></td>
+<td>Portable registered-model parameters and optional lattice geometry.</td>
+</tr>
+<tr>
+<td><code>ModelSummary</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.intake</code></td>
+<td>User-facing summary of a portable model or Hamiltonian result.</td>
+</tr>
+<tr>
+<td><code>MomentumPath</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Sampled momentum path with labeled high-symmetry vertices.</td>
+</tr>
+<tr>
+<td><code>MultiPanelPlotSpec</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Declarative layout for several named portable analysis panels.</td>
+</tr>
+<tr>
+<td><code>PLUGIN_API_VERSION</code></td>
+<td>constant</td>
+<td><code>quantum_lattice_models</code></td>
+<td>str(object='') -&gt; str</td>
+</tr>
+<tr>
+<td><code>PeriodicLatticeSpec</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Portable translationally invariant single-particle lattice model.</td>
+</tr>
+<tr>
+<td><code>ReducedBasisMapping</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.reduced</code></td>
+<td>Explicit row-to-full-state mapping for a symmetry-reduced basis.</td>
+</tr>
+<tr>
+<td><code>SPEC_SCHEMA_VERSION</code></td>
+<td>constant</td>
+<td><code>quantum_lattice_models</code></td>
+<td>str(object='') -&gt; str</td>
+</tr>
+<tr>
+<td><code>SpinField</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>One site-resolved Pauli field.</td>
+</tr>
+<tr>
+<td><code>SpinInteraction</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>One two-site Pauli interaction on an arbitrary spin graph.</td>
+</tr>
+<tr>
+<td><code>SpinSectorHamiltonian</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Sparse Hamiltonian and explicit basis for a conserved spin sector.</td>
+</tr>
+<tr>
+<td><code>TightBindingModel</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.lattice</code></td>
+<td>Build single-particle tight-binding Hamiltonians on a finite lattice.</td>
+</tr>
+<tr>
+<td><code>adapter_capability_report</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.intake</code></td>
+<td>Report whether a target adapter can preserve key model semantics.</td>
+</tr>
+<tr>
+<td><code>add_lattice_bonds</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Append validated bonds to a lattice.</td>
+</tr>
+<tr>
+<td><code>add_long_range_bonds</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Generate directed bonds by Euclidean distance with optional power-law decay.</td>
+</tr>
+<tr>
+<td><code>anderson_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a reproducible one-dimensional Anderson model.</td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a reproducible two-dimensional Anderson model.</td>
+</tr>
+<tr>
+<td><code>anderson_square_lattice_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a sparse two-dimensional Anderson Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>apply_bond_disorder</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Perturb explicit bond matrix elements reproducibly.</td>
+</tr>
+<tr>
+<td><code>apply_domain_wall</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Add a step-like onsite potential across a spatial domain wall.</td>
+</tr>
+<tr>
+<td><code>apply_impurity_potential</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Add site-selective impurity potentials to portable onsite metadata.</td>
+</tr>
+<tr>
+<td><code>apply_interface</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Apply a sharp or linearly interpolated onsite interface.</td>
+</tr>
+<tr>
+<td><code>apply_onsite_disorder</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Attach reproducible onsite disorder values to lattice metadata.</td>
+</tr>
+<tr>
+<td><code>apply_spatial_potential</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Add a continuously varying onsite potential evaluated at each coordinate.</td>
+</tr>
+<tr>
+<td><code>apply_twisted_boundary</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Apply a phase twist to bonds crossing a selected finite-lattice boundary.</td>
+</tr>
+<tr>
+<td><code>aubry_andre_harper_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return the single-particle Aubry-Andre-Harper tight-binding matrix.</td>
+</tr>
+<tr>
+<td><code>available_representations</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Return matrix representations available for a logical model.</td>
+</tr>
+<tr>
+<td><code>band_structure_result</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.analysis</code></td>
+<td>Convert a band structure into a portable analysis result.</td>
+</tr>
+<tr>
+<td><code>berry_curvature</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Return gauge-invariant plaquette Berry curvature over a reciprocal mesh.</td>
+</tr>
+<tr>
+<td><code>berry_curvature_convergence</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Report Chern-number convergence across reciprocal meshes.</td>
+</tr>
+<tr>
+<td><code>bipartite_entanglement_entropy</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return the von Neumann entropy of a spin subsystem.</td>
+</tr>
+<tr>
+<td><code>bond_current</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return the oriented single-particle bond current <code>2 Im(t ψ_i* ψ_j)</code>.</td>
+</tr>
+<tr>
+<td><code>bose_hubbard_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.hubbard</code></td>
+<td>Return a dense truncated Bose-Hubbard chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>bose_hubbard_chain_sector</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.boson_sector</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>bose_hubbard_chain_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.hubbard</code></td>
+<td>Return a sparse truncated Bose-Hubbard chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>boson_site_occupations</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.boson_sector</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>canonical_model_name</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Return the logical model name for a registered name or alias.</td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a two-orbital square-lattice Chern-insulator benchmark.</td>
+</tr>
+<tr>
+<td><code>checkerboard_chern_insulator_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return the sparse real-space two-band Chern-insulator matrix.</td>
+</tr>
+<tr>
+<td><code>chern_number</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topology</code></td>
+<td>Return the Fukui-Hatsugai-Suzuki Chern number on a periodic momentum mesh.</td>
+</tr>
+<tr>
+<td><code>chern_number_result</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topology</code></td>
+<td>Return the occupied-subspace Chern number as a portable analysis result.</td>
+</tr>
+<tr>
+<td><code>commutator_diagnostic</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.conserved</code></td>
+<td>Measure <code>[H, Q]</code> and report whether <code>Q</code> is conserved.</td>
+</tr>
+<tr>
+<td><code>compare_models</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.comparison</code></td>
+<td>Compare model metadata and, when safe, matrices and spectra.</td>
+</tr>
+<tr>
+<td><code>connected_spin_correlation_matrix</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return connected same-axis spin correlations.</td>
+</tr>
+<tr>
+<td><code>correlation_zz</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return the two-point <code>&lt;Z_i Z_j&gt;</code> correlation.</td>
+</tr>
+<tr>
+<td><code>create_graph_spin_spec</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.specs</code></td>
+<td>Create a portable arbitrary spin-1/2 interaction-graph specification.</td>
+</tr>
+<tr>
+<td><code>create_model_from_preset</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.specs</code></td>
+<td>Create a model specification from a named preset with optional overrides.</td>
+</tr>
+<tr>
+<td><code>create_model_spec</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.specs</code></td>
+<td>Create a validated specification using registered defaults.</td>
+</tr>
+<tr>
+<td><code>creutz_ladder</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a two-leg Creutz ladder with complex leg hoppings.</td>
+</tr>
+<tr>
+<td><code>custom_tight_binding</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.lattice</code></td>
+<td>Return a dense single-particle Hamiltonian on a user-defined graph.</td>
+</tr>
+<tr>
+<td><code>custom_tight_binding_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.lattice</code></td>
+<td>Return a sparse single-particle Hamiltonian on a user-defined graph.</td>
+</tr>
+<tr>
+<td><code>describe_model</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.intake</code></td>
+<td>Return a compact user-facing description of a model or Hamiltonian result.</td>
+</tr>
+<tr>
+<td><code>diagnose_matrix</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Return a compact structural diagnostic summary.</td>
+</tr>
+<tr>
+<td><code>dice_lattice</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a finite dice/T3 lattice with one hub and two rim sites per cell.</td>
+</tr>
+<tr>
+<td><code>dice_lattice_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a sparse finite dice/T3 lattice Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>estimate_dense_memory</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Return bytes required for a square dense matrix.</td>
+</tr>
+<tr>
+<td><code>estimate_model_dimension</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Estimate a registered model's matrix dimension from its dimension expression.</td>
+</tr>
+<tr>
+<td><code>evolve_state</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Evolve a state under a time-independent Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>evolve_time_dependent</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Evolve under <code>H(t)</code> using piecewise midpoint or fourth-order propagation.</td>
+</tr>
+<tr>
+<td><code>expectation</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return <code>&lt;state|operator|state&gt;</code> for a state vector.</td>
+</tr>
+<tr>
+<td><code>export_analysis_pdf</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Render any supported portable analysis plot to PDF.</td>
+</tr>
+<tr>
+<td><code>export_analysis_svg</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Render any supported portable analysis plot to SVG.</td>
+</tr>
+<tr>
+<td><code>export_band_data</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Export band coordinates and energies as deterministic JSON or CSV.</td>
+</tr>
+<tr>
+<td><code>export_graphml</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.interchange</code></td>
+<td>Export a lattice as GraphML through the optional NetworkX dependency.</td>
+</tr>
+<tr>
+<td><code>export_hamiltonian_artifact</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.storage</code></td>
+<td>Export one portable artifact or a deterministic directory bundle.</td>
+</tr>
+<tr>
+<td><code>export_interaction_plot_data</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Export physical degrees and interaction edges as deterministic JSON.</td>
+</tr>
+<tr>
+<td><code>export_interaction_svg</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Export a portable physical interaction graph as deterministic SVG.</td>
+</tr>
+<tr>
+<td><code>export_lattice_csv</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.interchange</code></td>
+<td>Export site and bond tables plus a metadata sidecar.</td>
+</tr>
+<tr>
+<td><code>export_lattice_dot</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Export a deterministic Graphviz DOT interaction graph.</td>
+</tr>
+<tr>
+<td><code>export_lattice_plot_data</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Export lattice site and bond coordinates as JSON or a single CSV table.</td>
+</tr>
+<tr>
+<td><code>export_lattice_svg</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Export a finite lattice diagram as dependency-free deterministic SVG.</td>
+</tr>
+<tr>
+<td><code>export_lattice_xyz</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Export lattice coordinates to XYZ with labels as element-like tokens.</td>
+</tr>
+<tr>
+<td><code>export_matrix_plot_data</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Export matrix real, imaginary, magnitude, phase, and sparsity arrays as JSON.</td>
+</tr>
+<tr>
+<td><code>export_model_yaml</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Export a model specification through the optional PyYAML adapter.</td>
+</tr>
+<tr>
+<td><code>export_periodic_svg</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Export a repeated two-dimensional unit-cell diagram as SVG.</td>
+</tr>
+<tr>
+<td><code>export_table_json</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Export named coordinates and values as deterministic plot-data JSON.</td>
+</tr>
+<tr>
+<td><code>fermi_hubbard_basis</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.fermion_sector</code></td>
+<td>Return spinful occupation states with fixed <code>N_up</code> and <code>N_down</code>.</td>
+</tr>
+<tr>
+<td><code>fermi_hubbard_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.hubbard</code></td>
+<td>Return a dense spinful Fermi-Hubbard chain in occupation-number basis.</td>
+</tr>
+<tr>
+<td><code>fermi_hubbard_chain_sector</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.fermion_sector</code></td>
+<td>Build a spinful Fermi-Hubbard chain in a fixed <code>(N_up, N_down)</code> sector.</td>
+</tr>
+<tr>
+<td><code>fermi_hubbard_chain_sector_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.fermion_sector</code></td>
+<td>Registered sparse alias for :func:<code>fermi_hubbard_chain_sector</code>.</td>
+</tr>
+<tr>
+<td><code>fermi_hubbard_chain_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.hubbard</code></td>
+<td>Return a sparse spinful Fermi-Hubbard chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>fermi_hubbard_observables</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.fermion_sector</code></td>
+<td>Return site occupations, spin density, and double occupancy.</td>
+</tr>
+<tr>
+<td><code>finite_size_sweep</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Evaluate a scalar quantity over finite system sizes.</td>
+</tr>
+<tr>
+<td><code>fixed_magnetization_basis</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return basis states with <code>sum_i Z_i = magnetization</code>.</td>
+</tr>
+<tr>
+<td><code>fixed_particle_number_basis</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.boson_sector</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>from_ase</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Translate an ASE <code>Atoms</code> object into coordinate-only portable geometry.</td>
+</tr>
+<tr>
+<td><code>from_networkx</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.interchange</code></td>
+<td>Construct a portable lattice specification from a NetworkX graph.</td>
+</tr>
+<tr>
+<td><code>gap_closing_points</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Identify threshold crossings and local minima in sampled spectral gaps.</td>
+</tr>
+<tr>
+<td><code>get_model_info</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Return metadata for a registered model.</td>
+</tr>
+<tr>
+<td><code>get_preset</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Return one named model preset.</td>
+</tr>
+<tr>
+<td><code>graph_spin_hamiltonian</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Build a dense graph spin Hamiltonian through the shared sparse backend.</td>
+</tr>
+<tr>
+<td><code>graph_spin_hamiltonian_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Build a sparse spin-1/2 Hamiltonian directly from graph interactions.</td>
+</tr>
+<tr>
+<td><code>graph_spin_model_sector</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Build a fixed-magnetization sector directly from a portable graph-spin model.</td>
+</tr>
+<tr>
+<td><code>graph_spin_sector</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Project a magnetization-conserving arbitrary spin graph without densifying.</td>
+</tr>
+<tr>
+<td><code>graph_spin_subgraph</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Return a graph-spin model with geometry and interactions remapped together.</td>
+</tr>
+<tr>
+<td><code>graphene_lattice</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a finite nearest-neighbor graphene/honeycomb Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>graphene_lattice_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a sparse finite graphene/honeycomb Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topological</code></td>
+<td>Return a finite honeycomb-lattice Haldane-model matrix.</td>
+</tr>
+<tr>
+<td><code>haldane_honeycomb_lattice_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topological</code></td>
+<td>Return a sparse finite Haldane honeycomb-lattice matrix.</td>
+</tr>
+<tr>
+<td><code>haldane_unit_cell</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>harper_hofstadter_square_lattice</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topological</code></td>
+<td>Return a square-lattice Harper-Hofstadter single-particle Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>harper_hofstadter_square_lattice_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topological</code></td>
+<td>Return a sparse Harper-Hofstadter square-lattice matrix.</td>
+</tr>
+<tr>
+<td><code>has_particle_hole_symmetric_spectrum</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Return whether a Hermitian spectrum is paired as <code>E</code> and <code>-E</code>.</td>
+</tr>
+<tr>
+<td><code>heisenberg_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the dense anisotropic Heisenberg spin-chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>heisenberg_chain_sector</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Build an anisotropic Heisenberg chain in a fixed-magnetization sector.</td>
+</tr>
+<tr>
+<td><code>heisenberg_chain_sector_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Registered sparse alias for :func:<code>heisenberg_chain_sector</code>.</td>
+</tr>
+<tr>
+<td><code>heisenberg_chain_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the sparse anisotropic Heisenberg spin-chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>heisenberg_ladder</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return a dense two-leg Heisenberg ladder with <code>2 * n_rungs</code> spins.</td>
+</tr>
+<tr>
+<td><code>heisenberg_ladder_sector</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Build a two-leg Heisenberg ladder in a fixed-magnetization sector.</td>
+</tr>
+<tr>
+<td><code>heisenberg_ladder_sector_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Registered sparse alias for :func:<code>heisenberg_ladder_sector</code>.</td>
+</tr>
+<tr>
+<td><code>heisenberg_ladder_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the sparse two-leg Heisenberg ladder Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>honeycomb_lattice_index</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topological</code></td>
+<td>Return the row-major index for a honeycomb unit-cell sublattice.</td>
+</tr>
+<tr>
+<td><code>honeycomb_lattice_positions</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.geometry</code></td>
+<td>Return row-major two-sublattice coordinates for a honeycomb lattice.</td>
+</tr>
+<tr>
+<td><code>honeycomb_unit_cell</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>import_graphml</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.interchange</code></td>
+<td>Import a GraphML lattice through the optional NetworkX dependency.</td>
+</tr>
+<tr>
+<td><code>import_hamiltonian</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.storage</code></td>
+<td>Import an external NPY or NPZ matrix with explicit portable metadata.</td>
+</tr>
+<tr>
+<td><code>import_lattice_csv</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.interchange</code></td>
+<td>Import paired site and bond tables with an optional metadata sidecar.</td>
+</tr>
+<tr>
+<td><code>import_lattice_xyz</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Import XYZ coordinates without inferring bonds or model semantics.</td>
+</tr>
+<tr>
+<td><code>import_model_yaml</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Load and validate a model specification from optional YAML.</td>
+</tr>
+<tr>
+<td><code>inspect_model</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Return a construction-free resource and risk report.</td>
+</tr>
+<tr>
+<td><code>inverse_participation_ratio</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return sum_i |v_i|^4 / (sum_i |v_i|^2)^2.</td>
+</tr>
+<tr>
+<td><code>is_hermitian</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Return whether a square dense or sparse matrix is Hermitian.</td>
+</tr>
+<tr>
+<td><code>is_model_alias</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Return whether a registered name is a compatibility alias.</td>
+</tr>
+<tr>
+<td><code>j1_j2_heisenberg_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return a dense frustrated J1-J2 Heisenberg spin-chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>j1_j2_heisenberg_chain_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the sparse frustrated J1-J2 Heisenberg spin-chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>kagome_lattice_index</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return the row-major index for a kagome unit-cell sublattice.</td>
+</tr>
+<tr>
+<td><code>kagome_lattice_positions</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.geometry</code></td>
+<td>Return row-major three-sublattice coordinates for a kagome lattice.</td>
+</tr>
+<tr>
+<td><code>kagome_lattice_tight_binding</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return a finite kagome-lattice single-particle tight-binding matrix.</td>
+</tr>
+<tr>
+<td><code>kagome_lattice_tight_binding_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return a sparse kagome-lattice tight-binding matrix.</td>
+</tr>
+<tr>
+<td><code>kagome_unit_cell</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>kitaev_chain_bdg</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topological</code></td>
+<td>Return a single-particle Bogoliubov-de Gennes matrix for the Kitaev chain.</td>
+</tr>
+<tr>
+<td><code>lattice_annotation_data</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Extract deterministic defect, boundary, interface, and disorder annotations.</td>
+</tr>
+<tr>
+<td><code>lattice_subgraph</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Return the induced subgraph on selected sites, preserving their order.</td>
+</tr>
+<tr>
+<td><code>lieb_lattice</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return an open finite Lieb lattice with three orbitals per unit cell.</td>
+</tr>
+<tr>
+<td><code>lint_model</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.intake</code></td>
+<td>Return validation errors, warnings, and follow-up checks for a model.</td>
+</tr>
+<tr>
+<td><code>list_models</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Return logical model names filtered by discovery metadata.</td>
+</tr>
+<tr>
+<td><code>list_presets</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Return named presets, optionally restricted to one model.</td>
+</tr>
+<tr>
+<td><code>load_analysis_result</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.analysis</code></td>
+<td>Load a JSON or NPZ analysis result.</td>
+</tr>
+<tr>
+<td><code>load_hamiltonian</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.storage</code></td>
+<td>Load a Hamiltonian result saved by :func:<code>save_hamiltonian</code>.</td>
+</tr>
+<tr>
+<td><code>load_model</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.specs</code></td>
+<td>Load and validate a model specification from JSON.</td>
+</tr>
+<tr>
+<td><code>load_model_plugins</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Load third-party registration callbacks from Python entry points.</td>
+</tr>
+<tr>
+<td><code>load_periodic_lattice</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>local_density_of_states</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return Lorentzian-broadened local density of states by site and energy.</td>
+</tr>
+<tr>
+<td><code>long_range_tight_binding_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a chain with hopping decaying as inverse distance to <code>power</code>.</td>
+</tr>
+<tr>
+<td><code>longitudinal_field_ising</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return <code>H = -J sum ZZ - h_x sum X - h_z sum Z</code>.</td>
+</tr>
+<tr>
+<td><code>longitudinal_field_ising_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the sparse Ising Hamiltonian with transverse and longitudinal fields.</td>
+</tr>
+<tr>
+<td><code>magnetization_z</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return average Pauli-Z magnetization per site.</td>
+</tr>
+<tr>
+<td><code>matrix_block_structure</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Return basis-labeled matrix block boundaries and norms.</td>
+</tr>
+<tr>
+<td><code>matrix_density</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Return the fraction of nonzero matrix entries.</td>
+</tr>
+<tr>
+<td><code>matrix_storage_bytes</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.diagnostics</code></td>
+<td>Return bytes used by dense data or a SciPy sparse matrix's core arrays.</td>
+</tr>
+<tr>
+<td><code>metadata_path</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.storage</code></td>
+<td>Return the deterministic JSON sidecar path for an NPY matrix.</td>
+</tr>
+<tr>
+<td><code>migrate_spec_data</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.specs</code></td>
+<td>Migrate decoded model or lattice data to the current schema.</td>
+</tr>
+<tr>
+<td><code>mixed_spin_correlation_matrix</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return mixed-axis <code>&lt;P_i Q_j&gt;</code> spin correlations.</td>
+</tr>
+<tr>
+<td><code>model_table</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Return registry metadata as dictionaries for docs, CLIs, or notebooks.</td>
+</tr>
+<tr>
+<td><code>next_nearest_neighbor_ising</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return <code>H = -J1 sum ZiZi+1 - J2 sum ZiZi+2 - h sum X</code>.</td>
+</tr>
+<tr>
+<td><code>next_nearest_neighbor_ising_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the sparse next-nearest-neighbor Ising Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>parameter_sweep</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Evaluate a scalar analysis across one model parameter.</td>
+</tr>
+<tr>
+<td><code>particle_model_subgraph</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Extract a single-particle model while remapping geometry and interactions.</td>
+</tr>
+<tr>
+<td><code>particle_model_vacancies</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Remove physical sites from a portable single-particle model.</td>
+</tr>
+<tr>
+<td><code>quench_dynamics</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Evolve the initial Hamiltonian's ground state under a final Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>random_field_heisenberg_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a Heisenberg chain with reproducible random longitudinal fields.</td>
+</tr>
+<tr>
+<td><code>reciprocal_space_data</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Return primitive reciprocal vectors and a first-zone polygon.</td>
+</tr>
+<tr>
+<td><code>reduced_density_matrix</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return the normalized reduced density matrix for selected spin sites.</td>
+</tr>
+<tr>
+<td><code>reduced_expectation</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.reduced</code></td>
+<td>Evaluate a full- or reduced-basis operator on a reduced state.</td>
+</tr>
+<tr>
+<td><code>reduced_operator</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.reduced</code></td>
+<td>Project a full-basis operator into an explicit reduced basis.</td>
+</tr>
+<tr>
+<td><code>register_model</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Register a model builder for discovery by notebooks, docs, and the CLI.</td>
+</tr>
+<tr>
+<td><code>relabel_lattice</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Return a lattice whose new site order is given by old site indices.</td>
+</tr>
+<tr>
+<td><code>remove_lattice_bonds</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Remove every bond matching a source-target pair.</td>
+</tr>
+<tr>
+<td><code>remove_lattice_sites</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Remove vacancy sites and all incident bonds.</td>
+</tr>
+<tr>
+<td><code>repeat_unit_cell</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Expand a periodic unit cell into a finite portable lattice.</td>
+</tr>
+<tr>
+<td><code>rice_mele_model</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return the single-particle Rice-Mele chain matrix.</td>
+</tr>
+<tr>
+<td><code>rice_mele_unit_cell</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>save_analysis_result</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.analysis</code></td>
+<td>Save an analysis result as readable JSON or self-contained NPZ.</td>
+</tr>
+<tr>
+<td><code>save_hamiltonian</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.storage</code></td>
+<td>Save a Hamiltonian result as NPY plus JSON or as self-contained NPZ.</td>
+</tr>
+<tr>
+<td><code>sawtooth_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return a sawtooth/delta chain with two orbitals per cell.</td>
+</tr>
+<tr>
+<td><code>sector_compatibility</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.conserved</code></td>
+<td>Return whether a Hamiltonian preserves a proposed sector quantity.</td>
+</tr>
+<tr>
+<td><code>single_particle_occupations</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return normalized site/orbital occupations for a single-particle state.</td>
+</tr>
+<tr>
+<td><code>site_magnetization_z</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return the site-resolved expectations <code>&lt;Z_i&gt;</code>.</td>
+</tr>
+<tr>
+<td><code>solve_eigenpairs</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Solve eigenpairs with explicit sparse-to-dense safeguards and residuals.</td>
+</tr>
+<tr>
+<td><code>spectrum_result</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.analysis</code></td>
+<td>Return a portable complete-spectrum result.</td>
+</tr>
+<tr>
+<td><code>spin_correlation_matrix</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return all <code>&lt;P_i P_j&gt;</code> correlations for one Pauli axis.</td>
+</tr>
+<tr>
+<td><code>spin_observables_result</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.analysis</code></td>
+<td>Return site magnetization and same-axis correlation records.</td>
+</tr>
+<tr>
+<td><code>spin_texture_plot_data</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Return site coordinates and local spin expectation arrows.</td>
+</tr>
+<tr>
+<td><code>square_lattice_index</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return the row-major site index for a square/rectangular lattice.</td>
+</tr>
+<tr>
+<td><code>square_lattice_positions</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.geometry</code></td>
+<td>Return row-major <code>(x, y)</code> coordinates for a square lattice.</td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return a single-particle tight-binding matrix on a rectangular square lattice.</td>
+</tr>
+<tr>
+<td><code>square_lattice_tight_binding_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return a sparse rectangular square-lattice tight-binding matrix.</td>
+</tr>
+<tr>
+<td><code>square_unit_cell</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>ssh_model</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return the single-particle Su-Schrieffer-Heeger tight-binding matrix.</td>
+</tr>
+<tr>
+<td><code>ssh_unit_cell</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Public package symbol.</td>
+</tr>
+<tr>
+<td><code>standard_momentum_path</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.periodic</code></td>
+<td>Return a conventional path for supported one- and two-dimensional cells.</td>
+</tr>
+<tr>
+<td><code>static_spin_structure_factor</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return <code>S(q) = N^-1 sum_ij exp[iq(r_i-r_j)] C_ij</code>.</td>
+</tr>
+<tr>
+<td><code>substitute_particle_bonds</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Replace selected directed hopping amplitudes in a portable particle model.</td>
+</tr>
+<tr>
+<td><code>supports_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Return whether a registered model can construct a sparse Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>susceptibility</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Estimate zero-temperature response to an explicit conjugate field.</td>
+</tr>
+<tr>
+<td><code>thermal_observables</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Return canonical small-system thermodynamics with stable shifted weights.</td>
+</tr>
+<tr>
+<td><code>tight_binding_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return a generic one-dimensional single-particle tight-binding matrix.</td>
+</tr>
+<tr>
+<td><code>tight_binding_chain_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return a sparse 1D single-particle tight-binding matrix.</td>
+</tr>
+<tr>
+<td><code>to_netket_graph</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Translate finite portable geometry to a NetKet graph.</td>
+</tr>
+<tr>
+<td><code>to_networkx</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.interchange</code></td>
+<td>Return a NetworkX <code>MultiDiGraph</code> preserving lattice attributes.</td>
+</tr>
+<tr>
+<td><code>to_openfermion</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Translate portable fermion interaction records to <code>FermionOperator</code>.</td>
+</tr>
+<tr>
+<td><code>to_qiskit_sparse_pauli</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Translate portable spin terms to Qiskit's <code>SparsePauliOp</code>.</td>
+</tr>
+<tr>
+<td><code>to_quspin_hamiltonian</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Translate portable spin Pauli terms to a QuSpin Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>to_qutip_qobj</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.adapters</code></td>
+<td>Construct a QuTiP <code>Qobj</code> while retaining portable model metadata.</td>
+</tr>
+<tr>
+<td><code>to_styled_networkx</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.visual_export</code></td>
+<td>Export a styled physical interaction graph with deterministic attributes.</td>
+</tr>
+<tr>
+<td><code>topology_result</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.analysis</code></td>
+<td>Return a portable scalar topological-invariant result.</td>
+</tr>
+<tr>
+<td><code>total_magnetization_z</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return the total Pauli-Z expectation <code>sum_i &lt;Z_i&gt;</code>.</td>
+</tr>
+<tr>
+<td><code>total_spin_squared</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.observables</code></td>
+<td>Return <code>&lt;S^2&gt;</code> for spin-1/2 sites with <code>S=Σσ/2</code>.</td>
+</tr>
+<tr>
+<td><code>transverse_field_ising</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return <code>H = -J sum ZZ - h sum X</code>.</td>
+</tr>
+<tr>
+<td><code>transverse_field_ising_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the sparse transverse-field Ising Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>triangular_lattice_positions</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.geometry</code></td>
+<td>Return row-major <code>(x, y)</code> coordinates for a triangular lattice.</td>
+</tr>
+<tr>
+<td><code>triangular_lattice_tight_binding</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return a single-particle tight-binding matrix on a triangular lattice.</td>
+</tr>
+<tr>
+<td><code>triangular_lattice_tight_binding_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.tight_binding</code></td>
+<td>Return a sparse triangular-lattice tight-binding matrix.</td>
+</tr>
+<tr>
+<td><code>two_parameter_sweep</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Evaluate a scalar analysis on a two-parameter grid.</td>
+</tr>
+<tr>
+<td><code>unregister_model</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.registry</code></td>
+<td>Remove and return a registered model.</td>
+</tr>
+<tr>
+<td><code>wilson_loop</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Return occupied-subspace Wilson-loop eigenphases along reciprocal vector one.</td>
+</tr>
+<tr>
+<td><code>wilson_loop_winding</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.advanced</code></td>
+<td>Estimate occupied-subspace Wilson-loop determinant winding.</td>
+</tr>
+<tr>
+<td><code>winding_number</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topology</code></td>
+<td>Return the winding of a two-band chiral Hamiltonian's off-diagonal term.</td>
+</tr>
+<tr>
+<td><code>winding_number_result</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topology</code></td>
+<td>Return the chiral winding number as a portable analysis result.</td>
+</tr>
+<tr>
+<td><code>with_boundary_conditions</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.transformations</code></td>
+<td>Return a lattice with replaced boundary-condition metadata.</td>
+</tr>
+<tr>
+<td><code>xxz_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the dense XXZ spin-chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>xxz_chain_sector</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Build an XXZ chain in a fixed total Pauli-Z sector.</td>
+</tr>
+<tr>
+<td><code>xxz_chain_sector_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Registered sparse alias for :func:<code>xxz_chain_sector</code>.</td>
+</tr>
+<tr>
+<td><code>xxz_chain_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the sparse XXZ spin-chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>xy_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the dense anisotropic XY spin-chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>xy_chain_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return the sparse anisotropic XY spin-chain Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>xyz_chain</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.benchmarks</code></td>
+<td>Return an XYZ spin chain.</td>
+</tr>
+<tr>
+<td><code>zak_phase</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topology</code></td>
+<td>Return the discretized Zak phase for one isolated one-dimensional band.</td>
+</tr>
+<tr>
+<td><code>zak_phase_result</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.topology</code></td>
+<td>Return the Zak phase as a portable analysis result.</td>
+</tr>
+</tbody>
+</table>
+<p><a href="index.html">Back to the model reference</a></p>
+
+      </article>
+    </main>
+  </body>
+</html>

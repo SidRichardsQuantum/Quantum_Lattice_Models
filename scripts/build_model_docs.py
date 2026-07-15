@@ -4,16 +4,21 @@ from __future__ import annotations
 
 import argparse
 import html
+import inspect
 import re
 from pathlib import Path
 
 from markdown_it import MarkdownIt
 
-from quantum_lattice_models.registry import get_model_info
+import quantum_lattice_models as qlm
+from quantum_lattice_models.registry import get_model_info, model_table
+from quantum_lattice_models.specs import create_model_spec
 
 SOURCE_DIR = Path("docs/models")
 BUILDERS_PATTERN = re.compile(r"<!--\s*builders:\s*([^>]+?)\s*-->")
 PARAMETERS_TOKEN = "{{PARAMETERS}}"
+CAPABILITIES_TOKEN = "{{MODEL_CAPABILITIES}}"
+PUBLIC_API_TOKEN = "{{PUBLIC_API}}"
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -31,6 +36,10 @@ def main(argv: list[str] | None = None) -> None:
             text = BUILDERS_PATTERN.sub("", text)
         if PARAMETERS_TOKEN in text:
             text = text.replace(PARAMETERS_TOKEN, _parameter_markdown(builders))
+        if CAPABILITIES_TOKEN in text:
+            text = text.replace(CAPABILITIES_TOKEN, _capability_markdown())
+        if PUBLIC_API_TOKEN in text:
+            text = text.replace(PUBLIC_API_TOKEN, _public_api_markdown())
         text = _web_links(text, model_page=True)
         body = markdown.render(text)
         output = source.with_suffix(".html")
@@ -73,6 +82,44 @@ def _parameter_markdown(builders: tuple[str, ...]) -> str:
                 f"`{parameter.type.__name__}` | `{parameter.default}` | {constraint} |"
             )
             lines.append(row)
+    return "\n".join(lines)
+
+
+def _capability_markdown() -> str:
+    lines = [
+        "| Logical model | Category | Representations | Physical records | Validation |",
+        "|---|---|---|---|---|",
+    ]
+    for row in model_table():
+        spec = create_model_spec(str(row["name"]))
+        physical = (
+            "geometry, local degrees, mappings, interactions"
+            if spec.lattice is not None
+            and spec.local_degrees
+            and spec.basis_mappings
+            and spec.interactions
+            else "incomplete"
+        )
+        representations = ", ".join(str(value) for value in row["representations"])
+        lines.append(
+            f"| `{row['name']}` | {row['category']} | {representations} | "
+            f"{physical} | {row['validation_status']} |"
+        )
+    return "\n".join(lines)
+
+
+def _public_api_markdown() -> str:
+    lines = [
+        "| Name | Kind | Defined in | Summary |",
+        "|---|---|---|---|",
+    ]
+    for name in sorted(qlm.__all__):
+        value = getattr(qlm, name)
+        module = getattr(value, "__module__", "quantum_lattice_models")
+        kind = "class" if inspect.isclass(value) else "function" if callable(value) else "constant"
+        summary = inspect.getdoc(value) or "Public package symbol."
+        summary = summary.splitlines()[0].replace("|", "\\|")
+        lines.append(f"| `{name}` | {kind} | `{module}` | {summary} |")
     return "\n".join(lines)
 
 

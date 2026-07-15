@@ -304,8 +304,8 @@ def test_artifact_exports_are_deterministic_and_round_trippable(tmp_path) -> Non
 def test_artifact_export_validation(tmp_path) -> None:
     spec = create_model_spec("tight_binding_chain", parameters={"n_sites": 2})
 
-    with pytest.raises(ValueError, match="portable lattice"):
-        export_hamiltonian_artifact(spec, tmp_path / "lattice", artifact="lattice")
+    outputs = export_hamiltonian_artifact(spec, tmp_path / "lattice.json", artifact="lattice")
+    assert outputs == (tmp_path / "lattice.json",)
     with pytest.raises(ValueError, match="constructed Hamiltonian"):
         export_hamiltonian_artifact(spec, tmp_path / "matrix", artifact="matrix")
     with pytest.raises(ValueError, match="Artifact must be"):
@@ -334,9 +334,10 @@ def test_npy_bundle_includes_sidecar_and_removes_stale_artifacts(tmp_path) -> No
         "matrix.npy.json",
         "model.json",
         "metadata.json",
+        "lattice.json",
         "manifest.json",
     ]
-    assert not (bundle_path / "lattice.json").exists()
+    assert (bundle_path / "lattice.json").exists()
     assert (bundle_path / "unmanaged.txt").read_text() == "keep"
     assert np.allclose(load_hamiltonian(bundle_path / "matrix.npy").matrix, result.matrix)
 

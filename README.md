@@ -114,6 +114,21 @@ quantum-lattice dry-run --preset ssh_topological --n-cells 20 --json
 quantum-lattice compare trivial.json topological.json --json
 ```
 
+Discovery lists logical models once and reports their available dense and
+sparse representations. Compatibility aliases remain available when needed:
+
+```bash
+quantum-lattice models --include-aliases
+```
+
+Portable model intake has a matching CLI workflow:
+
+```bash
+quantum-lattice describe model.json --json
+quantum-lattice lint model.json --json
+quantum-lattice adapter-capabilities model.json graphml --json
+```
+
 Named presets remain ordinary, transparent model specifications:
 
 ```python
@@ -167,9 +182,9 @@ builders retain their return types, while matching sparse builders are
 available with a `_sparse` suffix. Arbitrary spin graphs can use
 `SpinInteraction`, `SpinField`, and `graph_spin_hamiltonian_sparse`.
 
-Portable specifications for Ising, Heisenberg, XXZ, SSH, and custom
-tight-binding models also describe their physical local degrees of freedom,
-basis ordering, and onsite or two-body interactions:
+Portable specifications for every built-in logical model describe geometry,
+physical local degrees of freedom, basis ordering, and onsite or two-body
+interactions:
 
 ```python
 from quantum_lattice_models import create_model_spec
@@ -443,7 +458,8 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-Minimal runtime dependencies are `numpy`, `scipy`, and `matplotlib`.
+Minimal runtime dependencies are NumPy 1.24+, SciPy 1.10+, and Matplotlib 3.7+.
+Python 3.10 through 3.14 are tested.
 
 PennyLane export is optional:
 
@@ -574,6 +590,8 @@ comparison.py                Model parameter, matrix, spectrum, and gap comparis
 registry.py                  Built-in model catalog and registry operations
 _registry_core.py            Registry metadata and parameter validation
 specs.py                     Portable model/lattice records and factories
+intake.py                    Physical summaries, lint reports, and adapter capabilities
+physical.py                  Local-degree, basis-mapping, and interaction records
 _schema_codec.py             Portable JSON encoding and schema validation
 storage.py                   Metadata-preserving NPY and NPZ persistence
 cli.py                       quantum-lattice command-line entry point
@@ -609,6 +627,7 @@ Current notebooks, numbered in the recommended learning order:
 - `notebooks/19_graph_spin_model_workflow.ipynb`
 - `notebooks/20_fixed_magnetization_spin_sectors.ipynb`
 - `notebooks/21_lattice_import_and_transformations.ipynb`
+- `notebooks/22_model_intake_workflow.ipynb`
 
 ## Development
 
@@ -677,9 +696,7 @@ Support helps maintain and expand practical tooling for variational quantum meth
 
 ## Citation
 
-Sid Richards (2026)
-
-Unified Variational and Phase-Estimation Quantum Simulation Suite
+Sid Richards (2026), *Quantum Lattice Models*.
 
 ## Author
 

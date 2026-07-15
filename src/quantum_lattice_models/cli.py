@@ -16,6 +16,11 @@ from quantum_lattice_models.analysis import (
 )
 from quantum_lattice_models.comparison import compare_models
 from quantum_lattice_models.diagnostics import diagnose_matrix, inspect_model
+from quantum_lattice_models.intake import (
+    adapter_capability_report,
+    describe_model,
+    lint_model,
+)
 from quantum_lattice_models.interchange import (
     export_graphml,
     export_lattice_csv,
@@ -88,6 +93,11 @@ def main(argv: list[str] | None = None) -> int:
     models_parser.add_argument("--basis")
     models_parser.add_argument("--sparse", action=argparse.BooleanOptionalAction, default=None)
     models_parser.add_argument("--validation-status")
+    models_parser.add_argument(
+        "--include-aliases",
+        action="store_true",
+        help="Include compatibility builder aliases such as names ending in _sparse.",
+    )
     models_parser.add_argument("--json", action="store_true")
 
     create_parser = subparsers.add_parser("create", help="Create a portable model JSON file")
@@ -113,6 +123,46 @@ def main(argv: list[str] | None = None) -> int:
     )
     validate_parser.add_argument("path", help="Model JSON or portable NPY/NPZ path")
     validate_parser.add_argument("--json", action="store_true")
+
+    describe_parser = subparsers.add_parser(
+        "describe", help="Describe the physical content of a portable model or Hamiltonian"
+    )
+    describe_parser.add_argument("path", help="Model JSON or portable NPY/NPZ path")
+    describe_parser.add_argument("--json", action="store_true")
+
+    lint_parser = subparsers.add_parser(
+        "lint", help="Report model-intake errors, warnings, and suggested checks"
+    )
+    lint_parser.add_argument("path", help="Model JSON or portable NPY/NPZ path")
+    lint_parser.add_argument("--json", action="store_true")
+
+    capability_parser = subparsers.add_parser(
+        "adapter-capabilities",
+        help="Report semantics preserved or lost by an export adapter",
+    )
+    capability_parser.add_argument("path", help="Model JSON or portable NPY/NPZ path")
+    capability_parser.add_argument(
+        "target",
+        choices=(
+            "ase",
+            "csv",
+            "dot",
+            "graphml",
+            "json",
+            "netket",
+            "networkx",
+            "openfermion",
+            "pennylane",
+            "plot-data-json",
+            "qiskit",
+            "quspin",
+            "qutip",
+            "svg",
+            "xyz",
+            "yaml",
+        ),
+    )
+    capability_parser.add_argument("--json", action="store_true")
 
     presets_parser = subparsers.add_parser("presets", help="List named model presets")
     presets_parser.add_argument("--model", choices=tuple(sorted(MODEL_REGISTRY)))
@@ -264,8 +314,11 @@ def main(argv: list[str] | None = None) -> int:
             basis=args.basis,
             sparse=args.sparse,
             validation_status=args.validation_status,
+            include_aliases=args.include_aliases,
         )
-        rows = [row for row in model_table() if row["name"] in names]
+        rows = [
+            row for row in model_table(include_aliases=args.include_aliases) if row["name"] in names
+        ]
         if args.json:
             _print_json(rows)
         else:
@@ -275,6 +328,20 @@ def main(argv: list[str] | None = None) -> int:
                     f"{row['supports_sparse']}\t{row['validation_status']}\t"
                     f"{row['description']}"
                 )
+        return 0
+
+    if args.command in {"describe", "lint", "adapter-capabilities"}:
+        source = _load_portable_source(args.path)
+        if args.command == "describe":
+            report = describe_model(source).to_dict()
+        elif args.command == "lint":
+            report = lint_model(source).to_dict()
+        else:
+            report = adapter_capability_report(source, args.target).to_dict()
+        if args.json:
+            _print_json(report)
+        else:
+            _print_key_values(report)
         return 0
 
     if args.command == "create":
@@ -666,6 +733,10 @@ def _build_source(args: argparse.Namespace):
 
 def _is_hamiltonian_path(path: str | Path) -> bool:
     return Path(path).suffix.lower() in {".npy", ".npz"}
+
+
+def _load_portable_source(path: str | Path):
+    return load_hamiltonian(path) if _is_hamiltonian_path(path) else load_model(path)
 
 
 def _default_export_path(path: str | Path, artifact: str, output_format: str) -> Path:

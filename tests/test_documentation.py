@@ -55,8 +55,8 @@ def test_schema_and_import_guides_are_published() -> None:
 
 def test_notebook_curriculum_is_contiguous_and_rendered() -> None:
     notebooks = sorted(Path("notebooks").glob("*.ipynb"))
-    assert len(notebooks) == 21
-    assert [path.name[:2] for path in notebooks] == [f"{index:02d}" for index in range(1, 22)]
+    assert len(notebooks) == 22
+    assert [path.name[:2] for path in notebooks] == [f"{index:02d}" for index in range(1, 23)]
     for notebook in notebooks:
         assert (Path("docs/notebooks") / f"{notebook.stem}.html").exists()
 

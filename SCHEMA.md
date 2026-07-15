@@ -87,7 +87,12 @@ specification has particle/hole components per site. Their basis mappings and
 indices remain distinct.
 
 These fields are optional for compatibility with existing schema `1.0` files.
-Newly created specifications populate them for supported model families.
+Newly created specifications populate them for every built-in logical model
+family. Third-party plugins may omit them, but intake linting reports that loss.
+
+Dense and sparse builders are representations of one logical model. Registry
+discovery hides compatibility `_sparse` aliases by default, while serialized
+files using those family names remain valid and reconstructable.
 
 ## Reduced-basis mapping
 

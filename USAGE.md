@@ -530,7 +530,10 @@ rows = model_table()
 The registry records model category, basis, dimension scaling, return type,
 short description, and typed `ParameterInfo` entries. Parameter metadata
 includes defaults, CLI names, descriptions, repeatability, and basic
-constraints. The CLI options are generated from this metadata.
+constraints. Logical models are listed once with their available
+representations; pass `include_aliases=True` to either discovery function when
+compatibility builder names such as `_sparse` variants are required. The CLI
+options are generated from this metadata.
 
 ## Computational Diagnostics
 
@@ -586,6 +589,22 @@ membership, boundary conditions, and metadata. Complex numbers use an explicit
 JSON representation so they survive round trips without relying on
 implementation-specific encoding.
 
+Every built-in logical model populates portable lattice, local-degree,
+basis-mapping, and interaction records. Model-intake helpers expose those
+records without constructing a Hamiltonian:
+
+```python
+from quantum_lattice_models import (
+    adapter_capability_report,
+    describe_model,
+    lint_model,
+)
+
+print(describe_model(loaded).to_dict())
+print(lint_model(loaded).to_dict())
+print(adapter_capability_report(loaded, "graphml").to_dict())
+```
+
 ## Command-Line Interface
 
 After installation, use the `quantum-lattice` entry point:
@@ -593,12 +612,16 @@ After installation, use the `quantum-lattice` entry point:
 ```bash
 quantum-lattice models
 quantum-lattice models --category spin --sparse --json
+quantum-lattice models --include-aliases
 quantum-lattice presets --model ssh_model
 quantum-lattice dry-run --preset ssh_topological --n-cells 20 --json
 quantum-lattice create ssh_model --n-cells 12 --t1 0.4 --output ssh.json
 quantum-lattice create --preset ssh_topological --n-cells 12 --output ssh.json
 quantum-lattice inspect ssh.json
 quantum-lattice validate ssh.json
+quantum-lattice describe ssh.json --json
+quantum-lattice lint ssh.json --json
+quantum-lattice adapter-capabilities ssh.json graphml --json
 quantum-lattice compare ssh.json other-ssh.json --json
 quantum-lattice spectrum --model ssh_model --n-cells 8
 quantum-lattice plot --model harper_hofstadter_square_lattice --n-rows 4 --n-cols 4 --flux 0.25 --output images/hofstadter_cli.png
@@ -611,8 +634,8 @@ numbers. `create` writes a versioned JSON specification, `inspect` reports its
 model and resource summary, and `validate` checks the schema, registered
 parameters, geometry, and requested dense or sparse representation.
 
-`models` supports category, basis, sparse-capability, and validation-status
-filters. `dry-run` reports dimensions, dense-memory requirements,
+`models` supports category, basis, sparse-capability, validation-status, and
+compatibility-alias filters. `dry-run` reports dimensions, dense-memory requirements,
 representation, basis, sparse availability, validation status, and warnings
 without constructing a matrix. Add `--json` for deterministic
 machine-readable output. Presets are transparent parameter dictionaries and

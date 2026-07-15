@@ -82,5 +82,5 @@ def test_adapter_capability_reports_preserved_and_lost_semantics() -> None:
     assert csv.supported
     assert "geometry" in csv.preserved
     assert "interactions" in csv.lost
-    assert not netket.supported
-    assert "requires lattice bonds" in " ".join(netket.warnings)
+    assert netket.supported
+    assert "bonds" in netket.preserved

@@ -632,20 +632,37 @@ for _validated_model in (
     )
 
 
+for _model_name, _model_info_record in tuple(MODEL_REGISTRY.items()):
+    _canonical_candidate = _model_name.removesuffix("_sparse")
+    if _model_name.endswith("_sparse") and _canonical_candidate in MODEL_REGISTRY:
+        MODEL_REGISTRY[_model_name] = replace(
+            _model_info_record,
+            canonical_name=_canonical_candidate,
+            is_alias=True,
+        )
+
+
 def list_models(
     category: str | None = None,
     *,
     basis: str | None = None,
     sparse: bool | None = None,
     validation_status: str | None = None,
+    include_aliases: bool = False,
 ) -> tuple[str, ...]:
-    """Return registered model names filtered by discovery metadata."""
+    """Return logical model names filtered by discovery metadata.
+
+    Compatibility aliases such as ``tight_binding_chain_sparse`` remain
+    registered and constructable but are hidden unless ``include_aliases`` is
+    true. Sparse-only sector builders remain logical models.
+    """
 
     return tuple(
         sorted(
             name
             for name, info in MODEL_REGISTRY.items()
-            if (category is None or info.category == category)
+            if (include_aliases or not info.is_alias)
+            and (category is None or info.category == category)
             and (basis is None or info.basis == basis)
             and (sparse is None or supports_sparse(name) is sparse)
             and (validation_status is None or info.validation_status == validation_status)
@@ -656,8 +673,32 @@ def list_models(
 def supports_sparse(name: str) -> bool:
     """Return whether a registered model can construct a sparse Hamiltonian."""
 
-    base = name.removesuffix("_sparse")
-    return f"{base}_sparse" in MODEL_REGISTRY
+    info = get_model_info(name)
+    canonical = info.canonical_name or name
+    return name.endswith("_sparse") or f"{canonical}_sparse" in MODEL_REGISTRY
+
+
+def canonical_model_name(name: str) -> str:
+    """Return the logical model name for a registered name or alias."""
+
+    info = get_model_info(name)
+    return info.canonical_name or name
+
+
+def is_model_alias(name: str) -> bool:
+    """Return whether a registered name is a compatibility alias."""
+
+    return get_model_info(name).is_alias
+
+
+def available_representations(name: str) -> tuple[str, ...]:
+    """Return matrix representations available for a logical model."""
+
+    canonical = canonical_model_name(name)
+    representations = ["dense"]
+    if supports_sparse(canonical):
+        representations.append("sparse")
+    return tuple(representations)
 
 
 def list_presets(model: str | None = None) -> tuple[str, ...]:
@@ -709,6 +750,8 @@ def register_model(
     if name in MODEL_REGISTRY and not overwrite:
         raise ValueError(f"Model {name!r} is already registered.")
     registered_defaults = dict(defaults or {})
+    canonical_candidate = name.removesuffix("_sparse")
+    is_alias = name.endswith("_sparse") and canonical_candidate in MODEL_REGISTRY
     info = ModelInfo(
         name=name,
         category=category,
@@ -720,8 +763,17 @@ def register_model(
         defaults=registered_defaults,
         parameters=parameters or _parameter_schema(builder, registered_defaults),
         validation_status=validation_status,
+        canonical_name=canonical_candidate if is_alias else name,
+        is_alias=is_alias,
     )
     MODEL_REGISTRY[name] = info
+    sparse_name = f"{name}_sparse"
+    if not name.endswith("_sparse") and sparse_name in MODEL_REGISTRY:
+        MODEL_REGISTRY[sparse_name] = replace(
+            MODEL_REGISTRY[sparse_name],
+            canonical_name=name,
+            is_alias=True,
+        )
     return info
 
 
@@ -729,9 +781,17 @@ def unregister_model(name: str) -> ModelInfo:
     """Remove and return a registered model."""
 
     try:
-        return MODEL_REGISTRY.pop(name)
+        info = MODEL_REGISTRY.pop(name)
     except KeyError as exc:
         raise KeyError(f"Unknown model {name!r}.") from exc
+    sparse_name = f"{name}_sparse"
+    if sparse_name in MODEL_REGISTRY:
+        MODEL_REGISTRY[sparse_name] = replace(
+            MODEL_REGISTRY[sparse_name],
+            canonical_name=sparse_name,
+            is_alias=False,
+        )
+    return info
 
 
 def load_model_plugins(
@@ -753,7 +813,7 @@ def load_model_plugins(
     return loaded
 
 
-def model_table() -> list[dict[str, object]]:
+def model_table(*, include_aliases: bool = False) -> list[dict[str, object]]:
     """Return registry metadata as dictionaries for docs, CLIs, or notebooks."""
 
     return [
@@ -768,6 +828,10 @@ def model_table() -> list[dict[str, object]]:
             "parameters": tuple(parameter.name for parameter in info.parameters),
             "supports_sparse": supports_sparse(info.name),
             "validation_status": info.validation_status,
+            "canonical_name": info.canonical_name or info.name,
+            "is_alias": info.is_alias,
+            "representations": available_representations(info.name),
         }
         for info in sorted(MODEL_REGISTRY.values(), key=lambda item: item.name)
+        if include_aliases or not info.is_alias
     ]

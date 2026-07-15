@@ -9,6 +9,7 @@ studies or model-specific validation for research calculations.
 
 | Model or capability | Validation | Test coverage |
 |---|---|---|
+| Unified built-in model records | Every registered logical model and compatibility alias creates geometry, contiguous local degrees, complete basis mappings, and interactions. Representative and default single-particle interaction records reconstruct the corresponding builder matrices. | `test_every_registered_name_has_normalized_physical_records`, `test_all_default_single_particle_records_match_builders` |
 | Transverse-field Ising chain | At zero field, the open three-site spectrum matches the classical Ising energies and degeneracies. | `test_zero_field_open_ising_analytic_limit` |
 | Uniform tight-binding chain | Open-chain eigenvalues match $E_m=-2t\cos[m\pi/(N+1)]$. | `test_uniform_open_tight_binding_chain_analytic_spectrum` |
 | SSH chain | The decoupled-dimer limit $t_2=0$ gives repeated energies $\pm t_1$; the topological regime has near-zero edge-localized states. | `test_decoupled_ssh_dimer_analytic_spectrum`, `test_open_ssh_topological_regime_has_edge_localized_low_energy_states` |

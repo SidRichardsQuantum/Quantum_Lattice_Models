@@ -1,5 +1,8 @@
 # Model Reference
 
+- [Logical model capability matrix](capabilities.md)
+- [Complete public API inventory](api.md)
+
 These pages give concise, implementation-specific references for every model
 family currently included in Quantum Lattice Models. Shared basis, operator,
 boundary, sparse-matrix, and exact-diagonalization conventions are described in

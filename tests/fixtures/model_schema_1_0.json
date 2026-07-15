@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "family": "tight_binding_chain",
+  "parameters": {"n_sites": 2, "hopping": 1.0, "onsite": 0.0, "periodic": false},
+  "lattice": {
+    "schema_version": "1.0",
+    "n_sites": 2,
+    "positions": [[0.0, 0.0], [1.0, 0.0]],
+    "bonds": [{"source": 0, "target": 1, "value": {"__complex__": [-1.0, 0.0]}}],
+    "site_labels": ["site 0", "site 1"],
+    "orbital_labels": ["orbital", "orbital"],
+    "sublattice_labels": [],
+    "unit_cells": [0, 1],
+    "boundary_conditions": {"x": "open"},
+    "units": {},
+    "conventions": {"basis_ordering": "site/orbital index order"},
+    "references": [],
+    "provenance": [],
+    "metadata": {}
+  },
+  "basis": "single particle",
+  "local_degrees": [
+    {"index": 0, "site": 0, "kind": "orbital", "local_dimension": 2, "label": "site 0", "component": null, "orbital": "orbital", "metadata": {}},
+    {"index": 1, "site": 1, "kind": "orbital", "local_dimension": 2, "label": "site 1", "component": null, "orbital": "orbital", "metadata": {}}
+  ],
+  "basis_mappings": [
+    {"local_degree": 0, "basis_index": 0, "role": "single_particle_state", "label": "site 0"},
+    {"local_degree": 1, "basis_index": 1, "role": "single_particle_state", "label": "site 1"}
+  ],
+  "interactions": [
+    {
+      "degrees": [0, 1],
+      "operators": ["create", "annihilate"],
+      "coefficient": {"__complex__": [-1.0, 0.0]},
+      "kind": "hopping",
+      "label": "0-1",
+      "unit": null,
+      "metadata": {"hermitian_conjugate": true}
+    }
+  ],
+  "representation": "dense",
+  "units": {},
+  "conventions": {},
+  "references": [],
+  "provenance": {},
+  "metadata": {}
+}

@@ -804,18 +804,50 @@ def _infer_physical_system(
         "heisenberg_chain_sector",
         "xxz_chain",
         "xxz_chain_sector",
+        "xy_chain",
+        "j1_j2_heisenberg_chain",
+        "xyz_chain",
+        "random_field_heisenberg_chain",
     }:
         return _spin_chain_physical_system(base, parameters, lattice)
+    if base in {"heisenberg_ladder", "heisenberg_ladder_sector"}:
+        return _spin_ladder_physical_system(parameters, lattice)
     if base == "ssh_model":
         return _ssh_physical_system(parameters, lattice)
+    if base in {
+        "anderson_chain",
+        "aubry_andre_harper_chain",
+        "long_range_tight_binding_chain",
+        "rice_mele_model",
+        "sawtooth_chain",
+        "creutz_ladder",
+        "tight_binding_chain",
+    }:
+        return _chain_particle_physical_system(base, parameters, lattice)
+    if base in {
+        "anderson_square_lattice",
+        "checkerboard_chern_insulator",
+        "dice_lattice",
+        "graphene_lattice",
+        "haldane_honeycomb_lattice",
+        "harper_hofstadter_square_lattice",
+        "kagome_lattice_tight_binding",
+        "lieb_lattice",
+        "square_lattice_tight_binding",
+        "triangular_lattice_tight_binding",
+    }:
+        return _planar_particle_physical_system(base, parameters, lattice)
     if base == "bose_hubbard_chain":
         return _bose_hubbard_physical_system(parameters, lattice)
     if base in {"fermi_hubbard_chain", "fermi_hubbard_chain_sector"}:
         return _fermi_hubbard_physical_system(parameters, lattice)
     if base == "kitaev_chain_bdg":
         return _kitaev_bdg_physical_system(parameters, lattice)
-    if base == "custom_tight_binding" and lattice is not None:
-        return _custom_tight_binding_physical_system(parameters, lattice)
+    if base == "custom_tight_binding":
+        return _custom_tight_binding_physical_system(
+            parameters,
+            lattice or _custom_lattice_from_parameters(parameters),
+        )
     return lattice, (), (), ()
 
 
@@ -901,7 +933,7 @@ def _spin_chain_physical_system(
             "next_nearest_exchange",
         )
         fields("X", -complex(parameters["h"]))
-    elif family in {"heisenberg_chain", "heisenberg_chain_sector"}:
+    elif family in {"heisenberg_chain", "heisenberg_chain_sector", "xyz_chain"}:
         pair_terms(
             nearest,
             (
@@ -912,6 +944,54 @@ def _spin_chain_physical_system(
             "heisenberg_exchange",
         )
         fields("Z", complex(parameters.get("field", 0.0)))
+    elif family == "xy_chain":
+        coupling = complex(parameters["coupling"])
+        anisotropy = complex(parameters["anisotropy"])
+        pair_terms(
+            nearest,
+            (
+                ("X", -coupling * (1.0 + anisotropy) / 2.0),
+                ("Y", -coupling * (1.0 - anisotropy) / 2.0),
+            ),
+            "xy_exchange",
+        )
+        fields("Z", -complex(parameters.get("field", 0.0)))
+    elif family == "j1_j2_heisenberg_chain":
+        pair_terms(
+            nearest,
+            tuple((axis, complex(parameters["j1"])) for axis in ("X", "Y", "Z")),
+            "nearest_exchange",
+        )
+        pair_terms(
+            _next_nearest_chain_bonds(n_sites, periodic),
+            tuple((axis, complex(parameters["j2"])) for axis in ("X", "Y", "Z")),
+            "next_nearest_exchange",
+        )
+        fields("Z", complex(parameters.get("field", 0.0)))
+    elif family == "random_field_heisenberg_chain":
+        pair_terms(
+            nearest,
+            tuple((axis, complex(parameters["coupling"])) for axis in ("X", "Y", "Z")),
+            "heisenberg_exchange",
+        )
+        rng = np.random.default_rng(int(parameters["seed"]))
+        for site, coefficient in enumerate(
+            rng.uniform(
+                -float(parameters["disorder"]),
+                float(parameters["disorder"]),
+                n_sites,
+            )
+        ):
+            interactions.append(
+                InteractionTerm(
+                    (site,),
+                    ("Z",),
+                    complex(coefficient),
+                    "random_field",
+                    label=f"Z field {site}",
+                    metadata={"seed": int(parameters["seed"])},
+                )
+            )
     else:
         coupling = complex(parameters["coupling"])
         pair_terms(
@@ -925,6 +1005,73 @@ def _spin_chain_physical_system(
         )
         fields("Z", complex(parameters.get("field", 0.0)))
     return lattice, degrees, mappings, tuple(interactions)
+
+
+def _spin_ladder_physical_system(
+    parameters: dict[str, object],
+    lattice: LatticeSpec | None,
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    n_rungs = int(parameters["n_rungs"])
+    n_sites = 2 * n_rungs
+    periodic = bool(parameters.get("periodic", False))
+    rung_bonds = tuple((2 * rung, 2 * rung + 1) for rung in range(n_rungs))
+    leg_bonds = tuple(
+        (2 * rung + leg, 2 * next_rung + leg)
+        for leg in range(2)
+        for rung, next_rung in _chain_bonds(n_rungs, periodic)
+    )
+    all_bonds = rung_bonds + leg_bonds
+    if lattice is None:
+        lattice = LatticeSpec(
+            n_sites=n_sites,
+            positions=tuple(
+                (float(rung), float(leg)) for rung in range(n_rungs) for leg in range(2)
+            ),
+            bonds=tuple(Bond(source, target) for source, target in all_bonds),
+            site_labels=tuple(
+                f"rung {rung} leg {leg}" for rung in range(n_rungs) for leg in range(2)
+            ),
+            unit_cells=tuple(rung for rung in range(n_rungs) for _ in range(2)),
+            boundary_conditions={"x": "periodic" if periodic else "open", "y": "open"},
+            conventions={"site_ordering": "rung-major, leg-minor"},
+        )
+    degrees = tuple(
+        LocalDegreeOfFreedom(site, site, "spin", 2, lattice.site_labels[site], component="spin-1/2")
+        for site in range(n_sites)
+    )
+    mappings = tuple(
+        BasisIndexMapping(site, site, "tensor_factor", f"qubit {site}") for site in range(n_sites)
+    )
+    interactions = tuple(
+        InteractionTerm(
+            (source, target),
+            (axis, axis),
+            complex(coupling),
+            kind,
+            label=f"{axis}{axis} {source}-{target}",
+        )
+        for bonds, coupling, kind in (
+            (leg_bonds, parameters["leg_coupling"], "leg_exchange"),
+            (rung_bonds, parameters["rung_coupling"], "rung_exchange"),
+        )
+        for source, target in bonds
+        for axis in ("X", "Y", "Z")
+    ) + tuple(
+        InteractionTerm(
+            (site,),
+            ("Z",),
+            complex(parameters.get("field", 0.0)),
+            "field",
+            label=f"Z field {site}",
+        )
+        for site in range(n_sites)
+    )
+    return lattice, degrees, mappings, interactions
 
 
 def _ssh_physical_system(
@@ -983,6 +1130,534 @@ def _ssh_physical_system(
     degrees = _orbital_degrees(lattice)
     mappings = _single_particle_mappings(degrees)
     return lattice, degrees, mappings, tuple(interactions)
+
+
+def _chain_particle_physical_system(
+    family: str,
+    parameters: dict[str, object],
+    lattice: LatticeSpec | None,
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    periodic = bool(parameters.get("periodic", False))
+    hoppings: dict[tuple[int, int], complex] = {}
+    onsite: dict[int, complex] = {}
+
+    if family in {"rice_mele_model", "sawtooth_chain", "creutz_ladder"}:
+        n_cells = int(parameters["n_cells"])
+        n_sites = 2 * n_cells
+        positions = tuple(
+            (float(cell), 0.35 if orbital else 0.0)
+            for cell in range(n_cells)
+            for orbital in range(2)
+        )
+        unit_cells = tuple(cell for cell in range(n_cells) for _ in range(2))
+        if family == "rice_mele_model":
+            sublattices = tuple(label for _ in range(n_cells) for label in ("A", "B"))
+            hopping = complex(parameters["hopping"])
+            dimerization = complex(parameters["dimerization"])
+            staggering = complex(parameters["staggering"])
+            for cell in range(n_cells):
+                a, b = 2 * cell, 2 * cell + 1
+                onsite[a], onsite[b] = staggering, -staggering
+                _accumulate_hopping(hoppings, onsite, a, b, -(hopping + dimerization))
+                if cell < n_cells - 1:
+                    _accumulate_hopping(
+                        hoppings, onsite, b, 2 * (cell + 1), -(hopping - dimerization)
+                    )
+                elif periodic and n_cells > 1:
+                    _accumulate_hopping(hoppings, onsite, b, 0, -(hopping - dimerization))
+        elif family == "sawtooth_chain":
+            sublattices = tuple(label for _ in range(n_cells) for label in ("base", "tooth"))
+            for cell in range(n_cells):
+                base, tooth = 2 * cell, 2 * cell + 1
+                _accumulate_hopping(
+                    hoppings, onsite, base, tooth, -complex(parameters["tooth_hopping"])
+                )
+                if cell < n_cells - 1 or periodic:
+                    next_base = 2 * ((cell + 1) % n_cells)
+                    _accumulate_hopping(
+                        hoppings, onsite, base, next_base, -complex(parameters["base_hopping"])
+                    )
+                    _accumulate_hopping(
+                        hoppings, onsite, tooth, next_base, -complex(parameters["tooth_hopping"])
+                    )
+        else:
+            sublattices = tuple(label for _ in range(n_cells) for label in ("upper", "lower"))
+            phase = float(parameters["flux"]) / 2.0
+            for cell in range(n_cells):
+                upper, lower = 2 * cell, 2 * cell + 1
+                onsite[upper] = complex(parameters.get("mass", 0.0))
+                onsite[lower] = -complex(parameters.get("mass", 0.0))
+                if cell < n_cells - 1 or periodic:
+                    next_upper = 2 * ((cell + 1) % n_cells)
+                    next_lower = next_upper + 1
+                    _accumulate_hopping(
+                        hoppings,
+                        onsite,
+                        upper,
+                        next_upper,
+                        -complex(parameters["hopping"]) * np.exp(1j * phase),
+                    )
+                    _accumulate_hopping(
+                        hoppings,
+                        onsite,
+                        lower,
+                        next_lower,
+                        -complex(parameters["hopping"]) * np.exp(-1j * phase),
+                    )
+                    _accumulate_hopping(
+                        hoppings,
+                        onsite,
+                        upper,
+                        next_lower,
+                        -complex(parameters["diagonal_hopping"]),
+                    )
+                    _accumulate_hopping(
+                        hoppings,
+                        onsite,
+                        lower,
+                        next_upper,
+                        -complex(parameters["diagonal_hopping"]),
+                    )
+        labels = tuple(f"{sublattices[index]} {index // 2}" for index in range(n_sites))
+        orbital_labels = sublattices
+    else:
+        n_sites = int(parameters["n_sites"])
+        positions = tuple((float(site), 0.0) for site in range(n_sites))
+        unit_cells = tuple(range(n_sites))
+        sublattices = ()
+        labels = tuple(f"site {site}" for site in range(n_sites))
+        orbital_labels = tuple("orbital" for _ in range(n_sites))
+        if family == "long_range_tight_binding_chain":
+            for left in range(n_sites):
+                for right in range(left + 1, n_sites):
+                    distance = right - left
+                    if periodic:
+                        distance = min(distance, n_sites - distance)
+                    _accumulate_hopping(
+                        hoppings,
+                        onsite,
+                        left,
+                        right,
+                        -complex(parameters["hopping"]) / distance ** float(parameters["power"]),
+                    )
+        else:
+            for source, target in _chain_bonds(n_sites, periodic):
+                _accumulate_hopping(
+                    hoppings, onsite, source, target, -complex(parameters["hopping"])
+                )
+        if family == "anderson_chain":
+            values = np.random.default_rng(int(parameters["seed"])).uniform(
+                -float(parameters["disorder"]) / 2.0,
+                float(parameters["disorder"]) / 2.0,
+                n_sites,
+            )
+        elif family == "aubry_andre_harper_chain":
+            sites = np.arange(n_sites, dtype=float)
+            values = float(parameters["potential"]) * np.cos(
+                2.0 * np.pi * float(parameters["beta"]) * sites + float(parameters["phase"])
+            )
+        else:
+            values = _site_parameter_values(parameters.get("onsite", 0.0), n_sites)
+        onsite.update({site: complex(value) for site, value in enumerate(values)})
+
+    if lattice is None:
+        lattice = LatticeSpec(
+            n_sites=n_sites,
+            positions=positions,
+            bonds=tuple(
+                Bond(source, target, value) for (source, target), value in hoppings.items()
+            ),
+            site_labels=labels,
+            orbital_labels=orbital_labels,
+            sublattice_labels=sublattices,
+            unit_cells=unit_cells,
+            boundary_conditions={"x": "periodic" if periodic else "open"},
+            conventions={"basis_ordering": "site/orbital index order"},
+        )
+    return _particle_records(lattice, hoppings, onsite)
+
+
+def _planar_particle_physical_system(
+    family: str,
+    parameters: dict[str, object],
+    lattice: LatticeSpec | None,
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    n_rows = int(parameters["n_rows"])
+    n_cols = int(parameters["n_cols"])
+    periodic_x = bool(parameters.get("periodic_x", False))
+    periodic_y = bool(parameters.get("periodic_y", False))
+    orbitals = 1
+    if family in {"graphene_lattice", "haldane_honeycomb_lattice", "checkerboard_chern_insulator"}:
+        orbitals = 2
+    elif family in {"kagome_lattice_tight_binding", "lieb_lattice", "dice_lattice"}:
+        orbitals = 3
+    n_sites = orbitals * n_rows * n_cols
+    hoppings: dict[tuple[int, int], complex] = {}
+    onsite: dict[int, complex] = {}
+
+    def index(row: int, col: int, orbital: int = 0) -> int:
+        return orbitals * (row * n_cols + col) + orbital
+
+    if family in {
+        "square_lattice_tight_binding",
+        "anderson_square_lattice",
+        "harper_hofstadter_square_lattice",
+    }:
+        for row in range(n_rows):
+            for col in range(n_cols):
+                source = index(row, col)
+                for d_row, d_col in ((0, 1), (1, 0)):
+                    target_cell = _wrapped_cell(
+                        row + d_row,
+                        col + d_col,
+                        n_rows,
+                        n_cols,
+                        periodic_y,
+                        periodic_x,
+                    )
+                    if target_cell is None:
+                        continue
+                    coefficient = -complex(parameters["hopping"])
+                    if family == "harper_hofstadter_square_lattice" and d_row == 1:
+                        coefficient *= np.exp(2j * np.pi * float(parameters["flux"]) * col)
+                    _accumulate_hopping(hoppings, onsite, source, index(*target_cell), coefficient)
+        if family == "anderson_square_lattice":
+            values = np.random.default_rng(int(parameters["seed"])).uniform(
+                -float(parameters["disorder"]) / 2.0,
+                float(parameters["disorder"]) / 2.0,
+                n_sites,
+            )
+        else:
+            values = _site_parameter_values(parameters.get("onsite", 0.0), n_sites)
+        onsite.update({site: complex(value) for site, value in enumerate(values)})
+    elif family == "triangular_lattice_tight_binding":
+        for row in range(n_rows):
+            for col in range(n_cols):
+                for d_row, d_col in ((0, 1), (1, 0), (1, -1)):
+                    target = _wrapped_cell(
+                        row + d_row,
+                        col + d_col,
+                        n_rows,
+                        n_cols,
+                        periodic_y,
+                        periodic_x,
+                    )
+                    if target is not None:
+                        _accumulate_hopping(
+                            hoppings,
+                            onsite,
+                            index(row, col),
+                            index(*target),
+                            -complex(parameters["hopping"]),
+                        )
+        values = _site_parameter_values(parameters.get("onsite", 0.0), n_sites)
+        onsite.update({site: complex(value) for site, value in enumerate(values)})
+    elif family == "kagome_lattice_tight_binding":
+        for row in range(n_rows):
+            for col in range(n_cols):
+                for source_orbital, target_orbital in ((0, 1), (1, 2), (2, 0)):
+                    _accumulate_hopping(
+                        hoppings,
+                        onsite,
+                        index(row, col, source_orbital),
+                        index(row, col, target_orbital),
+                        -complex(parameters["hopping"]),
+                    )
+                for source_orbital, d_row, d_col, target_orbital in (
+                    (1, 0, 1, 0),
+                    (2, 1, 0, 0),
+                    (2, 1, -1, 1),
+                ):
+                    target = _wrapped_cell(
+                        row + d_row,
+                        col + d_col,
+                        n_rows,
+                        n_cols,
+                        periodic_y,
+                        periodic_x,
+                    )
+                    if target is not None:
+                        _accumulate_hopping(
+                            hoppings,
+                            onsite,
+                            index(row, col, source_orbital),
+                            index(*target, target_orbital),
+                            -complex(parameters["hopping"]),
+                        )
+        values = _site_parameter_values(parameters.get("onsite", 0.0), n_sites)
+        onsite.update({site: complex(value) for site, value in enumerate(values)})
+    elif family in {"graphene_lattice", "haldane_honeycomb_lattice"}:
+        t1 = complex(parameters.get("t1", parameters.get("hopping", 1.0)))
+        t2 = complex(parameters.get("t2", 0.0))
+        phi = float(parameters.get("phi", 0.0))
+        mass = complex(parameters.get("sublattice_potential", 0.0))
+        for row in range(n_rows):
+            for col in range(n_cols):
+                a, b = index(row, col, 0), index(row, col, 1)
+                onsite[a], onsite[b] = mass, -mass
+                _accumulate_hopping(hoppings, onsite, a, b, -t1)
+                for target in (
+                    _wrapped_cell(row, col - 1, n_rows, n_cols, periodic_y, periodic_x),
+                    _wrapped_cell(row - 1, col, n_rows, n_cols, periodic_y, periodic_x),
+                ):
+                    if target is not None:
+                        _accumulate_hopping(hoppings, onsite, a, index(*target, 1), -t1)
+                for d_row, d_col in ((0, 1), (1, 0), (1, -1)):
+                    target = _wrapped_cell(
+                        row + d_row,
+                        col + d_col,
+                        n_rows,
+                        n_cols,
+                        periodic_y,
+                        periodic_x,
+                    )
+                    if target is not None and t2 != 0:
+                        _accumulate_hopping(
+                            hoppings, onsite, a, index(*target, 0), -t2 * np.exp(1j * phi)
+                        )
+                        _accumulate_hopping(
+                            hoppings, onsite, b, index(*target, 1), -t2 * np.exp(-1j * phi)
+                        )
+    elif family == "checkerboard_chern_insulator":
+        sigma_x = np.array([[0, 1], [1, 0]], dtype=complex)
+        sigma_y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+        sigma_z = np.diag([1.0, -1.0]).astype(complex)
+        for row in range(n_rows):
+            for col in range(n_cols):
+                onsite[index(row, col, 0)] = complex(parameters["mass"])
+                onsite[index(row, col, 1)] = -complex(parameters["mass"])
+                for d_row, d_col, pauli in ((0, 1, sigma_x), (1, 0, sigma_y)):
+                    target = _wrapped_cell(
+                        row + d_row,
+                        col + d_col,
+                        n_rows,
+                        n_cols,
+                        periodic_y,
+                        periodic_x,
+                    )
+                    if target is None:
+                        continue
+                    block = 0.5 * complex(parameters["hopping"]) * (sigma_z - 1j * pauli)
+                    for source_orbital in range(2):
+                        for target_orbital in range(2):
+                            if block[source_orbital, target_orbital] != 0:
+                                _accumulate_hopping(
+                                    hoppings,
+                                    onsite,
+                                    index(row, col, source_orbital),
+                                    index(*target, target_orbital),
+                                    complex(block[source_orbital, target_orbital]),
+                                )
+    elif family == "lieb_lattice":
+        for row in range(n_rows):
+            for col in range(n_cols):
+                center = index(row, col, 0)
+                for target in (index(row, col, 1), index(row, col, 2)):
+                    _accumulate_hopping(
+                        hoppings, onsite, center, target, -complex(parameters["hopping"])
+                    )
+                if col + 1 < n_cols:
+                    _accumulate_hopping(
+                        hoppings,
+                        onsite,
+                        index(row, col, 1),
+                        index(row, col + 1, 0),
+                        -complex(parameters["hopping"]),
+                    )
+                if row + 1 < n_rows:
+                    _accumulate_hopping(
+                        hoppings,
+                        onsite,
+                        index(row, col, 2),
+                        index(row + 1, col, 0),
+                        -complex(parameters["hopping"]),
+                    )
+    else:  # dice_lattice
+        for row in range(n_rows):
+            for col in range(n_cols):
+                hub = index(row, col, 0)
+                for orbital, offsets in (
+                    (1, ((0, 0), (0, -1), (-1, 0))),
+                    (2, ((0, 0), (0, 1), (1, 0))),
+                ):
+                    for d_row, d_col in offsets:
+                        target = _wrapped_cell(
+                            row + d_row,
+                            col + d_col,
+                            n_rows,
+                            n_cols,
+                            periodic_y,
+                            periodic_x,
+                        )
+                        if target is not None:
+                            _accumulate_hopping(
+                                hoppings,
+                                onsite,
+                                hub,
+                                index(*target, orbital),
+                                -complex(parameters["hopping"]),
+                            )
+
+    if orbitals == 1:
+        positions = tuple(
+            (float(col), float(-row)) for row in range(n_rows) for col in range(n_cols)
+        )
+        sublattices: tuple[str, ...] = ()
+        orbital_labels = tuple("orbital" for _ in range(n_sites))
+    else:
+        names = {
+            "checkerboard_chern_insulator": ("A", "B"),
+            "graphene_lattice": ("A", "B"),
+            "haldane_honeycomb_lattice": ("A", "B"),
+            "kagome_lattice_tight_binding": ("A", "B", "C"),
+            "lieb_lattice": ("center", "horizontal", "vertical"),
+            "dice_lattice": ("hub", "rim-A", "rim-B"),
+        }[family]
+        offsets = (
+            ((0.0, 0.0), (0.0, 0.35)) if orbitals == 2 else ((0.0, 0.0), (-0.25, 0.2), (0.25, -0.2))
+        )
+        positions = tuple(
+            (float(col) + offsets[orbital][0], float(-row) + offsets[orbital][1])
+            for row in range(n_rows)
+            for col in range(n_cols)
+            for orbital in range(orbitals)
+        )
+        sublattices = tuple(name for _ in range(n_rows * n_cols) for name in names)
+        orbital_labels = sublattices
+    unit_cells = tuple(cell for cell in range(n_rows * n_cols) for _ in range(orbitals))
+    labels = tuple(
+        f"{sublattices[site]} cell {unit_cells[site]}" if sublattices else f"site {site}"
+        for site in range(n_sites)
+    )
+    if lattice is None:
+        lattice = LatticeSpec(
+            n_sites=n_sites,
+            positions=positions,
+            bonds=tuple(
+                Bond(source, target, value) for (source, target), value in hoppings.items()
+            ),
+            site_labels=labels,
+            orbital_labels=orbital_labels,
+            sublattice_labels=sublattices,
+            unit_cells=unit_cells,
+            boundary_conditions={
+                "x": "periodic" if periodic_x else "open",
+                "y": "periodic" if periodic_y else "open",
+            },
+            conventions={"basis_ordering": "row-major cell order, then orbital"},
+        )
+    return _particle_records(lattice, hoppings, onsite)
+
+
+def _particle_records(
+    lattice: LatticeSpec,
+    hoppings: dict[tuple[int, int], complex],
+    onsite: dict[int, complex],
+) -> tuple[
+    LatticeSpec,
+    tuple[LocalDegreeOfFreedom, ...],
+    tuple[BasisIndexMapping, ...],
+    tuple[InteractionTerm, ...],
+]:
+    degrees = _orbital_degrees(lattice)
+    interactions = tuple(
+        InteractionTerm(
+            (source, target),
+            ("create", "annihilate"),
+            coefficient,
+            "hopping",
+            label=f"{source}-{target}",
+            metadata={"hermitian_conjugate": True},
+        )
+        for (source, target), coefficient in sorted(hoppings.items())
+        if coefficient != 0
+    ) + tuple(
+        InteractionTerm(
+            (site,),
+            ("number",),
+            coefficient,
+            "onsite",
+            label=f"onsite {site}",
+        )
+        for site, coefficient in sorted(onsite.items())
+        if coefficient != 0
+    )
+    return lattice, degrees, _single_particle_mappings(degrees), interactions
+
+
+def _accumulate_hopping(
+    hoppings: dict[tuple[int, int], complex],
+    onsite: dict[int, complex],
+    source: int,
+    target: int,
+    coefficient: complex,
+) -> None:
+    coefficient = complex(coefficient)
+    if source == target:
+        onsite[source] = onsite.get(source, 0.0j) + coefficient + coefficient.conjugate()
+        return
+    if source > target:
+        source, target = target, source
+        coefficient = coefficient.conjugate()
+    hoppings[(source, target)] = hoppings.get((source, target), 0.0j) + coefficient
+
+
+def _wrapped_cell(
+    row: int,
+    col: int,
+    n_rows: int,
+    n_cols: int,
+    periodic_y: bool,
+    periodic_x: bool,
+) -> tuple[int, int] | None:
+    if col < 0 or col >= n_cols:
+        if not periodic_x:
+            return None
+        col %= n_cols
+    if row < 0 or row >= n_rows:
+        if not periodic_y:
+            return None
+        row %= n_rows
+    return row, col
+
+
+def _site_parameter_values(value: object, n_sites: int) -> tuple[complex, ...]:
+    if isinstance(value, (tuple, list, np.ndarray)):
+        values = tuple(complex(item) for item in value)
+        if len(values) != n_sites:
+            raise ValueError("onsite must contain one value per site.")
+        return values
+    return tuple(complex(value) for _ in range(n_sites))
+
+
+def _custom_lattice_from_parameters(parameters: dict[str, object]) -> LatticeSpec:
+    n_sites = int(parameters["n_sites"])
+    bonds = tuple(
+        Bond(
+            int(record[0]),
+            int(record[1]),
+            None if len(record) == 2 else complex(record[2]),
+        )
+        for record in parameters.get("bonds", ())
+    )
+    return LatticeSpec(
+        n_sites=n_sites,
+        positions=tuple((float(site), 0.0) for site in range(n_sites)),
+        bonds=bonds,
+        site_labels=tuple(f"site {site}" for site in range(n_sites)),
+        orbital_labels=tuple("orbital" for _ in range(n_sites)),
+        conventions={"basis_ordering": "site index order"},
+    )
 
 
 def _custom_tight_binding_physical_system(
