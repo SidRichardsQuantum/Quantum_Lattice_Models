@@ -126,7 +126,7 @@ exclude = [
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 files = [
   "src/quantum_lattice_models/_registry_core.py",
   "src/quantum_lattice_models/_schema_codec.py",
