@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "17 5 * * 1"
   workflow_dispatch:
+  push:
+    branches:
+      - agent/complete-v0.2-stability-gates
 
 jobs:
   real-adapter-smoke:
