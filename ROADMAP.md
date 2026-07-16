@@ -307,29 +307,6 @@ Future maturity work:
 - Maintain scheduled performance regression reports for representative
   construction, reduction, persistence, and solver workloads.
 
-## v0.2.0 Stability Criteria
-
-Version 0.2.0 should be released when all of the following are true:
-
-1. The public API snapshot, schema `1.0` golden files, and CLI JSON fixtures are
-   enforced in continuous integration.
-2. Public removals and semantic changes follow `DEPRECATIONS.md`; no known
-   accidental compatibility break remains.
-3. Strict MyPy covers the portable records, factories, registry, intake,
-   reduced-basis, symmetry, persistence, and model-builder core.
-4. Branch-aware test coverage remains at or above 80%, with scientific features
-   validated against analytic limits, full-space blocks, or independent
-   backends.
-5. The portable model representation supports explicit local symmetry actions
-   and at least magnetization, particle-number, and global spin-flip parity
-   reduced mappings.
-6. Sparse construction and reduction paths do not introduce undocumented dense
-   conversion for representative benchmark sizes.
-7. Contributor guidance, structured issue forms, and concrete third-party
-   intake case studies are published.
-8. The scheduled optional-adapter and performance workflows have completed
-   successfully for at least two consecutive runs.
-
 ## Near-Term Backlog
 
 Recommended implementation order:

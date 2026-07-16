@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## v0.2.0
+
+This stability release completes the package's initial compatibility,
+verification, typing, and release-readiness work without changing its numerical
+model conventions or portable schema versions.
 
 ### Changed
 
@@ -8,6 +12,18 @@
   spin, storage, tight-binding, and transformation modules.
 - Strengthened type annotations at JSON, sparse-matrix, and model
   transformation boundaries without changing numerical behavior.
+- Updated package version metadata to `0.2.0`.
+- Removed completed release criteria from the roadmap so it remains focused on
+  future capabilities and project work.
+- Replaced the stale source-tree analysis-version fallback with the explicit
+  development value `0+unknown`.
+
+### Compatibility
+
+- Existing public imports, command-line workflows, and compatibility snapshots
+  remain unchanged.
+- The portable model and analysis schema versions remain `1.0`.
+- This release introduces no public removals or deprecations.
 
 ## v0.1.12
 

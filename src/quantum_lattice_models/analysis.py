@@ -410,4 +410,4 @@ def _package_version() -> str:
     try:
         return version("quantum-lattice-models")
     except PackageNotFoundError:
-        return "0.1.8"
+        return "0+unknown"
