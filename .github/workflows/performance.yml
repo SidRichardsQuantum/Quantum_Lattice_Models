@@ -4,9 +4,6 @@ on:
   schedule:
     - cron: "41 5 * * 2"
   workflow_dispatch:
-  push:
-    branches:
-      - agent/complete-v0.2-stability-gates
 
 jobs:
   reference-benchmarks:
