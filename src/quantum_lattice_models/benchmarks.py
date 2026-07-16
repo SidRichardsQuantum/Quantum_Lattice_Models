@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import Any, cast
 
 import numpy as np
 import scipy.sparse as sp
@@ -15,7 +16,7 @@ from quantum_lattice_models._model_utils import (
 from quantum_lattice_models.geometry import honeycomb_lattice_positions
 from quantum_lattice_models.spin import SpinField, SpinInteraction, graph_spin_hamiltonian
 from quantum_lattice_models.topological import haldane_honeycomb_lattice_sparse
-from quantum_lattice_models.types import LatticeHamiltonian
+from quantum_lattice_models.types import DenseHamiltonian, LatticeHamiltonian
 
 
 def anderson_chain(
@@ -340,7 +341,11 @@ def long_range_tight_binding_chain(
 ) -> LatticeHamiltonian:
     """Return a chain with hopping decaying as inverse distance to ``power``."""
 
-    diagonal = np.full(n_sites, onsite) if np.isscalar(onsite) else np.asarray(tuple(onsite))
+    diagonal = (
+        np.full(n_sites, cast(Any, onsite))
+        if np.isscalar(onsite)
+        else np.asarray(tuple(cast(Iterable[float], onsite)))
+    )
     matrix = np.diag(diagonal.astype(complex))
     for left in range(n_sites):
         for right in range(left + 1, n_sites):
@@ -456,7 +461,7 @@ def xyz_chain(
     jz: float = 0.6,
     field: float = 0.0,
     periodic: bool = False,
-):
+) -> DenseHamiltonian:
     """Return an XYZ spin chain."""
 
     interactions = tuple(
@@ -479,7 +484,7 @@ def random_field_heisenberg_chain(
     disorder: float = 1.0,
     seed: int = 0,
     periodic: bool = False,
-):
+) -> DenseHamiltonian:
     """Return a Heisenberg chain with reproducible random longitudinal fields."""
 
     rng = np.random.default_rng(seed)

@@ -82,7 +82,7 @@ def tight_binding_chain(
     hopping: float = 1.0,
     onsite: float | Iterable[float] = 0.0,
     periodic: bool = False,
-) -> np.ndarray:
+) -> LatticeHamiltonian:
     """Return a generic one-dimensional single-particle tight-binding matrix."""
 
     validate_positive_int(n_sites, "n_sites")

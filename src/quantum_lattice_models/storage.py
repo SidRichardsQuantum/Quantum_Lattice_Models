@@ -60,7 +60,7 @@ def save_hamiltonian(
         return output
 
     if sp.issparse(result.matrix):
-        matrix = result.matrix.tocsr()
+        matrix = sp.csr_matrix(result.matrix)
         np.savez_compressed(
             output,
             storage=np.array("csr"),
@@ -237,13 +237,13 @@ def export_hamiltonian_artifact(
         raise ValueError("Analysis records can only be attached to bundle exports.")
     output = Path(path)
     if artifact == "model":
-        model = source.model if isinstance(source, HamiltonianResult) else source
-        return (model.save(_with_suffix(output, "json")),)
+        selected_model = source.model if isinstance(source, HamiltonianResult) else source
+        return (selected_model.save(_with_suffix(output, "json")),)
     if artifact == "lattice":
-        model = source.model if isinstance(source, HamiltonianResult) else source
-        if model.lattice is None:
+        selected_model = source.model if isinstance(source, HamiltonianResult) else source
+        if selected_model.lattice is None:
             raise ValueError("Export source does not contain portable lattice data.")
-        return (_write_json(_with_suffix(output, "json"), model.lattice.to_dict()),)
+        return (_write_json(_with_suffix(output, "json"), selected_model.lattice.to_dict()),)
     if not isinstance(source, HamiltonianResult):
         raise ValueError(f"Artifact {artifact!r} requires a constructed Hamiltonian result.")
     result = source
@@ -254,12 +254,12 @@ def export_hamiltonian_artifact(
 
     _prepare_bundle_directory(output)
     matrix = save_hamiltonian(result, output / f"matrix.{format}", format=format)
-    model = result.model.save(output / "model.json")
+    model_path = result.model.save(output / "model.json")
     metadata = _write_json(output / "metadata.json", result.to_metadata())
     paths = [matrix]
     if format == "npy":
         paths.append(metadata_path(matrix))
-    paths.extend((model, metadata))
+    paths.extend((model_path, metadata))
     if result.model.lattice is not None:
         paths.append(_write_json(output / "lattice.json", result.model.lattice.to_dict()))
     if analyses:
@@ -331,7 +331,7 @@ def _validate_external_matrix(
 ) -> None:
     if len(matrix.shape) != 2 or matrix.shape[0] < 1 or matrix.shape[0] != matrix.shape[1]:
         raise ValueError("External Hamiltonian matrix must be nonempty and square.")
-    values = matrix.data if sp.issparse(matrix) else np.asarray(matrix)
+    values = sp.csr_matrix(matrix).data if sp.issparse(matrix) else np.asarray(matrix)
     if not np.issubdtype(values.dtype, np.number):
         raise ValueError("External Hamiltonian matrix must contain numeric values.")
     if not np.all(np.isfinite(values)):

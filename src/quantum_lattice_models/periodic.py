@@ -6,8 +6,12 @@ import json
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from quantum_lattice_models.analysis import AnalysisResult
 
 PERIODIC_SCHEMA_VERSION = "1.0"
 
@@ -38,9 +42,11 @@ class CellBond:
         if not isinstance(parts, list) or len(parts) != 2:
             raise ValueError("Periodic bond values require [real, imaginary].")
         return cls(
-            source=int(data["source"]),
-            target=int(data["target"]),
-            displacement=tuple(int(item) for item in data["displacement"]),
+            source=int(cast(Any, data["source"])),
+            target=int(cast(Any, data["target"])),
+            displacement=tuple(
+                int(cast(Any, item)) for item in cast(Iterable[object], data["displacement"])
+            ),
             value=complex(float(parts[0]), float(parts[1])),
         )
 
@@ -113,7 +119,7 @@ class PeriodicLatticeSpec:
 
     def bloch_hamiltonian(
         self,
-        momentum: Sequence[float],
+        momentum: Sequence[float] | np.ndarray,
         *,
         gauge: str = "cell",
     ) -> np.ndarray:
@@ -209,22 +215,41 @@ class PeriodicLatticeSpec:
         spec = cls(
             schema_version=str(data.get("schema_version", PERIODIC_SCHEMA_VERSION)),
             primitive_vectors=tuple(
-                tuple(float(item) for item in vector) for vector in data["primitive_vectors"]
+                tuple(float(cast(Any, item)) for item in vector)
+                for vector in cast(Iterable[Iterable[object]], data["primitive_vectors"])
             ),
             orbital_positions=tuple(
-                tuple(float(item) for item in position) for position in data["orbital_positions"]
+                tuple(float(cast(Any, item)) for item in position)
+                for position in cast(Iterable[Iterable[object]], data["orbital_positions"])
             ),
-            bonds=tuple(CellBond.from_dict(item) for item in data.get("bonds", [])),
-            onsite=tuple(_decode_complex(item) for item in data.get("onsite", [])),
-            orbital_labels=tuple(str(item) for item in data.get("orbital_labels", [])),
-            sublattice_labels=tuple(str(item) for item in data.get("sublattice_labels", [])),
-            units={str(key): str(value) for key, value in dict(data.get("units", {})).items()},
-            conventions={
-                str(key): str(value) for key, value in dict(data.get("conventions", {})).items()
+            bonds=tuple(
+                CellBond.from_dict(item)
+                for item in cast(Iterable[dict[str, object]], data.get("bonds", []))
+            ),
+            onsite=tuple(
+                _decode_complex(item) for item in cast(Iterable[object], data.get("onsite", []))
+            ),
+            orbital_labels=tuple(
+                str(item) for item in cast(Iterable[object], data.get("orbital_labels", []))
+            ),
+            sublattice_labels=tuple(
+                str(item) for item in cast(Iterable[object], data.get("sublattice_labels", []))
+            ),
+            units={
+                str(key): str(value)
+                for key, value in dict(cast(Any, data.get("units", {}))).items()
             },
-            references=tuple(str(item) for item in data.get("references", [])),
-            provenance=tuple(dict(item) for item in data.get("provenance", [])),
-            metadata=dict(data.get("metadata", {})),
+            conventions={
+                str(key): str(value)
+                for key, value in dict(cast(Any, data.get("conventions", {}))).items()
+            },
+            references=tuple(
+                str(item) for item in cast(Iterable[object], data.get("references", []))
+            ),
+            provenance=tuple(
+                dict(item) for item in cast(Iterable[dict[str, object]], data.get("provenance", []))
+            ),
+            metadata=dict(cast(Any, data.get("metadata", {}))),
         )
         spec.validate()
         return spec
@@ -247,7 +272,7 @@ class MomentumPath:
     @classmethod
     def from_vertices(
         cls,
-        vertices: Iterable[Sequence[float]],
+        vertices: Iterable[Sequence[float] | np.ndarray],
         *,
         labels: Sequence[str] = (),
         points_per_segment: int = 64,
@@ -306,7 +331,7 @@ class BandStructure:
         *,
         periodic: PeriodicLatticeSpec | None = None,
         parameters: dict[str, object] | None = None,
-    ):
+    ) -> AnalysisResult:
         """Return this band structure as a portable ``AnalysisResult``."""
 
         from quantum_lattice_models.analysis import band_structure_result
@@ -459,7 +484,7 @@ def bloch_function(
     source: PeriodicLatticeSpec | Callable[[np.ndarray], np.ndarray],
 ) -> Callable[[np.ndarray], np.ndarray]:
     if isinstance(source, PeriodicLatticeSpec):
-        return source.bloch_hamiltonian
+        return lambda momentum: source.bloch_hamiltonian(momentum)
     return source
 
 

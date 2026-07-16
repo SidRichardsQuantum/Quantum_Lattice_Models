@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Expanded the strict MyPy baseline to cover benchmark, lattice, periodic,
+  spin, storage, tight-binding, and transformation modules.
+- Strengthened type annotations at JSON, sparse-matrix, and model
+  transformation boundaries without changing numerical behavior.
+
 ## v0.1.12
 
 This stabilization release introduces explicit discrete symmetry records and

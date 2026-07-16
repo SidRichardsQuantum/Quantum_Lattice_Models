@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import replace
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import numpy as np
 
 from quantum_lattice_models.lattice import Bond
 from quantum_lattice_models.periodic import PeriodicLatticeSpec
 from quantum_lattice_models.specs import LatticeSpec
+
+if TYPE_CHECKING:
+    from quantum_lattice_models.specs import ModelSpec
+
+T = TypeVar("T")
 
 
 def relabel_lattice(lattice: LatticeSpec, order: Sequence[int]) -> LatticeSpec:
@@ -347,7 +353,7 @@ def apply_domain_wall(
 
 def apply_spatial_potential(
     lattice: LatticeSpec,
-    potential,
+    potential: Callable[[np.ndarray], complex | float],
     *,
     label: str = "spatial_potential",
 ) -> LatticeSpec:
@@ -394,7 +400,7 @@ def apply_interface(
         distance = coordinate[axis] - position
         if width == 0:
             return left if distance < 0 else right
-        fraction = np.clip(0.5 + distance / width, 0.0, 1.0)
+        fraction = float(np.clip(0.5 + distance / width, 0.0, 1.0))
         return (1 - fraction) * left + fraction * right
 
     if not lattice.positions or not 0 <= axis < len(lattice.positions[0]):
@@ -509,7 +515,7 @@ def add_long_range_bonds(
     )
 
 
-def graph_spin_subgraph(model, sites: Iterable[int]):
+def graph_spin_subgraph(model: ModelSpec, sites: Iterable[int]) -> ModelSpec:
     """Return a graph-spin model with geometry and interactions remapped together."""
 
     from quantum_lattice_models.specs import GRAPH_SPIN_FAMILY, create_graph_spin_spec
@@ -565,7 +571,7 @@ def graph_spin_subgraph(model, sites: Iterable[int]):
     )
 
 
-def particle_model_subgraph(model, sites: Iterable[int]):
+def particle_model_subgraph(model: ModelSpec, sites: Iterable[int]) -> ModelSpec:
     """Extract a single-particle model while remapping geometry and interactions."""
 
     from quantum_lattice_models.specs import create_model_spec
@@ -632,7 +638,7 @@ def particle_model_subgraph(model, sites: Iterable[int]):
     )
 
 
-def particle_model_vacancies(model, sites: Iterable[int]):
+def particle_model_vacancies(model: ModelSpec, sites: Iterable[int]) -> ModelSpec:
     """Remove physical sites from a portable single-particle model."""
 
     removed = set(int(site) for site in sites)
@@ -645,9 +651,9 @@ def particle_model_vacancies(model, sites: Iterable[int]):
 
 
 def substitute_particle_bonds(
-    model,
+    model: ModelSpec,
     substitutions: dict[tuple[int, int], complex],
-):
+) -> ModelSpec:
     """Replace selected directed hopping amplitudes in a portable particle model."""
 
     transformed = particle_model_subgraph(
@@ -696,7 +702,7 @@ def _transformed(
     lattice: LatticeSpec,
     operation: str,
     parameters: dict[str, object],
-    **changes: object,
+    **changes: Any,
 ) -> LatticeSpec:
     provenance = lattice.provenance + ({"operation": operation, "parameters": parameters},)
     transformed = replace(lattice, provenance=provenance, **changes)
@@ -704,7 +710,7 @@ def _transformed(
     return transformed
 
 
-def _select(values: tuple, indices: Sequence[int]) -> tuple:
+def _select(values: tuple[T, ...], indices: Sequence[int]) -> tuple[T, ...]:
     return tuple(values[index] for index in indices) if values else ()
 
 
@@ -715,9 +721,9 @@ def _bond(record: Bond | Sequence[object]) -> Bond:
     if len(values) not in {2, 3}:
         raise ValueError("Bond records require source, target, and optional value.")
     return Bond(
-        int(values[0]),
-        int(values[1]),
-        None if len(values) == 2 else complex(values[2]),
+        int(cast(Any, values[0])),
+        int(cast(Any, values[1])),
+        None if len(values) == 2 else complex(cast(Any, values[2])),
     )
 
 

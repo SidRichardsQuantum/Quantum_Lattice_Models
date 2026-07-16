@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from math import comb
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import scipy.sparse as sp
@@ -18,6 +19,9 @@ from quantum_lattice_models._model_utils import (
 from quantum_lattice_models.operators import PAULI_MATRICES
 from quantum_lattice_models.reduced import ReducedBasisMapping, reduced_operator
 from quantum_lattice_models.types import DenseHamiltonian, PauliTerm
+
+if TYPE_CHECKING:
+    from quantum_lattice_models.specs import ModelSpec
 
 
 @dataclass(frozen=True)
@@ -178,7 +182,7 @@ class SpinSectorHamiltonian:
     def shape(self) -> tuple[int, int]:
         """Return the reduced matrix shape."""
 
-        return self.matrix.shape
+        return int(self.matrix.shape[0]), int(self.matrix.shape[1])
 
     def to_metadata(self) -> dict[str, object]:
         """Return portable construction and basis metadata."""
@@ -203,7 +207,7 @@ class SpinParitySectorHamiltonian:
     def shape(self) -> tuple[int, int]:
         """Return the reduced matrix shape."""
 
-        return self.matrix.shape
+        return int(self.matrix.shape[0]), int(self.matrix.shape[1])
 
     def to_metadata(self) -> dict[str, object]:
         """Return portable construction and parity-basis metadata."""
@@ -268,7 +272,7 @@ def graph_spin_sector(
     )
 
 
-def graph_spin_model_sector(model, magnetization: int) -> SpinSectorHamiltonian:
+def graph_spin_model_sector(model: ModelSpec, magnetization: int) -> SpinSectorHamiltonian:
     """Build a fixed-magnetization sector directly from a portable graph-spin model."""
 
     from quantum_lattice_models.specs import GRAPH_SPIN_FAMILY
@@ -291,7 +295,7 @@ def graph_spin_model_sector(model, magnetization: int) -> SpinSectorHamiltonian:
                 )
             )
     return graph_spin_sector(
-        int(model.parameters["n_sites"]),
+        int(cast(Any, model.parameters["n_sites"])),
         magnetization,
         interactions,
         fields,
@@ -346,7 +350,7 @@ def transverse_field_ising_parity_sector(
     if not sp.issparse(matrix):
         raise RuntimeError("Parity reduction unexpectedly returned a dense matrix.")
     return SpinParitySectorHamiltonian(
-        matrix.tocsr(),
+        sp.csr_matrix(matrix),
         basis,
         "transverse_field_ising_parity_sector",
         {
