@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from quantum_lattice_models.periodic import PeriodicLatticeSpec, bloch_function
+
+if TYPE_CHECKING:
+    from quantum_lattice_models.analysis import AnalysisResult
 
 
 def zak_phase(
@@ -123,7 +127,7 @@ def zak_phase_result(
     *,
     band: int = 0,
     n_points: int = 401,
-):
+) -> AnalysisResult:
     """Return the Zak phase as a portable analysis result."""
 
     from quantum_lattice_models.analysis import topology_result
@@ -143,7 +147,7 @@ def winding_number_result(
     *,
     n_points: int = 801,
     tolerance: float = 1e-10,
-):
+) -> AnalysisResult:
     """Return the chiral winding number as a portable analysis result."""
 
     from quantum_lattice_models.analysis import topology_result
@@ -163,7 +167,7 @@ def chern_number_result(
     *,
     occupied_bands: int = 1,
     mesh: tuple[int, int] = (31, 31),
-):
+) -> AnalysisResult:
     """Return the occupied-subspace Chern number as a portable analysis result."""
 
     from quantum_lattice_models.analysis import topology_result
@@ -182,4 +186,4 @@ def _link(left: np.ndarray, right: np.ndarray) -> complex:
     determinant = np.linalg.det(left.conj().T @ right)
     if abs(determinant) < 1e-14:
         raise ValueError("Topological invariant encountered a singular occupied-band overlap.")
-    return determinant / abs(determinant)
+    return complex(determinant / abs(determinant))

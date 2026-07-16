@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
@@ -151,7 +152,7 @@ class AnalysisResult:
             parameters=_mapping(data.get("parameters", {}), "parameters"),
             source=_mapping(data.get("source", {}), "source"),
             solver=_mapping(data.get("solver", {}), "solver"),
-            warnings=tuple(str(item) for item in data.get("warnings", [])),
+            warnings=tuple(str(item) for item in cast(Iterable[object], data.get("warnings", []))),
             plot=_mapping(data.get("plot", {}), "plot"),
             provenance=_mapping(data.get("provenance", {}), "provenance"),
             metadata=_mapping(data.get("metadata", {}), "metadata"),
@@ -307,13 +308,12 @@ def save_analysis_result(
     metadata["coordinates"] = {
         name: {"array_key": f"coordinate__{name}"} for name in result.coordinates
     }
-    arrays = {f"value__{name}": value for name, value in result.values.items()}
+    arrays: dict[str, Any] = {
+        "metadata": np.array(json.dumps(metadata, sort_keys=True)),
+    }
+    arrays.update({f"value__{name}": value for name, value in result.values.items()})
     arrays.update({f"coordinate__{name}": value for name, value in result.coordinates.items()})
-    np.savez_compressed(
-        output,
-        metadata=np.array(json.dumps(metadata, sort_keys=True)),
-        **arrays,
-    )
+    np.savez_compressed(output, **arrays)
     return output
 
 
@@ -360,7 +360,7 @@ def _array_from_dict(value: object, name: str) -> np.ndarray:
     if set(record) != {"dtype", "shape", "data"}:
         raise ValueError(f"{name} requires dtype, shape, and data.")
     array = np.asarray(_decode_value(record["data"]), dtype=str(record["dtype"]))
-    shape = tuple(int(item) for item in record["shape"])
+    shape = tuple(int(cast(Any, item)) for item in cast(Iterable[object], record["shape"]))
     if array.shape != shape:
         raise ValueError(f"{name} data shape does not match its declared shape.")
     return array

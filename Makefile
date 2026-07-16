@@ -1,17 +1,23 @@
 PYTHON ?= .venv/bin/python
 
-.PHONY: format lint test check examples docs-assets docs-models docs-models-check notebook-summary
+.PHONY: format format-check lint typecheck test check examples docs-assets docs-models docs-models-check notebook-summary
 
 format:
 	find src tests examples scripts case_studies -name '*.py' -print0 | xargs -0 -n 1 $(PYTHON) -m black
 
+format-check:
+	find src tests examples scripts case_studies -name '*.py' -print0 | xargs -0 -n 1 $(PYTHON) -m black --check --quiet
+
 lint:
 	$(PYTHON) -m ruff check src tests examples scripts case_studies
+
+typecheck:
+	$(PYTHON) -m mypy
 
 test:
 	$(PYTHON) -m pytest -q
 
-check: lint test
+check: format-check lint typecheck docs-models-check test
 
 examples:
 	$(PYTHON) examples/heisenberg_density_of_states.py

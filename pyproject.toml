@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quantum-lattice-models"
-version = "0.2.0"
+version = "0.2.1"
 description = "Portable quantum lattice models, sparse sectors, reference analysis, and interchange."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -83,6 +83,9 @@ quspin = [
 
 [project.urls]
 Homepage = "https://github.com/SidRichardsQuantum/Quantum_Lattice_Models"
+Documentation = "https://sidrichardsquantum.github.io/Quantum_Lattice_Models/"
+Source = "https://github.com/SidRichardsQuantum/Quantum_Lattice_Models"
+Changelog = "https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/CHANGELOG.md"
 Issues = "https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/issues"
 
 [project.scripts]
@@ -139,6 +142,7 @@ files = [
   "src/quantum_lattice_models/_spec_migrations.py",
   "src/quantum_lattice_models/_spec_records.py",
   "src/quantum_lattice_models/adapters.py",
+  "src/quantum_lattice_models/analysis.py",
   "src/quantum_lattice_models/benchmarks.py",
   "src/quantum_lattice_models/boson_sector.py",
   "src/quantum_lattice_models/comparison.py",
@@ -150,14 +154,17 @@ files = [
   "src/quantum_lattice_models/intake.py",
   "src/quantum_lattice_models/lattice.py",
   "src/quantum_lattice_models/operators.py",
+  "src/quantum_lattice_models/observables.py",
   "src/quantum_lattice_models/periodic.py",
   "src/quantum_lattice_models/physical.py",
   "src/quantum_lattice_models/reduced.py",
   "src/quantum_lattice_models/specs.py",
+  "src/quantum_lattice_models/spectra.py",
   "src/quantum_lattice_models/spin.py",
   "src/quantum_lattice_models/storage.py",
   "src/quantum_lattice_models/tight_binding.py",
   "src/quantum_lattice_models/topological.py",
+  "src/quantum_lattice_models/topology.py",
   "src/quantum_lattice_models/transformations.py",
   "src/quantum_lattice_models/types.py",
   "src/quantum_lattice_models/models",

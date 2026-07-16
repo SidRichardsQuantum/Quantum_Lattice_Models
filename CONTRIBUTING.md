@@ -13,14 +13,11 @@ python -m pip install -e ".[dev]"
 make check
 ```
 
-Before submitting a change, run:
+`make check` verifies formatting, linting, strict typing, generated model
+documentation, and the test suite. Before submitting a change, also validate
+the distributions:
 
 ```bash
-python -m black --check src tests examples scripts case_studies
-python -m ruff check src tests examples scripts case_studies
-python -m mypy
-python -m pytest -q
-python scripts/build_model_docs.py --check
 python -m build
 python -m twine check dist/*
 ```

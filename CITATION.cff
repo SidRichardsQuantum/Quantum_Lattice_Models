@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "Quantum Lattice Models"
+type: software
+version: 0.2.1
+date-released: 2026-07-16
+authors:
+  - family-names: Richards
+    given-names: Sid
+repository-code: "https://github.com/SidRichardsQuantum/Quantum_Lattice_Models"
+url: "https://sidrichardsquantum.github.io/Quantum_Lattice_Models/"
+license: MIT

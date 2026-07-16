@@ -67,6 +67,17 @@ def test_compatibility_contribution_and_intake_guides_are_present() -> None:
     assert Path(".github/workflows/performance.yml").exists()
 
 
+def test_release_metadata_and_citation_are_published() -> None:
+    project = Path("pyproject.toml").read_text()
+    citation = Path("CITATION.cff").read_text()
+
+    assert 'version = "0.2.1"' in project
+    for name in ("Homepage", "Documentation", "Source", "Changelog", "Issues"):
+        assert f"{name} =" in project
+    assert "version: 0.2.1" in citation
+    assert "family-names: Richards" in citation
+
+
 def test_notebook_curriculum_is_contiguous_and_rendered() -> None:
     notebooks = sorted(Path("notebooks").glob("*.ipynb"))
     assert len(notebooks) == 22

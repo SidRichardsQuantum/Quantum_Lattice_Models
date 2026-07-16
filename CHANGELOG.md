@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.2.1
+
+This maintenance release improves local release checks, package metadata,
+typing coverage, and regression tests without changing numerical conventions
+or portable schema versions.
+
+### Added
+
+- Added a `CITATION.cff` record for research-software citation tooling.
+- Added targeted tests for deterministic CLI rendering, portable source
+  selection, export-path defaults, and model-intake error reporting.
+- Added documentation, source, and changelog links to the package metadata.
+
+### Changed
+
+- Updated package version metadata to `0.2.1`.
+- Expanded the strict MyPy baseline to cover analysis results, observables,
+  spectral utilities, and topological invariants.
+- Expanded `make check` to verify formatting, linting, typing, generated model
+  documentation, and the test suite.
+
+### Compatibility
+
+- Existing public imports, command-line workflows, and compatibility snapshots
+  remain unchanged.
+- The portable model and analysis schema versions remain `1.0`.
+- This release introduces no public removals or deprecations.
+
 ## v0.2.0
 
 This stability release completes the package's initial compatibility,

@@ -664,12 +664,11 @@ Use the virtual environment for examples, notebooks, tests, and packaging comman
 The standard local checks are:
 
 ```bash
-make format
-make lint
-make test
+make check
 ```
 
 The `Makefile` runs Black one file at a time to avoid multi-file formatter stalls observed in some Codespace environments.
+Use `make format` to apply formatting changes.
 Before a release, also run Ruff across the full repository so notebook code
 cells are checked:
 
@@ -726,6 +725,9 @@ Support helps maintain and expand practical tooling for variational quantum meth
 ## Citation
 
 Sid Richards (2026), *Quantum Lattice Models*.
+
+Machine-readable citation metadata is available in
+[`CITATION.cff`](CITATION.cff).
 
 ## Author
 

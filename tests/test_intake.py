@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from quantum_lattice_models import (
     HamiltonianResult,
@@ -84,3 +85,25 @@ def test_adapter_capability_reports_preserved_and_lost_semantics() -> None:
     assert "interactions" in csv.lost
     assert netket.supported
     assert "bonds" in netket.preserved
+
+
+def test_adapter_capability_reports_unsupported_targets_and_unknown_names() -> None:
+    no_geometry = ModelSpec(family="external_matrix", basis="external basis")
+
+    graphml = adapter_capability_report(no_geometry, "graphml")
+    qiskit = adapter_capability_report(no_geometry, "qiskit")
+
+    assert not graphml.supported
+    assert "lattice export requires portable lattice data" in graphml.warnings
+    assert (
+        "external matrix imports may not be reconstructable after translation" in graphml.warnings
+    )
+    assert not qiskit.supported
+    assert "target supports portable spin Pauli terms only" in qiskit.warnings
+    with pytest.raises(ValueError, match="Unknown adapter target"):
+        adapter_capability_report(no_geometry, "unknown")
+
+
+def test_intake_rejects_unsupported_source_types() -> None:
+    with pytest.raises(TypeError, match="ModelSpec or HamiltonianResult"):
+        describe_model(np.eye(2))  # type: ignore[arg-type]

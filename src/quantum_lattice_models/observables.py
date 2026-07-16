@@ -236,7 +236,7 @@ def single_particle_occupations(state: np.ndarray) -> np.ndarray:
     norm = probabilities.sum()
     if norm == 0:
         raise ValueError("state must have nonzero norm.")
-    return probabilities / norm
+    return np.asarray(probabilities / norm)
 
 
 def bond_current(
@@ -324,7 +324,7 @@ def local_density_of_states(
     values, vectors = np.linalg.eigh(np.asarray(hamiltonian))
     grid = np.asarray(energies, dtype=float)
     lorentzian = broadening / np.pi / ((grid[:, None] - values[None, :]) ** 2 + broadening**2)
-    return lorentzian @ (np.abs(vectors) ** 2).T
+    return np.asarray(lorentzian @ (np.abs(vectors) ** 2).T)
 
 
 def _pauli_expectation(
