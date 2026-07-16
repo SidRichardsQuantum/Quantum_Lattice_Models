@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from typing import Any, cast
 
 import numpy as np
 import scipy.sparse as sp
@@ -189,7 +190,11 @@ def _parse_bond(record: Bond | Sequence[object]) -> Bond:
         if len(values) not in (2, 3):
             raise ValueError("Each bond must contain source, target, and optional value.")
         value = values[2] if len(values) == 3 else None
-        bond = Bond(int(values[0]), int(values[1]), None if value is None else complex(value))
+        bond = Bond(
+            int(cast(Any, values[0])),
+            int(cast(Any, values[1])),
+            None if value is None else complex(cast(Any, value)),
+        )
     if bond.source < 0 or bond.target < 0:
         raise ValueError("Bond site indices must be nonnegative.")
     return bond
