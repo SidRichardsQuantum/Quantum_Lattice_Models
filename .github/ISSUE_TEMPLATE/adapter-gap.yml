@@ -1,0 +1,46 @@
+name: Adapter convention gap
+description: Request or correct an optional ecosystem translation.
+title: "[Adapter] "
+labels: ["adapter"]
+body:
+  - type: input
+    id: target
+    attributes:
+      label: Target package and version
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Model family and basis convention
+    validations:
+      required: true
+  - type: dropdown
+    id: representation
+    attributes:
+      label: Required representation
+      options:
+        - Operator terms
+        - Dense matrix
+        - Sparse matrix
+        - Graph
+        - Geometry
+    validations:
+      required: true
+  - type: textarea
+    id: semantics
+    attributes:
+      label: Semantics that must be preserved
+      description: Site order, tensor-factor order, coefficients, signs, boundary conditions, and related conventions.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Minimal expected input and output
+    validations:
+      required: true
+  - type: textarea
+    id: loss
+    attributes:
+      label: Required warnings or acceptable loss

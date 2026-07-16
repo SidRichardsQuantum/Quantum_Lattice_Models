@@ -15,6 +15,7 @@ _OPERATORS_BY_KIND = {
     "orbital": {"identity", "create", "annihilate", "number"},
     "nambu": {"identity", "create", "annihilate", "number", "particle", "hole"},
 }
+SYMMETRY_ACTION_KINDS = ("onsite_product", "permutation")
 
 
 @dataclass(frozen=True)
@@ -221,10 +222,116 @@ class InteractionTerm:
         return record
 
 
+@dataclass(frozen=True)
+class SymmetryAction:
+    """Portable action of a discrete symmetry on local degrees of freedom."""
+
+    name: str
+    kind: str
+    degrees: tuple[int, ...]
+    operators: tuple[str, ...] = ()
+    permutation: tuple[int, ...] = ()
+    eigenvalues: tuple[complex, ...] = ()
+    convention: str = ""
+    metadata: dict[str, object] = field(default_factory=dict)
+
+    def validate(self, local_degrees: tuple[LocalDegreeOfFreedom, ...]) -> None:
+        if not isinstance(self.name, str) or not self.name:
+            raise ValueError("symmetry action name must be a nonempty string.")
+        if self.kind not in SYMMETRY_ACTION_KINDS:
+            raise ValueError(f"symmetry action kind must be one of {SYMMETRY_ACTION_KINDS!r}.")
+        if len(set(self.degrees)) != len(self.degrees):
+            raise ValueError("symmetry action degrees must be unique.")
+        by_index = {degree.index: degree for degree in local_degrees}
+        if any(index not in by_index for index in self.degrees):
+            raise ValueError("symmetry action references an undefined local degree.")
+        if self.kind == "onsite_product":
+            if len(self.operators) != len(self.degrees):
+                raise ValueError(
+                    "onsite-product symmetry operators must align with symmetry degrees."
+                )
+            if self.permutation:
+                raise ValueError("onsite-product symmetries do not accept a permutation.")
+            for index, operator in zip(self.degrees, self.operators, strict=True):
+                if operator not in _OPERATORS_BY_KIND[by_index[index].kind]:
+                    raise ValueError(
+                        f"operator {operator!r} is incompatible with "
+                        f"local degree kind {by_index[index].kind!r}."
+                    )
+        else:
+            if self.operators:
+                raise ValueError("permutation symmetries do not accept onsite operators.")
+            if len(self.permutation) != len(self.degrees):
+                raise ValueError("permutation symmetry targets must align with symmetry degrees.")
+            if set(self.permutation) != set(self.degrees):
+                raise ValueError("symmetry permutation must reorder the listed degrees.")
+        if not self.eigenvalues:
+            raise ValueError("symmetry action eigenvalues must be nonempty.")
+        if not all(np.isfinite(complex(value)) for value in self.eigenvalues):
+            raise ValueError("symmetry action eigenvalues must be finite.")
+        if not isinstance(self.convention, str):
+            raise ValueError("symmetry action convention must be a string.")
+        _validate_portable_metadata(self.metadata, "symmetry action metadata")
+
+    def to_dict(self) -> dict[str, object]:
+        """Return a JSON-compatible symmetry-action record."""
+
+        return {
+            "name": self.name,
+            "kind": self.kind,
+            "degrees": list(self.degrees),
+            "operators": list(self.operators),
+            "permutation": list(self.permutation),
+            "eigenvalues": [
+                {"__complex__": [complex(value).real, complex(value).imag]}
+                for value in self.eigenvalues
+            ],
+            "convention": self.convention,
+            "metadata": dict(self.metadata),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> SymmetryAction:
+        """Construct and validate a symmetry-action record."""
+
+        _validate_record(
+            data,
+            {
+                "name",
+                "kind",
+                "degrees",
+                "operators",
+                "permutation",
+                "eigenvalues",
+                "convention",
+                "metadata",
+            },
+            {"name", "kind", "degrees", "eigenvalues"},
+            "symmetry action",
+        )
+        degrees = _list_value(data["degrees"], "symmetry action degrees")
+        operators = _list_value(data.get("operators", []), "symmetry action operators")
+        permutation = _list_value(data.get("permutation", []), "symmetry action permutation")
+        eigenvalues = _list_value(data["eigenvalues"], "symmetry action eigenvalues")
+        return cls(
+            name=str(data["name"]),
+            kind=str(data["kind"]),
+            degrees=tuple(_integer(value, "symmetry action degree") for value in degrees),
+            operators=tuple(str(value) for value in operators),
+            permutation=tuple(
+                _integer(value, "symmetry action permutation target") for value in permutation
+            ),
+            eigenvalues=tuple(_complex_value(value) for value in eigenvalues),
+            convention=str(data.get("convention", "")),
+            metadata=_mapping(data.get("metadata", {}), "symmetry action metadata"),
+        )
+
+
 def validate_physical_system(
     local_degrees: tuple[LocalDegreeOfFreedom, ...],
     basis_mappings: tuple[BasisIndexMapping, ...],
     interactions: tuple[InteractionTerm, ...],
+    symmetry_actions: tuple[SymmetryAction, ...] = (),
     *,
     n_sites: int | None,
 ) -> None:
@@ -251,6 +358,12 @@ def validate_physical_system(
         raise ValueError("basis indices must be unique within each mapping role.")
     for interaction in interactions:
         interaction.validate(local_degrees)
+    names: set[str] = set()
+    for action in symmetry_actions:
+        action.validate(local_degrees)
+        if action.name in names:
+            raise ValueError("symmetry action names must be unique.")
+        names.add(action.name)
 
 
 def _validate_record(
@@ -279,6 +392,12 @@ def _mapping(value: object, name: str) -> dict[str, object]:
     if not isinstance(value, dict) or not all(isinstance(key, str) for key in value):
         raise ValueError(f"{name} must be an object with string keys.")
     return dict(value)
+
+
+def _list_value(value: object, name: str) -> list[object]:
+    if not isinstance(value, list):
+        raise ValueError(f"{name} must be a list.")
+    return value
 
 
 def _complex_value(value: object) -> complex:

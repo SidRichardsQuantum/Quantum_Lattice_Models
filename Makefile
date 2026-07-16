@@ -3,10 +3,10 @@ PYTHON ?= .venv/bin/python
 .PHONY: format lint test check examples docs-assets docs-models docs-models-check notebook-summary
 
 format:
-	find src tests examples scripts -name '*.py' -print0 | xargs -0 -n 1 $(PYTHON) -m black
+	find src tests examples scripts case_studies -name '*.py' -print0 | xargs -0 -n 1 $(PYTHON) -m black
 
 lint:
-	$(PYTHON) -m ruff check src tests examples scripts
+	$(PYTHON) -m ruff check src tests examples scripts case_studies
 
 test:
 	$(PYTHON) -m pytest -q

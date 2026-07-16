@@ -1,0 +1,38 @@
+name: Import format request
+description: Propose a concrete lattice, structure, or Hamiltonian intake workflow.
+title: "[Import] "
+labels: ["import"]
+body:
+  - type: input
+    id: source
+    attributes:
+      label: Source format or package
+      description: Include the format and upstream package/version when applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Minimal representative sample
+      description: Attach a small file or link to a stable public example.
+    validations:
+      required: true
+  - type: textarea
+    id: semantics
+    attributes:
+      label: Information that must survive
+      description: Geometry, orbitals, bonds, units, boundary conditions, gauge, provenance, and so on.
+    validations:
+      required: true
+  - type: textarea
+    id: target
+    attributes:
+      label: Intended model and output
+      description: Describe the model to construct and the expected portable or adapter output.
+    validations:
+      required: true
+  - type: textarea
+    id: loss
+    attributes:
+      label: Acceptable normalization or loss
+      description: State what may be inferred, normalized, omitted, or warned about.

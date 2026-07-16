@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import runpy
 
 import pytest
 
@@ -63,6 +64,13 @@ def test_networkx_and_graphml_round_trip(tmp_path) -> None:
     assert graph.is_multigraph()
     assert restored_graph == original
     assert restored_graphml == original
+
+
+def test_networkx_weighted_chain_case_study() -> None:
+    pytest.importorskip("networkx")
+    namespace = runpy.run_path("case_studies/networkx_weighted_chain.py")
+    assert namespace["model"].lattice.n_sites == 3
+    assert namespace["report"].supported
 
 
 def test_csv_validation_rejects_incomplete_coordinates(tmp_path) -> None:

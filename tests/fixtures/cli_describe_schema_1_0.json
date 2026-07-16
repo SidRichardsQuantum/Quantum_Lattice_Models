@@ -1,0 +1,22 @@
+{
+  "basis": "single particle",
+  "basis_mappings": 2,
+  "boundary_conditions": {
+    "x": "open"
+  },
+  "conventions": {
+    "basis_ordering": "site/orbital index order"
+  },
+  "dimension": 2,
+  "family": "tight_binding_chain",
+  "interactions": 1,
+  "lattice_bonds": 1,
+  "lattice_sites": 2,
+  "local_degrees": 2,
+  "matrix_shape": null,
+  "reconstructable": true,
+  "representation": "dense",
+  "symmetry_actions": 0,
+  "units": {},
+  "warnings": []
+}

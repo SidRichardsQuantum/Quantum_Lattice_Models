@@ -89,6 +89,20 @@ $$</p>
 <p>The reduced dimension is $\binom{N}{(N-M)/2}$. Reduced basis states are stored
 as their integer indices in the full computational basis, allowing explicit
 projection, embedding, and full-space block validation.</p>
+<p>For the transverse-field Ising chain, the global spin-flip operator</p>
+<p>$$
+P=\prod_i X_i
+$$</p>
+<p>commutes with the Hamiltonian. Its parity eigenvalues are $p=\pm1$. The reduced
+basis pairs every computational state $|s\rangle$ with its bitwise complement
+$|\bar{s}\rangle$:</p>
+<p>$$
+|s;p\rangle=\frac{|s\rangle+p|\bar{s}\rangle}{\sqrt{2}}.
+$$</p>
+<p>Each parity sector has dimension $2^{N-1}$. The portable reduced mapping stores
+both full-basis components and coefficients, so embedding, projection,
+operator reduction, observables, and full-space isometric block checks use the
+same explicit basis transformation.</p>
 <h2>Exact diagonalization</h2>
 <p>Exact diagonalization solves</p>
 <p>$$
@@ -119,8 +133,9 @@ plots use the complex argument of each amplitude.</p>
 currently test spectral pairing $E\leftrightarrow-E$ rather than constructing
 the full antiunitary symmetry operator. Numerical tolerances must be chosen for
 the problem scale.</p>
-<p>Further parity, translation-sector, commutator, degeneracy, and topological
-diagnostics are listed in <a href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/ROADMAP.md">ROADMAP.md</a>.</p>
+<p>Portable onsite-product symmetry actions and global spin-flip diagnostics are
+implemented. Further translation-sector, degeneracy, and symmetry-aware
+topological diagnostics are listed in <a href="https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/blob/main/ROADMAP.md">ROADMAP.md</a>.</p>
 <h2>Portable model specifications</h2>
 <p><code>ModelSpec</code> records a registered model family, parameters, basis, requested
 dense or sparse representation, and optional <code>LatticeSpec</code>. JSON encodes

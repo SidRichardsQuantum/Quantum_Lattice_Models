@@ -16,7 +16,7 @@ from quantum_lattice_models._model_utils import (
     validate_positive_int,
 )
 from quantum_lattice_models.operators import PAULI_MATRICES
-from quantum_lattice_models.reduced import ReducedBasisMapping
+from quantum_lattice_models.reduced import ReducedBasisMapping, reduced_operator
 from quantum_lattice_models.types import DenseHamiltonian, PauliTerm
 
 
@@ -94,6 +94,78 @@ class FixedMagnetizationBasis:
 
 
 @dataclass(frozen=True)
+class SpinParityBasis:
+    """Global spin-flip parity basis made from complementary bitstrings."""
+
+    n_sites: int
+    parity: int
+    representatives: tuple[int, ...]
+
+    @property
+    def states(self) -> tuple[int, ...]:
+        """Return canonical representative states for compatibility."""
+
+        return self.representatives
+
+    @property
+    def mapping(self) -> ReducedBasisMapping:
+        normalization = 1.0 / np.sqrt(2.0)
+        mask = 2**self.n_sites - 1
+        return ReducedBasisMapping(
+            kind="spin_flip_parity",
+            full_dimension=2**self.n_sites,
+            states=self.representatives,
+            quantum_numbers={"parity": self.parity},
+            labels=tuple(
+                f"(|{state:0{self.n_sites}b}> "
+                f"{'+' if self.parity == 1 else '-'} "
+                f"|{state ^ mask:0{self.n_sites}b}>)/sqrt(2)"
+                for state in self.representatives
+            ),
+            components=tuple(
+                (
+                    (state, normalization),
+                    (state ^ mask, self.parity * normalization),
+                )
+                for state in self.representatives
+            ),
+            metadata={
+                "n_sites": self.n_sites,
+                "symmetry": "global_spin_flip",
+                "operator": "X^tensor_n",
+            },
+        )
+
+    @property
+    def dimension(self) -> int:
+        """Return the parity-sector dimension."""
+
+        return len(self.representatives)
+
+    def embed(self, state: np.ndarray) -> np.ndarray:
+        """Embed a parity-sector vector into the full computational basis."""
+
+        return self.mapping.embed(state)
+
+    def project(self, state: np.ndarray) -> np.ndarray:
+        """Project a full state onto this parity sector."""
+
+        return self.mapping.project(state)
+
+    def to_metadata(self) -> dict[str, object]:
+        """Return portable parity-sector metadata."""
+
+        return {
+            "kind": "spin_flip_parity",
+            "n_sites": self.n_sites,
+            "parity": self.parity,
+            "dimension": self.dimension,
+            "basis_states": list(self.representatives),
+            "mapping": self.mapping.to_dict(),
+        }
+
+
+@dataclass(frozen=True)
 class SpinSectorHamiltonian:
     """Sparse Hamiltonian and explicit basis for a conserved spin sector."""
 
@@ -110,6 +182,31 @@ class SpinSectorHamiltonian:
 
     def to_metadata(self) -> dict[str, object]:
         """Return portable construction and basis metadata."""
+
+        return {
+            "model_name": self.model_name,
+            "sector": self.basis.to_metadata(),
+            "parameters": dict(self.parameters),
+        }
+
+
+@dataclass(frozen=True)
+class SpinParitySectorHamiltonian:
+    """Sparse Hamiltonian and explicit basis for global spin-flip parity."""
+
+    matrix: sp.csr_matrix
+    basis: SpinParityBasis
+    model_name: str
+    parameters: dict[str, object]
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        """Return the reduced matrix shape."""
+
+        return self.matrix.shape
+
+    def to_metadata(self) -> dict[str, object]:
+        """Return portable construction and parity-basis metadata."""
 
         return {
             "model_name": self.model_name,
@@ -219,6 +316,59 @@ def fixed_magnetization_basis(
     if len(states) != comb(n_sites, n_ones):
         raise RuntimeError("Fixed-magnetization basis construction failed.")
     return FixedMagnetizationBasis(n_sites, magnetization, states)
+
+
+def spin_flip_parity_basis(n_sites: int, parity: int) -> SpinParityBasis:
+    """Return eigenstates of the global spin-flip operator ``prod_i X_i``."""
+
+    validate_positive_int(n_sites, "n_sites")
+    if parity not in {-1, 1}:
+        raise ValueError("parity must be +1 or -1.")
+    mask = 2**n_sites - 1
+    representatives = tuple(state for state in range(2**n_sites) if state < (state ^ mask))
+    if len(representatives) != 2 ** (n_sites - 1):
+        raise RuntimeError("Spin-flip parity basis construction failed.")
+    return SpinParityBasis(n_sites, parity, representatives)
+
+
+def transverse_field_ising_parity_sector(
+    n_sites: int,
+    parity: int,
+    j: float = 1.0,
+    h: float = 0.5,
+    periodic: bool = False,
+) -> SpinParitySectorHamiltonian:
+    """Build the transverse-field Ising chain in a spin-flip parity sector."""
+
+    basis = spin_flip_parity_basis(n_sites, parity)
+    full = transverse_field_ising_sparse(n_sites, j=j, h=h, periodic=periodic)
+    matrix = reduced_operator(full, basis.mapping)
+    if not sp.issparse(matrix):
+        raise RuntimeError("Parity reduction unexpectedly returned a dense matrix.")
+    return SpinParitySectorHamiltonian(
+        matrix.tocsr(),
+        basis,
+        "transverse_field_ising_parity_sector",
+        {
+            "n_sites": n_sites,
+            "parity": parity,
+            "j": j,
+            "h": h,
+            "periodic": periodic,
+        },
+    )
+
+
+def transverse_field_ising_parity_sector_sparse(
+    n_sites: int,
+    parity: int,
+    j: float = 1.0,
+    h: float = 0.5,
+    periodic: bool = False,
+) -> SpinParitySectorHamiltonian:
+    """Registered sparse alias for the transverse-field Ising parity sector."""
+
+    return transverse_field_ising_parity_sector(n_sites, parity, j, h, periodic)
 
 
 def heisenberg_chain_sector(

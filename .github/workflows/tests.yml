@@ -25,10 +25,10 @@ jobs:
           python -m pip install -e ".[dev]"
 
       - name: Check formatting
-        run: python -m black --check src tests examples scripts
+        run: python -m black --check src tests examples scripts case_studies
 
       - name: Lint
-        run: python -m ruff check src tests examples scripts
+        run: python -m ruff check src tests examples scripts case_studies
 
       - name: Type check
         run: python -m mypy

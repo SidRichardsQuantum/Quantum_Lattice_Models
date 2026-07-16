@@ -39,6 +39,7 @@ Periodic unit-cell and analysis-result records also use independently versioned
 | `local_degrees` | object list | Indexed physical spins, orbitals, modes, or Nambu components |
 | `basis_mappings` | object list | Mapping from local degrees to tensor factors, modes, or single-particle indices |
 | `interactions` | object list | Portable onsite and two-body operator terms |
+| `symmetry_actions` | object list | Optional discrete local-operator or permutation actions |
 | `representation` | `dense` or `sparse` | Requested matrix representation |
 | `units` | string map | Units keyed by parameter or quantity |
 | `conventions` | string map | Signs, gauges, orderings, and interpretation rules |
@@ -86,6 +87,12 @@ Fermi-Hubbard has up/down fermionic modes per site and a Kitaev BdG
 specification has particle/hole components per site. Their basis mappings and
 indices remain distinct.
 
+`SymmetryAction` records name a discrete action, identify participating local
+degrees, and store either an onsite operator product or a degree permutation.
+Allowed eigenvalues and conventions are explicit. The transverse-field Ising
+family advertises global spin flip as the onsite product
+\(P=X_0X_1\cdots X_{N-1}\).
+
 These fields are optional for compatibility with existing schema `1.0` files.
 Newly created specifications populate them for every built-in logical model
 family. Third-party plugins may omit them, but intake linting reports that loss.
@@ -103,10 +110,17 @@ and fermion sectors. It stores:
 - One full-basis integer state for every reduced row
 - Explicit conserved quantum numbers
 - Optional row labels and convention metadata
+- Optional normalized full-basis components for reduced rows that are
+  superpositions rather than subsets of the discrete basis
 
 Projection, embedding, operator reduction, and reduced-state expectation
 values use this record rather than inferring sector indices from local-degree
 or tensor-factor mappings.
+
+For subset sectors such as fixed magnetization, `states` directly identify the
+selected full rows. For global spin-flip parity, each row contains two
+normalized components, \((|s\rangle \pm |\bar{s}\rangle)/\sqrt{2}\), and the
+mapping acts as an explicit full-by-reduced isometry.
 
 ## Declarative visual records
 

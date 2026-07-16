@@ -118,6 +118,8 @@ def estimate_model_dimension(model_name: str, **parameters: object) -> int:
                 "magnetization must satisfy abs(magnetization) <= n_sites "
                 "and have the same parity as n_sites."
             )
+    if "parity" in values and values["parity"] not in {-1, 1}:
+        raise ValueError("parity must be +1 or -1.")
     dimension = _evaluate_dimension(info.dimension, values)
     if dimension < 1:
         raise ValueError("Estimated model dimension must be positive.")

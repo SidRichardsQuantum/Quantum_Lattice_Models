@@ -6,7 +6,9 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from quantum_lattice_models.spin import FixedMagnetizationBasis
+from quantum_lattice_models.spin import FixedMagnetizationBasis, SpinParityBasis
+
+SpinBasis = FixedMagnetizationBasis | SpinParityBasis
 
 
 def expectation(state: np.ndarray, operator: np.ndarray) -> complex:
@@ -23,7 +25,7 @@ def site_magnetization_z(
     state: np.ndarray,
     n_sites: int,
     *,
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
 ) -> np.ndarray:
     """Return the site-resolved expectations ``<Z_i>``."""
 
@@ -39,7 +41,7 @@ def total_magnetization_z(
     state: np.ndarray,
     n_sites: int,
     *,
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
 ) -> float:
     """Return the total Pauli-Z expectation ``sum_i <Z_i>``."""
 
@@ -50,7 +52,7 @@ def magnetization_z(
     state: np.ndarray,
     n_sites: int,
     *,
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
 ) -> float:
     """Return average Pauli-Z magnetization per site."""
 
@@ -62,7 +64,7 @@ def spin_correlation_matrix(
     n_sites: int,
     *,
     axis: str = "Z",
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
     connected: bool = False,
 ) -> np.ndarray:
     """Return all ``<P_i P_j>`` correlations for one Pauli axis.
@@ -97,7 +99,7 @@ def connected_spin_correlation_matrix(
     n_sites: int,
     *,
     axis: str = "Z",
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
 ) -> np.ndarray:
     """Return connected same-axis spin correlations."""
 
@@ -116,7 +118,7 @@ def correlation_zz(
     i: int,
     j: int,
     *,
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
 ) -> float:
     """Return the two-point ``<Z_i Z_j>`` correlation."""
 
@@ -134,7 +136,7 @@ def static_spin_structure_factor(
     momenta: float | Sequence[float] | np.ndarray,
     *,
     axis: str = "Z",
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
     connected: bool = True,
     positions: Sequence[float] | np.ndarray | None = None,
 ) -> np.ndarray:
@@ -170,7 +172,7 @@ def reduced_density_matrix(
     n_sites: int,
     subsystem: Sequence[int],
     *,
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
 ) -> np.ndarray:
     """Return the normalized reduced density matrix for selected spin sites.
 
@@ -199,7 +201,7 @@ def bipartite_entanglement_entropy(
     n_sites: int,
     subsystem: Sequence[int],
     *,
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
     base: float = 2.0,
     tolerance: float = 1e-12,
 ) -> float:
@@ -257,7 +259,7 @@ def mixed_spin_correlation_matrix(
     source_axis: str,
     target_axis: str,
     *,
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
 ) -> np.ndarray:
     """Return mixed-axis ``<P_i Q_j>`` spin correlations."""
 
@@ -294,7 +296,7 @@ def total_spin_squared(
     state: np.ndarray,
     n_sites: int,
     *,
-    basis: FixedMagnetizationBasis | None = None,
+    basis: SpinBasis | None = None,
 ) -> float:
     """Return ``<S^2>`` for spin-1/2 sites with ``S=Σσ/2``."""
 
@@ -330,7 +332,7 @@ def _pauli_expectation(
     n_sites: int,
     operators: dict[int, str],
     *,
-    basis: FixedMagnetizationBasis | None,
+    basis: SpinBasis | None,
 ) -> complex:
     vector, states = _state_and_basis_states(state, n_sites, basis)
     state_to_index = {full_state: index for index, full_state in enumerate(states)}
@@ -359,7 +361,7 @@ def _pauli_expectation(
 def _state_and_basis_states(
     state: np.ndarray,
     n_sites: int,
-    basis: FixedMagnetizationBasis | None,
+    basis: SpinBasis | None,
 ) -> tuple[np.ndarray, tuple[int, ...]]:
     if not isinstance(n_sites, int) or n_sites < 1:
         raise ValueError("n_sites must be a positive integer.")
@@ -367,6 +369,15 @@ def _state_and_basis_states(
     if basis is None:
         expected = 2**n_sites
         states = tuple(range(expected))
+    elif isinstance(basis, SpinParityBasis):
+        if basis.n_sites != n_sites:
+            raise ValueError("basis.n_sites must match n_sites.")
+        expected = basis.dimension
+        if vector.size != expected:
+            raise ValueError("state length must match the selected spin basis.")
+        vector = basis.embed(vector)
+        states = tuple(range(2**n_sites))
+        expected = 2**n_sites
     else:
         if basis.n_sites != n_sites:
             raise ValueError("basis.n_sites must match n_sites.")

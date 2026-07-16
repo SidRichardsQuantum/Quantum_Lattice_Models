@@ -667,6 +667,23 @@ Pass `basis=sector.basis` to the same functions when the state comes from
 `xxz_chain_sector` or `heisenberg_chain_sector`. Correlations and reduced
 density matrices operate directly on the reduced state vector.
 
+Global spin-flip parity sectors use the same observable interface:
+
+```python
+from quantum_lattice_models import (
+    site_magnetization_z,
+    transverse_field_ising_parity_sector,
+)
+from quantum_lattice_models.spectra import ground_state
+
+sector = transverse_field_ising_parity_sector(10, parity=1, h=0.7)
+_, state = ground_state(sector.matrix)
+magnetization = site_magnetization_z(state, 10, basis=sector.basis)
+```
+
+The parity mapping embeds each reduced row as a normalized superposition of
+complementary computational-basis states.
+
 ## Portable Analysis Results
 
 ```python

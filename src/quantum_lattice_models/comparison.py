@@ -140,5 +140,5 @@ def _dimension(spec: ModelSpec) -> int | None:
         return None
 
 
-def _dense(matrix) -> np.ndarray:
-    return matrix.toarray() if sp.issparse(matrix) else np.asarray(matrix)
+def _dense(matrix: np.ndarray | sp.spmatrix) -> np.ndarray:
+    return sp.csr_matrix(matrix).toarray() if sp.issparse(matrix) else np.asarray(matrix)

@@ -299,10 +299,34 @@ QuSpin, NetKet, and QuTiP adapters are available. Remaining adapter work:
 Future maturity work:
 
 - Gauge-equivalent constructions where applicable
-- Continue expanding the type-checking baseline beyond the modules added in
-  v0.1.11 as annotation completeness improves.
+- Continue expanding the strict type-checking baseline toward all core,
+  dependency-light modules.
 - Use the scheduled real-backend adapter jobs to guide coverage expectations.
-- Add performance regression thresholds to representative benchmarks.
+- Maintain scheduled performance regression reports for representative
+  construction, reduction, persistence, and solver workloads.
+
+## v0.2.0 Stability Criteria
+
+Version 0.2.0 should be released when all of the following are true:
+
+1. The public API snapshot, schema `1.0` golden files, and CLI JSON fixtures are
+   enforced in continuous integration.
+2. Public removals and semantic changes follow `DEPRECATIONS.md`; no known
+   accidental compatibility break remains.
+3. Strict MyPy covers the portable records, factories, registry, intake,
+   reduced-basis, symmetry, persistence, and model-builder core.
+4. Branch-aware test coverage remains at or above 80%, with scientific features
+   validated against analytic limits, full-space blocks, or independent
+   backends.
+5. The portable model representation supports explicit local symmetry actions
+   and at least magnetization, particle-number, and global spin-flip parity
+   reduced mappings.
+6. Sparse construction and reduction paths do not introduce undocumented dense
+   conversion for representative benchmark sizes.
+7. Contributor guidance, structured issue forms, and concrete third-party
+   intake case studies are published.
+8. The scheduled optional-adapter and performance workflows have completed
+   successfully for at least two consecutive runs.
 
 ## Near-Term Backlog
 
@@ -315,9 +339,10 @@ Recommended implementation order:
    [adapter priorities](https://github.com/SidRichardsQuantum/Quantum_Lattice_Models/issues/3).
 2. Broaden adapter convention coverage and add selected pymatgen/CIF workflows
    only when feedback identifies a concrete structure-intake need.
-3. Extend transformations to interacting particle models and consider parity
-   sectors with explicit validation mappings.
-4. Add solver iteration reporting, benchmark regression thresholds, and simple
+3. Extend transformations to interacting particle models and broaden
+   reduced-basis-aware observables beyond the implemented global spin-flip
+   parity sector.
+4. Add solver iteration reporting and simple
    spectral-function records.
 5. Add the Kitaev honeycomb model only with documented gauge and sector
    conventions and a concrete interchange use case.

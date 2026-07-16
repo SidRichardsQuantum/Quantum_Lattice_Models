@@ -74,6 +74,7 @@ _PARAMETER_DESCRIPTIONS = {
     "h_z": "Longitudinal z-field strength.",
     "field": "Uniform z-field strength.",
     "magnetization": "Total Pauli-Z eigenvalue for a conserved spin sector.",
+    "parity": "Global spin-flip eigenvalue, either +1 or -1.",
     "n_up": "Fixed number of spin-up fermions.",
     "n_down": "Fixed number of spin-down fermions.",
     "coupling": "Overall interaction strength.",
@@ -209,6 +210,8 @@ def validate_parameter(parameter: ParameterInfo, value: object) -> None:
         )
     if parameter.name == "onsite" and not _matches_onsite_value(value):
         raise ValueError("onsite must be a numeric scalar or numeric sequence.")
+    if parameter.name == "parity" and value not in {-1, 1}:
+        raise ValueError("parity must be +1 or -1.")
     if parameter.minimum is not None and cast(float, value) < parameter.minimum:
         raise ValueError(f"{parameter.name} must be at least {parameter.minimum}.")
     if parameter.choices and value not in parameter.choices:

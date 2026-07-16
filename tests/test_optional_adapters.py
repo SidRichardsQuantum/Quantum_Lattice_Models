@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import runpy
+
 import numpy as np
 import pytest
 
@@ -23,3 +25,9 @@ def test_ase_import_preserves_coordinates_cell_and_periodicity() -> None:
     assert lattice.units == {"position": "angstrom"}
     assert lattice.metadata["cell"] == [[3.0, 0.0, 0.0], [0.0, 4.0, 0.0], [0.0, 0.0, 5.0]]
     assert lattice.metadata["periodic_axes"] == [True, False, True]
+
+
+def test_ase_structure_intake_case_study() -> None:
+    pytest.importorskip("ase")
+    namespace = runpy.run_path("case_studies/ase_structure_intake.py")
+    assert namespace["model"].lattice.n_sites == 3

@@ -1,0 +1,31 @@
+name: Missing physical metadata
+description: Report model semantics that cannot currently be represented or inspected.
+title: "[Metadata] "
+labels: ["metadata"]
+body:
+  - type: textarea
+    id: model
+    attributes:
+      label: Minimal model description
+      description: Include the basis, local degrees, interactions, geometry, and relevant conventions.
+    validations:
+      required: true
+  - type: textarea
+    id: missing
+    attributes:
+      label: Missing metadata
+      description: Examples include orbital species, constraints, symmetry actions, units, gauges, uncertainty, or fitted history.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should describe, lint, serialization, or an adapter report show?
+    validations:
+      required: true
+  - type: textarea
+    id: downstream
+    attributes:
+      label: Downstream workflow
+      description: Identify the package, file format, or analysis that consumes this metadata.

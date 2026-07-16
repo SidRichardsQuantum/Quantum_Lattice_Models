@@ -253,6 +253,12 @@ physical domain.</p>
 <td>str(object='') -&gt; str</td>
 </tr>
 <tr>
+<td><code>SYMMETRY_ACTION_KINDS</code></td>
+<td>constant</td>
+<td><code>quantum_lattice_models</code></td>
+<td>Built-in immutable sequence.</td>
+</tr>
+<tr>
 <td><code>SpinField</code></td>
 <td>class</td>
 <td><code>quantum_lattice_models.spin</code></td>
@@ -265,10 +271,28 @@ physical domain.</p>
 <td>One two-site Pauli interaction on an arbitrary spin graph.</td>
 </tr>
 <tr>
+<td><code>SpinParityBasis</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Global spin-flip parity basis made from complementary bitstrings.</td>
+</tr>
+<tr>
+<td><code>SpinParitySectorHamiltonian</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Sparse Hamiltonian and explicit basis for global spin-flip parity.</td>
+</tr>
+<tr>
 <td><code>SpinSectorHamiltonian</code></td>
 <td>class</td>
 <td><code>quantum_lattice_models.spin</code></td>
 <td>Sparse Hamiltonian and explicit basis for a conserved spin sector.</td>
+</tr>
+<tr>
+<td><code>SymmetryAction</code></td>
+<td>class</td>
+<td><code>quantum_lattice_models.physical</code></td>
+<td>Portable action of a discrete symmetry on local degrees of freedom.</td>
 </tr>
 <tr>
 <td><code>TightBindingModel</code></td>
@@ -1291,6 +1315,12 @@ physical domain.</p>
 <td>Return all <code>&lt;P_i P_j&gt;</code> correlations for one Pauli axis.</td>
 </tr>
 <tr>
+<td><code>spin_flip_parity_basis</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Return eigenstates of the global spin-flip operator <code>prod_i X_i</code>.</td>
+</tr>
+<tr>
 <td><code>spin_observables_result</code></td>
 <td>function</td>
 <td><code>quantum_lattice_models.analysis</code></td>
@@ -1375,6 +1405,18 @@ physical domain.</p>
 <td>Estimate zero-temperature response to an explicit conjugate field.</td>
 </tr>
 <tr>
+<td><code>symmetry_action_diagnostic</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.conserved</code></td>
+<td>Diagnose a named portable model symmetry against a Hamiltonian.</td>
+</tr>
+<tr>
+<td><code>symmetry_operator</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.conserved</code></td>
+<td>Construct an onsite-product spin symmetry in tensor-factor order.</td>
+</tr>
+<tr>
 <td><code>thermal_observables</code></td>
 <td>function</td>
 <td><code>quantum_lattice_models.advanced</code></td>
@@ -1457,6 +1499,18 @@ physical domain.</p>
 <td>function</td>
 <td><code>quantum_lattice_models.spin</code></td>
 <td>Return <code>H = -J sum ZZ - h sum X</code>.</td>
+</tr>
+<tr>
+<td><code>transverse_field_ising_parity_sector</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Build the transverse-field Ising chain in a spin-flip parity sector.</td>
+</tr>
+<tr>
+<td><code>transverse_field_ising_parity_sector_sparse</code></td>
+<td>function</td>
+<td><code>quantum_lattice_models.spin</code></td>
+<td>Registered sparse alias for the transverse-field Ising parity sector.</td>
 </tr>
 <tr>
 <td><code>transverse_field_ising_sparse</code></td>

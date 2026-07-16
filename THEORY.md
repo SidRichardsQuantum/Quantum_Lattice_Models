@@ -88,6 +88,25 @@ The reduced dimension is $\binom{N}{(N-M)/2}$. Reduced basis states are stored
 as their integer indices in the full computational basis, allowing explicit
 projection, embedding, and full-space block validation.
 
+For the transverse-field Ising chain, the global spin-flip operator
+
+$$
+P=\prod_i X_i
+$$
+
+commutes with the Hamiltonian. Its parity eigenvalues are $p=\pm1$. The reduced
+basis pairs every computational state $|s\rangle$ with its bitwise complement
+$|\bar{s}\rangle$:
+
+$$
+|s;p\rangle=\frac{|s\rangle+p|\bar{s}\rangle}{\sqrt{2}}.
+$$
+
+Each parity sector has dimension $2^{N-1}$. The portable reduced mapping stores
+both full-basis components and coefficients, so embedding, projection,
+operator reduction, observables, and full-space isometric block checks use the
+same explicit basis transformation.
+
 ## Exact diagonalization
 
 Exact diagonalization solves
@@ -135,8 +154,9 @@ currently test spectral pairing $E\leftrightarrow-E$ rather than constructing
 the full antiunitary symmetry operator. Numerical tolerances must be chosen for
 the problem scale.
 
-Further parity, translation-sector, commutator, degeneracy, and topological
-diagnostics are listed in [ROADMAP.md](ROADMAP.md).
+Portable onsite-product symmetry actions and global spin-flip diagnostics are
+implemented. Further translation-sector, degeneracy, and symmetry-aware
+topological diagnostics are listed in [ROADMAP.md](ROADMAP.md).
 
 ## Portable model specifications
 

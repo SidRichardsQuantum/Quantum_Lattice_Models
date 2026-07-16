@@ -53,6 +53,20 @@ def test_schema_and_import_guides_are_published() -> None:
     assert "NetworkX and GraphML" in importing
 
 
+def test_compatibility_contribution_and_intake_guides_are_present() -> None:
+    deprecations = Path("DEPRECATIONS.md").read_text()
+    contributing = Path("CONTRIBUTING.md").read_text()
+    case_studies = Path("case_studies/README.md").read_text()
+
+    assert "Public Python API" in deprecations
+    assert "Command-line interface" in deprecations
+    assert "Model and importer contributions" in contributing
+    assert "NetworkX weighted chain" in case_studies
+    assert "ASE structure intake" in case_studies
+    assert len(list(Path(".github/ISSUE_TEMPLATE").glob("*.yml"))) == 4
+    assert Path(".github/workflows/performance.yml").exists()
+
+
 def test_notebook_curriculum_is_contiguous_and_rendered() -> None:
     notebooks = sorted(Path("notebooks").glob("*.ipynb"))
     assert len(notebooks) == 22

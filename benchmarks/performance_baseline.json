@@ -1,0 +1,12 @@
+{
+  "maximum": {
+    "parity_sector_10_seconds": 5.0,
+    "parity_sector_10_storage_bytes": 300000,
+    "sparse_eigenpairs_256_seconds": 5.0,
+    "tfim_sparse_12_seconds": 5.0,
+    "tfim_sparse_12_storage_bytes": 1200000
+  },
+  "minimum": {
+    "parity_dimension_reduction": 2.0
+  }
+}

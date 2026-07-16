@@ -20,7 +20,7 @@ from quantum_lattice_models.spectra import eigenvalues
 if TYPE_CHECKING:
     from quantum_lattice_models.periodic import BandStructure, PeriodicLatticeSpec
     from quantum_lattice_models.specs import ModelSpec
-    from quantum_lattice_models.spin import FixedMagnetizationBasis
+    from quantum_lattice_models.spin import FixedMagnetizationBasis, SpinParityBasis
 
 ANALYSIS_SCHEMA_VERSION = "1.0"
 
@@ -254,7 +254,7 @@ def spin_observables_result(
     *,
     axis: str = "Z",
     connected: bool = False,
-    basis: FixedMagnetizationBasis | None = None,
+    basis: FixedMagnetizationBasis | SpinParityBasis | None = None,
     model: ModelSpec | None = None,
 ) -> AnalysisResult:
     """Return site magnetization and same-axis correlation records."""

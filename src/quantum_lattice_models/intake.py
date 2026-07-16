@@ -25,6 +25,7 @@ class ModelSummary:
     lattice_bonds: int | None
     local_degrees: int
     interactions: int
+    symmetry_actions: int
     basis_mappings: int
     boundary_conditions: dict[str, str]
     units: dict[str, str]
@@ -45,6 +46,7 @@ class ModelSummary:
             "lattice_bonds": self.lattice_bonds,
             "local_degrees": self.local_degrees,
             "interactions": self.interactions,
+            "symmetry_actions": self.symmetry_actions,
             "basis_mappings": self.basis_mappings,
             "boundary_conditions": dict(sorted(self.boundary_conditions.items())),
             "units": dict(sorted(self.units.items())),
@@ -126,6 +128,7 @@ def describe_model(source: ModelSpec | HamiltonianResult) -> ModelSummary:
         lattice_bonds=None if lattice is None else len(lattice.bonds),
         local_degrees=len(model.local_degrees),
         interactions=len(model.interactions),
+        symmetry_actions=len(model.symmetry_actions),
         basis_mappings=len(model.basis_mappings),
         boundary_conditions={} if lattice is None else dict(lattice.boundary_conditions),
         units={**({} if lattice is None else lattice.units), **model.units},
@@ -165,6 +168,8 @@ def lint_model(source: ModelSpec | HamiltonianResult) -> ModelLintReport:
         warnings.append("local degrees are present without basis mappings")
     if model.interactions and not model.local_degrees:
         warnings.append("interactions are present without local-degree records")
+    if model.symmetry_actions and matrix is None:
+        suggestions.append("validate advertised symmetry actions after construction")
     if model.family == EXTERNAL_MATRIX_FAMILY:
         warnings.append("external matrix records cannot reconstruct a Hamiltonian builder")
 
@@ -304,6 +309,8 @@ def _model_features(model: ModelSpec) -> set[str]:
         features.add("basis_mappings")
     if model.interactions:
         features.add("interactions")
+    if model.symmetry_actions:
+        features.add("symmetry_actions")
     if model.provenance or (model.lattice is not None and model.lattice.provenance):
         features.add("provenance")
     if model.references or (model.lattice is not None and model.lattice.references):
@@ -319,6 +326,8 @@ def _validation_suggestions(model: ModelSpec, has_matrix: bool) -> tuple[str, ..
         suggestions.append("check Hermiticity before spectral analysis")
     if model.interactions:
         suggestions.append("check conserved-quantity commutators for advertised sectors")
+    if model.symmetry_actions:
+        suggestions.append("check symmetry-action commutators and sector eigenvalues")
     if model.lattice is not None and model.lattice.bonds:
         suggestions.append("inspect connected components for imported lattice graphs")
     if model.family == EXTERNAL_MATRIX_FAMILY:

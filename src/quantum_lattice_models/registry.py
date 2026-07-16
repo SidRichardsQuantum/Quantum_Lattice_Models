@@ -585,6 +585,16 @@ for _sector_builder, _description, _defaults in (
         _defaults,
     )
 
+MODEL_REGISTRY["transverse_field_ising_parity_sector_sparse"] = _info(
+    "spin",
+    "spin-flip parity qubit",
+    "2**(n_sites-1)",
+    "SpinParitySectorHamiltonian",
+    "Transverse-field Ising chain in a global spin-flip parity sector",
+    spin.transverse_field_ising_parity_sector_sparse,
+    {"n_sites": 6, "parity": 1, "j": 1.0, "h": 0.5},
+)
+
 MODEL_REGISTRY["fermi_hubbard_chain_sector_sparse"] = _info(
     "many_body",
     "fixed spinful fermion occupation",
@@ -617,6 +627,7 @@ for _validated_model in (
     "xxz_chain_sector_sparse",
     "heisenberg_ladder_sector_sparse",
     "fermi_hubbard_chain_sector_sparse",
+    "transverse_field_ising_parity_sector_sparse",
     "graphene_lattice",
     "graphene_lattice_sparse",
     "anderson_square_lattice",

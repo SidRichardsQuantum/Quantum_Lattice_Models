@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.1.12
+
+This stabilization release introduces explicit discrete symmetry records and
+global spin-flip parity sectors while strengthening the package's compatibility,
+typing, contribution, and performance-regression contracts.
+
+### Added
+
+- Added portable discrete `SymmetryAction` records and exact global spin-flip
+  symmetry diagnostics.
+- Added transverse-field Ising parity-sector construction with explicit
+  superposition-based reduced mappings, sector-aware observables, persistence,
+  registry discovery, CLI creation, spectra, and dry-run estimates.
+- Added public-API and CLI JSON compatibility snapshots, a deprecation policy,
+  structured issue forms, contribution guidance, and NetworkX/ASE intake case
+  studies.
+- Added deterministic sparse-storage budgets and a scheduled performance
+  regression workflow with uploaded metrics.
+
+### Changed
+
+- Updated package version metadata to `0.1.12`.
+- Split the stable specification and CLI surfaces across focused records,
+  factory, migration, physical-inference, parameter, source, output, and
+  periodic-command modules while preserving existing imports.
+- Raised the branch-aware coverage floor from 70% to 80% and expanded the
+  strict MyPy baseline.
+- Added explicit v0.2.0 stability criteria to the roadmap.
+
 ## v0.1.11
 
 This release consolidates the package around one portable physical-system

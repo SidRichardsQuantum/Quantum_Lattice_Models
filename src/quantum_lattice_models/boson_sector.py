@@ -134,4 +134,4 @@ def boson_site_occupations(
         raise ValueError("State length must match sector dimension.")
     probabilities = np.abs(vector) ** 2
     probabilities /= probabilities.sum()
-    return probabilities @ np.asarray(basis.states)
+    return np.asarray(probabilities @ np.asarray(basis.states), dtype=float)

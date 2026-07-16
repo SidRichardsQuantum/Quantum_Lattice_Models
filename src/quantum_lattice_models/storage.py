@@ -14,6 +14,7 @@ from quantum_lattice_models.physical import (
     BasisIndexMapping,
     InteractionTerm,
     LocalDegreeOfFreedom,
+    SymmetryAction,
 )
 from quantum_lattice_models.specs import EXTERNAL_MATRIX_FAMILY, LatticeSpec, ModelSpec
 from quantum_lattice_models.types import HamiltonianResult
@@ -25,6 +26,7 @@ _IMPORT_METADATA_FIELDS = {
     "local_degrees",
     "basis_mappings",
     "interactions",
+    "symmetry_actions",
     "units",
     "conventions",
     "references",
@@ -162,6 +164,10 @@ def import_hamiltonian(
         InteractionTerm.from_dict(record)
         for record in _metadata_records(decoded.get("interactions", []), "interactions")
     )
+    symmetry_actions = tuple(
+        SymmetryAction.from_dict(record)
+        for record in _metadata_records(decoded.get("symmetry_actions", []), "symmetry_actions")
+    )
 
     matrix = _load_external_matrix(source)
     basis_dimension = decoded.get("basis_dimension")
@@ -194,6 +200,7 @@ def import_hamiltonian(
         local_degrees=local_degrees,
         basis_mappings=basis_mappings,
         interactions=interactions,
+        symmetry_actions=symmetry_actions,
         units=_string_mapping(decoded.get("units", {}), "units"),
         conventions=_string_mapping(decoded.get("conventions", {}), "conventions"),
         references=_string_list(decoded.get("references", []), "references"),

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://sidrichardsquantum.github.io/Quantum_Lattice_Models/
+    about: Check model conventions, schemas, examples, and limitations.

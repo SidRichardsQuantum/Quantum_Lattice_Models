@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 
 from quantum_lattice_models.types import DenseHamiltonian
 
 
-def to_pennylane_terms(lattice_hamiltonian: DenseHamiltonian):
+def to_pennylane_terms(lattice_hamiltonian: DenseHamiltonian) -> Any:
     """Convert a spin-chain Hamiltonian with Pauli metadata to a PennyLane Hamiltonian.
 
     PennyLane is optional. Install with ``pip install quantum-lattice-models[pennylane]``
@@ -45,7 +47,7 @@ def to_pennylane_terms(lattice_hamiltonian: DenseHamiltonian):
     return qml.Hamiltonian(coeffs, observables)
 
 
-def _qml_pauli(qml, label: str, wire: int):
+def _qml_pauli(qml: Any, label: str, wire: int) -> Any:
     if label == "X":
         return qml.PauliX(wire)
     if label == "Y":

@@ -242,6 +242,23 @@ H = sector.matrix
 print(sector.basis.dimension)
 ```
 
+The transverse-field Ising chain supports global spin-flip parity sectors.
+Parity rows are explicit normalized superpositions of complementary
+computational-basis states, and their portable reduced mappings retain the
+full-state coefficients:
+
+```python
+from quantum_lattice_models import transverse_field_ising_parity_sector
+
+sector = transverse_field_ising_parity_sector(
+    n_sites=12,
+    parity=1,
+    j=1.0,
+    h=0.7,
+)
+print(sector.basis.mapping.quantum_numbers)
+```
+
 Spin observables and entanglement routines work with both full and
 fixed-magnetization state vectors without requiring reduced states to be
 expanded:
@@ -562,10 +579,15 @@ docs/models/                 Per-model references and generated HTML
 RESULTS.md                   Generated results
 SCHEMA.md                    Portable schema and compatibility policy
 IMPORTING.md                 CSV, GraphML, and transformation workflow
+DEPRECATIONS.md              Public API, schema, and CLI compatibility policy
+CONTRIBUTING.md              Contribution and validation requirements
+case_studies/                Third-party model-intake examples
 ```
 
 Future capabilities and their recommended implementation order are documented
 in [ROADMAP.md](ROADMAP.md).
+Public compatibility and contribution expectations are documented in
+[DEPRECATIONS.md](DEPRECATIONS.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
 Portable fields and compatibility guarantees are documented in
 [SCHEMA.md](SCHEMA.md), with import and transformation examples in
 [IMPORTING.md](IMPORTING.md).
@@ -589,12 +611,19 @@ diagnostics.py               Matrix and pre-build resource diagnostics
 comparison.py                Model parameter, matrix, spectrum, and gap comparison
 registry.py                  Built-in model catalog and registry operations
 _registry_core.py            Registry metadata and parameter validation
-specs.py                     Portable model/lattice records and factories
+specs.py                     Stable portable-specification import facade
+_spec_records.py             Record-type boundary
+_spec_factories.py           Model creation and loading boundary
+_physical_inference.py       Built-in physical-record inference boundary
+_spec_migrations.py          Versioned schema-migration boundary
 intake.py                    Physical summaries, lint reports, and adapter capabilities
 physical.py                  Local-degree, basis-mapping, and interaction records
 _schema_codec.py             Portable JSON encoding and schema validation
 storage.py                   Metadata-preserving NPY and NPZ persistence
-cli.py                       quantum-lattice command-line entry point
+cli.py                       Stable quantum-lattice command-line entry point
+_cli_app.py                  Parser and command dispatcher
+_cli_parameters.py           Registry-driven parameter handling
+_cli_sources.py              Model/file source construction
 models/                      Domain namespaces and compatible flat re-exports
 ```
 

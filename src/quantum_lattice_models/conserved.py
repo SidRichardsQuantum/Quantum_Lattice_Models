@@ -8,6 +8,12 @@ import numpy as np
 import scipy.sparse as sp
 
 from quantum_lattice_models.analysis import AnalysisResult
+from quantum_lattice_models.operators import PAULI_MATRICES
+from quantum_lattice_models.physical import (
+    BasisIndexMapping,
+    LocalDegreeOfFreedom,
+    SymmetryAction,
+)
 
 
 @dataclass(frozen=True)
@@ -70,4 +76,77 @@ def sector_compatibility(
 
     return bool(
         commutator_diagnostic(hamiltonian, quantity, tolerance=tolerance).metadata["conserved"]
+    )
+
+
+def symmetry_operator(
+    action: SymmetryAction,
+    local_degrees: tuple[LocalDegreeOfFreedom, ...],
+    basis_mappings: tuple[BasisIndexMapping, ...],
+    *,
+    sparse: bool = True,
+) -> np.ndarray | sp.csr_matrix:
+    """Construct an onsite-product spin symmetry in tensor-factor order."""
+
+    action.validate(local_degrees)
+    if action.kind != "onsite_product":
+        raise ValueError("Only onsite-product symmetry operators can be constructed.")
+    if not local_degrees or any(degree.kind != "spin" for degree in local_degrees):
+        raise ValueError("Symmetry operator construction currently requires spin degrees.")
+    by_degree = {mapping.local_degree: mapping for mapping in basis_mappings}
+    if set(by_degree) != {degree.index for degree in local_degrees}:
+        raise ValueError("Symmetry operator construction requires complete basis mappings.")
+    if any(mapping.role != "tensor_factor" for mapping in basis_mappings):
+        raise ValueError("Spin symmetry operators require tensor-factor basis mappings.")
+    n_factors = len(local_degrees)
+    factors = [sp.eye(2, format="csr", dtype=complex) for _ in range(n_factors)]
+    for degree_index, operator in zip(action.degrees, action.operators, strict=True):
+        factor = by_degree[degree_index].basis_index
+        if not 0 <= factor < n_factors:
+            raise ValueError("Symmetry tensor-factor index is out of range.")
+        factors[factor] = sp.csr_matrix(PAULI_MATRICES[operator])
+    result = sp.csr_matrix([[1.0 + 0.0j]])
+    for factor in factors:
+        result = sp.kron(result, factor, format="csr")
+    return result if sparse else result.toarray()
+
+
+def symmetry_action_diagnostic(
+    hamiltonian: np.ndarray | sp.spmatrix,
+    model: object,
+    name: str,
+    *,
+    tolerance: float = 1e-10,
+) -> AnalysisResult:
+    """Diagnose a named portable model symmetry against a Hamiltonian."""
+
+    actions = tuple(getattr(model, "symmetry_actions", ()))
+    try:
+        action = next(action for action in actions if action.name == name)
+    except StopIteration as exc:
+        raise ValueError(f"Model does not define symmetry action {name!r}.") from exc
+    operator = symmetry_operator(
+        action,
+        tuple(getattr(model, "local_degrees", ())),
+        tuple(getattr(model, "basis_mappings", ())),
+    )
+    result = commutator_diagnostic(
+        hamiltonian,
+        operator,
+        tolerance=tolerance,
+        name=name,
+    )
+    return AnalysisResult(
+        analysis=result.analysis,
+        values=result.values,
+        coordinates=result.coordinates,
+        parameters={**result.parameters, "symmetry_action": action.to_dict()},
+        source=result.source,
+        solver=result.solver,
+        warnings=result.warnings,
+        plot=result.plot,
+        package_version=result.package_version,
+        created_at=result.created_at,
+        provenance=result.provenance,
+        metadata=result.metadata,
     )

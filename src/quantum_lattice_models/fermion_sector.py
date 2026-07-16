@@ -77,7 +77,7 @@ class FermiHubbardSector:
 
     @property
     def shape(self) -> tuple[int, int]:
-        return self.matrix.shape
+        return int(self.matrix.shape[0]), int(self.matrix.shape[1])
 
     def to_metadata(self) -> dict[str, object]:
         return {
