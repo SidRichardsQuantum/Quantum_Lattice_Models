@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quantum-lattice-models"
-version = "0.1.12"
+version = "0.2.0"
 description = "Portable quantum lattice models, sparse sectors, reference analysis, and interchange."
 readme = "README.md"
 requires-python = ">=3.10"
