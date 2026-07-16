@@ -29,6 +29,15 @@ typing, contribution, and performance-regression contracts.
   strict MyPy baseline.
 - Added explicit v0.2.0 stability criteria to the roadmap.
 
+### Compatibility
+
+- Existing public imports and command-line workflows remain supported through
+  stable facades and compatibility snapshots.
+- The portable model and analysis schema versions remain `1.0`;
+  `symmetry_actions` and superposition components are optional additions, so
+  existing `1.0` files remain readable.
+- This release introduces no public removals or deprecations.
+
 ## v0.1.11
 
 This release consolidates the package around one portable physical-system

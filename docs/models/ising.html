@@ -26,7 +26,8 @@
 <p>These spin-$\tfrac12$ chains combine Ising $ZZ$ interactions with transverse
 and optional longitudinal fields. The next-nearest-neighbor variant adds
 frustration. They are standard small-system benchmarks for phase-transition
-intuition, quantum simulation, and variational algorithms.</p>
+intuition, quantum simulation, and variational algorithms. The transverse-field
+model also supports explicit global spin-flip parity sectors.</p>
 <p><img src="../diagrams/spin_chain_couplings.svg" alt="Ising and related spin-chain couplings" /></p>
 <h2>Hamiltonians</h2>
 <p>$$
@@ -39,15 +40,42 @@ $$</p>
 H_{\rm NNN}=-J_1\sum_iZ_iZ_{i+1}-J_2\sum_iZ_iZ_{i+2}-h\sum_iX_i.
 $$</p>
 <p>The operators are Pauli matrices, not spin operators divided by two.</p>
+<p>For the transverse-field model,</p>
+<p>$$
+P=\prod_i X_i,\qquad [H_{\rm TFIM},P]=0,
+$$</p>
+<p>so the Hamiltonian can be reduced to either parity eigenvalue $p=\pm1$.</p>
 <h2>Basis and scaling</h2>
-<p>The computational basis has dimension $2^N$. Builders currently return dense
-<code>DenseHamiltonian</code> arrays with Pauli-term metadata.</p>
+<p>The full computational basis has dimension $2^N$. The ordinary builder returns
+a dense <code>DenseHamiltonian</code>; the compatible <code>_sparse</code> builder returns a CSR
+matrix.</p>
+<p>Each spin-flip parity sector has dimension $2^{N-1}$. Its basis rows are the
+normalized superpositions</p>
+<p>$$
+|s;p\rangle=\frac{|s\rangle+p|\bar{s}\rangle}{\sqrt{2}},
+$$</p>
+<p>where $|\bar{s}\rangle$ is the bitwise-complement state. The sector builder
+returns a <code>SpinParitySectorHamiltonian</code> containing a CSR matrix and a portable
+reduced-basis mapping with both components and coefficients.</p>
 <h2>Package use</h2>
-<pre><code class="language-python">from quantum_lattice_models import transverse_field_ising
+<pre><code class="language-python">from quantum_lattice_models import (
+    transverse_field_ising,
+    transverse_field_ising_parity_sector,
+)
 
 H = transverse_field_ising(n_sites=6, j=1.0, h=0.7, periodic=False)
+even = transverse_field_ising_parity_sector(
+    n_sites=6,
+    parity=1,
+    j=1.0,
+    h=0.7,
+    periodic=False,
+)
+H_even = even.matrix
 </code></pre>
 <pre><code class="language-bash">quantum-lattice create transverse_field_ising --n-sites 6 --j 1 --h 0.7 --output ising.json
+quantum-lattice create transverse_field_ising_parity_sector_sparse \
+  --n-sites 6 --parity 1 --j 1 --h 0.7 --output ising-even.json
 </code></pre>
 <h2>Parameters</h2>
 <table>
@@ -159,11 +187,52 @@ H = transverse_field_ising(n_sites=6, j=1.0, h=0.7, periodic=False)
 <td style="text-align:right"><code>False</code></td>
 <td></td>
 </tr>
+<tr>
+<td><code>transverse_field_ising_parity_sector_sparse</code></td>
+<td><code>n_sites</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>6</code></td>
+<td>&gt;= 1</td>
+</tr>
+<tr>
+<td><code>transverse_field_ising_parity_sector_sparse</code></td>
+<td><code>parity</code></td>
+<td style="text-align:right"><code>int</code></td>
+<td style="text-align:right"><code>1</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>transverse_field_ising_parity_sector_sparse</code></td>
+<td><code>j</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>transverse_field_ising_parity_sector_sparse</code></td>
+<td><code>h</code></td>
+<td style="text-align:right"><code>float</code></td>
+<td style="text-align:right"><code>0.5</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>transverse_field_ising_parity_sector_sparse</code></td>
+<td><code>periodic</code></td>
+<td style="text-align:right"><code>bool</code></td>
+<td style="text-align:right"><code>False</code></td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <h2>Validation and cautions</h2>
-<p>The zero-field three-site spectrum is checked analytically. Dense memory grows
-as $4^N$; inspect the estimated dimension and memory before increasing $N$.</p>
+<p>The zero-field three-site spectrum is checked analytically. Parity mappings are
+checked as orthonormal eigenbases of $P$, each reduced matrix is compared with
+an explicit full-space isometric reduction, and the two sector spectra are
+verified to recombine into the full spectrum.</p>
+<p>Dense memory grows as $4^N$. A parity sector halves the matrix dimension but
+does not remove exponential scaling, so inspect the estimated dimension and
+storage before increasing $N$. A nonzero longitudinal $Z$ field breaks the
+global spin-flip symmetry and is not supported by the parity-sector builder.</p>
 <p>Related: <a href="xy_chain.html">XY chain</a>, <a href="xxz_chain.html">XXZ chain</a>.</p>
 
       </article>

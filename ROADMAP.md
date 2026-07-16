@@ -91,10 +91,10 @@ remaining work concerns richer semantics rather than catalog coverage.
   two-body terms.
 - Add richer multi-orbital site semantics, orbital geometry, and local
   constraints.
-- Add symmetry actions on local degrees beyond the current named conserved
-  quantities and commutator diagnostics.
-- Extend shared reduced-basis mappings to future parity and translation
-  sectors.
+- Add symmetry actions on local degrees beyond the current global spin-flip
+  action, named conserved quantities, and commutator diagnostics.
+- Extend shared reduced-basis mappings to translation and future
+  model-specific discrete sectors.
 - Preserve physical-system records through additional importers and ecosystem
   adapters.
 
@@ -250,9 +250,11 @@ be delegated to external tools.
 ## Priority 7: Symmetry-Reduced Bases
 
 Reduced bases should be added where the conserved quantity is explicit and the
-mapping to the full basis is testable.
+mapping to the full basis is testable. Global spin-flip parity sectors are
+implemented for the transverse-field Ising chain.
 
-- Consider spin-inversion or parity sectors where they offer a clear benefit.
+- Add other spin-inversion or discrete-symmetry sectors only where they offer a
+  clear benefit and have an explicit portable action.
 - Consider translation sectors only after periodic geometry and momentum
   conventions stabilize.
 
