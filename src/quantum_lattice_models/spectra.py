@@ -25,8 +25,10 @@ def eigensystem(H: np.ndarray | sp.spmatrix) -> tuple[np.ndarray, np.ndarray]:
 
     matrix = as_dense(H)
     if _is_hermitian(matrix):
-        return np.linalg.eigh(matrix)
-    return np.linalg.eig(matrix)
+        values, vectors = np.linalg.eigh(matrix)
+    else:
+        values, vectors = np.linalg.eig(matrix)
+    return np.asarray(values), np.asarray(vectors)
 
 
 def ground_energy(H: np.ndarray | sp.spmatrix) -> float:
